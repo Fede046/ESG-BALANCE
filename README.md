@@ -1,10 +1,6 @@
-# ESG-BALANCE
 
 # 🗺️ Roadmap Progetto ESG-BALANCE
 
-Ecco una roadmap strutturata 
-
----
 
 ## 📋 **FASE 1: ANALISI E PROGETTAZIONE (Settimana 1-2)**
 
