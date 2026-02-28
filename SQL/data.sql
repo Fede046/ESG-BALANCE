@@ -1,3 +1,4 @@
+-- Active: 1771787311626@@localhost@3308@test
 
 DROP DATABASE IF EXISTS TEST;
 CREATE DATABASE TEST;
@@ -15,4 +16,12 @@ CREATE TABLE UTENTE (
     Data VARCHAR(30)
 ) engine=InnoDB;
 
+CREATE TABLE EMAIL (
+    Username VARCHAR(30),
+    Email VARCHAR(255),
+    PRIMARY KEY(Username,Email),
+    FOREIGN KEY(Username) REFERENCES UTENTE(Username)
+)
+
 SELECT * FROM UTENTE;
+SELECT Password FROM UTENTE WHERE Username = '814';
