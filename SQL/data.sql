@@ -11,15 +11,15 @@ USE TEST;
 CREATE TABLE UTENTE (
     Username VARCHAR(30) PRIMARY KEY,
     CodiceFiscale VARCHAR(30),
-    Password VARCHAR(30),
+    Password VARCHAR(30) NOT NULL,
     Luogo VARCHAR(30),
     Data VARCHAR(30)
 ) engine=InnoDB;
 
 CREATE TABLE EMAIL (
-    Username VARCHAR(30),
-    Email VARCHAR(255),
-    PRIMARY KEY(Username,Email),
+    Username VARCHAR(30) NOT NULL,
+    Indirizzo VARCHAR(255),
+    PRIMARY KEY(Username,Indirizzo),
     FOREIGN KEY(Username) REFERENCES UTENTE(Username)
 )
 
