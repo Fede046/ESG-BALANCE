@@ -136,7 +136,12 @@ CREATE TABLE BILANCIO (
     id INT NOT NULL,
     Ragione_sociale_azienda VARCHAR(30) NOT NULL,
     Data_creazione DATETIME,
-    Stato VARCHAR(30),
+    Stato ENUM(
+        'bozza',
+        'in revisione',
+        'approvato',
+        'respinto'
+    ),
     PRIMARY KEY (id, Ragione_sociale_azienda),
     FOREIGN KEY (Ragione_sociale_azienda) REFERENCES AZIENDA(Ragione_sociale)
 );
@@ -144,7 +149,11 @@ CREATE TABLE BILANCIO (
 -- 13. GIUDIZIO  (dipende da REVISORE_ESG e BILANCIO)
 CREATE TABLE GIUDIZIO (
     Id INT PRIMARY KEY,
-    Esito VARCHAR(30),
+    Esito ENUM(
+        'approvazione',
+        'approvazione con rilievi',
+        'respingimento'
+    ),
     Data DATETIME,
     Rilievi VARCHAR(500),
     Username VARCHAR(30) NOT NULL,
