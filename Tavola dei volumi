@@ -1,0 +1,22 @@
+COSTO OPERAZIONI
+OP1) 
+1 azienda + 1 bilancio per ogni anno (1*3)
+  - Senza_ridondanza= 1+1*(2*(1+3)+0)=8
+1 azienda + 1 bilancio per ogni anno (1*3) + 1 aggiornamento variabile rid
+  - Ridondanza= 1+1*(2*(1+1+3)+0)=10
+
+OP2)
+10 aziende * 5 bilanci l'una
+  - Senza_ridondanza= 3+0,5*(2*0+(10*5))=75
+10 aziende da cui leggi il valore dal val rid
+  - Ridondanza= 3+0,5*(2*0+(10))=15
+
+OP3)
+1 azienda eliminata + 5 bilanci associati
+  - Senza_ridondanza= 1+0,5*(2*(1+5)+0)=6
+  - Ridondanza= 3+0,5*(2*(1+5)+0)=6
+
+RISPOSTA FINALE
+  - Senza_ridondanza= 89
+  - Ridondanza= 31
+Nonostante l'aggiunta di un campo (4 byte) per ogni azienda, con il campo ridondante c'è un risparmio di 58.
