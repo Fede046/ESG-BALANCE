@@ -52,6 +52,8 @@ switch ($ruolo) {
 }
 exit();
 
+
+
 ?>
 
 <!DOCTYPE html>

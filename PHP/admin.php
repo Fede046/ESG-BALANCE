@@ -129,35 +129,7 @@ $bilanci = $pdo->query(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin – ESG Balance</title>
-    <style>
-        *, *::before, *::after { box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; max-width: 960px; margin: 40px auto; padding: 0 20px; background: #f4f6f4; }
-        h1 { color: #1b4332; margin-bottom: 2px; }
-        h2 { color: #2c6e49; border-bottom: 2px solid #2c6e49; padding-bottom: 5px; margin-top: 0; }
-        h3 { color: #1b4332; margin: 18px 0 8px; }
-        .sezione { background:#fff; border:1px solid #d0ddd0; border-radius:8px; padding:22px; margin-bottom:22px; }
-        .msg-ok  { background:#d4edda; border:1px solid #28a745; color:#155724; padding:10px 14px; border-radius:5px; margin-bottom:18px; }
-        .msg-err { background:#f8d7da; border:1px solid #dc3545; color:#721c24; padding:10px 14px; border-radius:5px; margin-bottom:18px; }
-        .avviso  { background:#fff3cd; border:1px solid #ffc107; color:#856404; padding:10px 14px; border-radius:5px; margin-bottom:12px; }
-        label { font-weight:bold; display:block; margin-top:12px; margin-bottom:3px; }
-        small { font-weight:normal; color:#666; }
-        input[type=text], input[type=number], select {
-            width:100%; padding:8px 10px; border:1px solid #bbb; border-radius:4px; font-size:.95em;
-        }
-        input[type=submit] {
-            margin-top:16px; padding:10px 22px; background:#2c6e49; color:#fff;
-            border:none; border-radius:5px; cursor:pointer; font-size:1em;
-        }
-        input[type=submit]:hover { background:#1b4332; }
-        table { width:100%; border-collapse:collapse; margin-top:12px; font-size:.9em; }
-        th { background:#2c6e49; color:#fff; padding:8px 10px; text-align:left; }
-        td { padding:7px 10px; border-bottom:1px solid #e0e0e0; }
-        tr:hover td { background:#f0f7f0; }
-        .topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; }
-        .badge  { background:#2c6e49; color:#fff; padding:4px 14px; border-radius:12px; font-size:.85em; }
-        .btn-logout { background:#c0392b; color:#fff; border:none; padding:8px 18px; border-radius:5px; cursor:pointer; }
-        .btn-logout:hover { background:#922b21; }
-    </style>
+    
 </head>
 <body>
 
@@ -177,7 +149,7 @@ $bilanci = $pdo->query(
 <?php if ($messaggio): ?><div class="msg-ok"><?= htmlspecialchars($messaggio) ?></div><?php endif; ?>
 <?php if ($errore):    ?><div class="msg-err"><?= htmlspecialchars($errore) ?></div><?php endif; ?>
 
-<!-- ── Indicatori ESG ─────────────────────────────────────────────────────── -->
+
 <div class="sezione">
     <h2>📋 Aggiungi Indicatore ESG</h2>
     <form action="admin.php" method="post">
@@ -204,7 +176,7 @@ $bilanci = $pdo->query(
     <?php endif; ?>
 </div>
 
-<!-- ── Template Bilancio ──────────────────────────────────────────────────── -->
+
 <div class="sezione">
     <h2>📄 Crea Template di Bilancio</h2>
     <div class="avviso">
@@ -232,7 +204,6 @@ $bilanci = $pdo->query(
     <?php endif; ?>
 </div>
 
-<!-- ── Associa Revisore ───────────────────────────────────────────────────── -->
 <div class="sezione">
     <h2>🔗 Associa Revisore ESG a Bilancio</h2>
     <form action="admin.php" method="post">

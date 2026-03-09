@@ -182,4 +182,12 @@ CREATE TABLE ASSOCIA_BILANCIO_VOCE (
     FOREIGN KEY (id_bilancio, Ragione_sociale_bilancio) REFERENCES BILANCIO(id, Ragione_sociale_azienda),
     FOREIGN KEY (Nome_voce) REFERENCES VOCE(Nome)
 );
+-- 16. TEMPLATE_BILANCIO (dipende da AMMINISTRATORE)
+CREATE TABLE TEMPLATE_BILANCIO (
+    Nome VARCHAR(30) NOT NULL,
+    Anno INT NOT NULL,
+    Username_Amministratore VARCHAR(30) NOT NULL,
+    PRIMARY KEY (Nome, Anno),
+    FOREIGN KEY (Username_Amministratore) REFERENCES AMMINISTRATORE(Username)
+);
 
