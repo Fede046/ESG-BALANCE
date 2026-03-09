@@ -32,24 +32,25 @@ function getRuolo(PDO $pdo, string $username): ?string {
     return null;
 }
 
-$pdo      = getDB();
-$username = $_SESSION["Username"];
-$ruolo    = getRuolo($pdo, $username);
+$pdo   = getDB();
+$ruolo = getRuolo($pdo, $_SESSION["Username"]);
 
-if (!$ruolo) {
-    session_destroy();
-    header("Location: login.php");
-    exit();
+switch ($ruolo) {
+    case "amministratore":
+        header("Location: admin.php");
+        break;
+    case "revisore":
+        header("Location: revisore.php");
+        break;
+    case "responsabile":
+        header("Location: responsabile.php");
+        break;
+    default:
+        session_destroy();
+        header("Location: login.php?errore=ruolo_mancante");
+        break;
 }
-
-if (isset($_POST["logout"])) {
-    session_destroy();
-    header("Location: home.html");
-    exit();
-}
-
-//AMMINISTRATORE 
-
+exit();
 
 ?>
 
