@@ -26,7 +26,7 @@ if (!$stmt->fetch()) {
 
 if (isset($_POST["logout"])) {
     session_destroy();
-    header("Location: home.html");
+    header("Location: home.php");
     exit();
 }
 

@@ -1,4 +1,4 @@
--- Active: 1771787311626@@localhost@3308@test
+-- Active: 1771837160674@@127.0.0.1@3308@test
 
 -- NOTA: per campi testuali (Descrizione, CV, Immagine, ecc.) si intende un path, non un elenco di parole.
 
@@ -183,6 +183,7 @@ CREATE TABLE ASSOCIA_BILANCIO_VOCE (
     FOREIGN KEY (Nome_voce) REFERENCES VOCE(Nome)
 );
 -- 16. TEMPLATE_BILANCIO (dipende da AMMINISTRATORE)
+-- CREATO DA TOMMASO PER admin.php
 CREATE TABLE TEMPLATE_BILANCIO (
     Nome VARCHAR(30) NOT NULL,
     Anno INT NOT NULL,
