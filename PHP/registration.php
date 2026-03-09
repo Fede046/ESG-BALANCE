@@ -31,10 +31,15 @@
                 $pdo->query($q); 
             }
 
+            $queryRuolo = queryRuolo($_POST['usr']);
+            if ($queryRuolo !== null) {
+            $pdo->query($queryRuolo);
+}
+
         }catch(PDOException $e){
             // Verifichiamo se il codice d'errore è quello del duplicato (1062)
             if ($e->errorInfo[1] == 1062) {
-                echo "Errore: Lo username 'fede' è già occupato. Scegline un altro.";
+                echo "Errore: Lo username è già occupato. Scegline un altro.";
             } else {
             // Gestione di altri tipi di errori SQL
                 echo "Si è verificato un errore imprevisto: " . $e->getMessage();
@@ -42,13 +47,25 @@
         }
 
     }
+    function queryRuolo($usr) {
+    $ruolo = $_POST['ruolo'] ?? '';
+    
+    switch($ruolo) {
+        case 'RevisoreESG':
+            return "INSERT INTO REVISORE_ESG(Username, IndiceAffidabilita, NumRevisioni) VALUES ('{$usr}', 5, 0)";
+        case 'ResponsabileAziendale':
+            return "INSERT INTO RESPONSABILE_AZIENDALE(Username, CV) VALUES ('{$usr}', '')";
+        default:
+            return null;
+    }
+}
 
     function queryEmail($usr){
         $arrayQuery = [];
 
         $emails = $_POST['emails'];
         foreach($emails as $email){
-            $arrayQuery[] = "INSERT INTO EMAIL(Username,Indirizzo) VALUES ('{$usr}','{$email}')";
+            $arrayQuery[] = "INSERT INTO EMAIL(Username_Utente,Indirizzo) VALUES ('{$usr}','{$email}')";
         }
         return $arrayQuery;
     }
@@ -84,6 +101,11 @@
 
         <h3>Data di Nascita:</h3>
         <input type="date" name='data'>
+        <h3>Ruolo</h3>
+
+        <h3>Ruolo</h3>
+        <label><input type="radio" name="ruolo" value="RevisoreESG"> Revisore ESG</label><br>
+        <label><input type="radio" name="ruolo" value="ResponsabileAziendale"> Responsabile Aziendale</label><br>
         
         <!--Implementare un controllo  email  adeguato -->
         <!--Implementare la possibilità di aggiungere più mail --> 
@@ -130,7 +152,7 @@
 
     </form>
 
-    <a href="home.php"><button>Home</button></a>
+    <a href="home.html"><button>Home</button></a>
 
     
     

@@ -20,7 +20,7 @@ session_start()
 
     </form>
 
-    <a href="home.php"><button>Home</button></a>
+    <a href="home.html"><button>Home</button></a>
 
 </body>
 </html>
