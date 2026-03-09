@@ -1,0 +1,10 @@
+La	relazione	DEVE contenere	lo	studio	di	progettazione	svolto	per	la	 realizzazione	 del	 sistema	informativo,	 secondo	la	metodologia	vista	a	lezione:
+1. Raccolta/Analisi	 dei	 requisiti (testo	 completo	 delle	specifica	sui	dati,	lista	delle	operazioni,	tavola	media	dei	volumi,	glossario	dei	dati).
+2. Progettazione	Concettuale (diagramma	E-R,	dizionario	delle	entità/relazioni,	tavola	delle	business	rules).
+3. Progettazione	 Logica	 (ristrutturazione	 dello	 schema	concettuale,	 analisi	 delle	 ridondanze,	 lista	 delle	 tabelle con	vincoli	di	chiavi,	lista	dei	vincoli	inter-relazionali).
+4. Normalizzazione	(se	necessaria).
+5. Descrizione	 -ad	 alto	 livello- delle	 funzionalità dell’applicazione Web.
+6. (In	appendice):	Codice	SQL completo	dello	schema	della	base di dati
+
+La	 discussione	 consiste	in	 una	presentazione (con	 slide)	 del	progetto,	con	demo annessa sui	PC	degli	studenti.	
+Ø E’	 necessario	 preparare	 una	 presentazione	 PowerPoint/PDF	per	la	discussione.	La	presentazione	deve	contenere:	specifiche	progetto,	 progettazione	 della	 base	 di	 dati,
