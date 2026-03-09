@@ -132,8 +132,8 @@ INSERT INTO AZIENDA (Ragione_sociale, Nome, p_IVA, Settore, n_dip, logo, nr_bila
 -- ─────────────────────────────────────────────
 INSERT INTO BILANCIO (id, Ragione_sociale_azienda, Data_creazione, Stato) VALUES
 -- GreenTech SRL  → 3 bilanci
-(1, 'GreenTech SRL',  '2022-03-31 00:00:00', 'Approvato'),
-(2, 'GreenTech SRL',  '2023-03-31 00:00:00', 'Approvato'),
+(1, 'GreenTech SRL',  '2022-03-31 00:00:00', 'bozza'),
+(2, 'GreenTech SRL',  '2023-03-31 00:00:00', 'bozza'),
 (3, 'GreenTech SRL',  '2024-03-31 00:00:00', 'In revisione'),
 -- EcoFarm SPA    → 2 bilanci
 (4, 'EcoFarm SPA',    '2023-04-30 00:00:00', 'Approvato'),
@@ -147,11 +147,11 @@ INSERT INTO BILANCIO (id, Ragione_sociale_azienda, Data_creazione, Stato) VALUES
 -- 13. GIUDIZIO
 -- ─────────────────────────────────────────────
 INSERT INTO GIUDIZIO (Id, Esito, Data, Rilievi, Username, id_bilancio, Ragione_sociale_bilancio) VALUES
-(1, 'Positivo',  '2022-05-01 00:00:00', '/rilievi/r1.pdf', 'giulia.bianchi', 1, 'GreenTech SRL'),
-(2, 'Positivo',  '2023-05-01 00:00:00', '/rilievi/r2.pdf', 'giulia.bianchi', 2, 'GreenTech SRL'),
-(3, 'Con riserva','2023-06-15 00:00:00','/rilievi/r3.pdf', 'luca.verdi',     4, 'EcoFarm SPA'),
-(4, 'Positivo',  '2022-08-01 00:00:00', '/rilievi/r4.pdf', 'giulia.bianchi', 6, 'BluEnergy SRL'),
-(5, 'Negativo',  '2023-08-01 00:00:00', '/rilievi/r5.pdf', 'luca.verdi',     7, 'BluEnergy SRL');
+(1, 'approvazione',  '2022-05-01 00:00:00', '/rilievi/r1.pdf', 'giulia.bianchi', 1, 'GreenTech SRL'),
+(2, 'approvazione',  '2023-05-01 00:00:00', '/rilievi/r2.pdf', 'giulia.bianchi', 2, 'GreenTech SRL'),
+(3, 'approvazione con rilievi','2023-06-15 00:00:00','/rilievi/r3.pdf', 'luca.verdi',     4, 'EcoFarm SPA'),
+(4, 'respingimento',  '2022-08-01 00:00:00', '/rilievi/r4.pdf', 'giulia.bianchi', 6, 'BluEnergy SRL'),
+(5, 'approvazione con rilievi',  '2023-08-01 00:00:00', '/rilievi/r5.pdf', 'luca.verdi',     7, 'BluEnergy SRL');
 
 -- ─────────────────────────────────────────────
 -- 14. VALUTA_REVISORE_BILANCIO

@@ -1,4 +1,4 @@
--- Active: 1771787311626@@localhost@3308@test
+-- Active: 1771837160674@@127.0.0.1@3308@test
 
 -- NOTA: per campi testuali (Descrizione, CV, Immagine, ecc.) si intende un path, non un elenco di parole.
 
@@ -97,7 +97,7 @@ CREATE TABLE VOCE (
 
 -- 9. NOTA  (dipende da VOCE e REVISORE_ESG)
 CREATE TABLE NOTA (
-    ID INT PRIMARY KEY,   
+    ID INT PRIMARY KEY AUTO_INCREMENT,   
     Data DATETIME,
     Testo VARCHAR(500),
     NomeVoce VARCHAR(30) NOT NULL,
@@ -136,15 +136,24 @@ CREATE TABLE BILANCIO (
     id INT NOT NULL,
     Ragione_sociale_azienda VARCHAR(30) NOT NULL,
     Data_creazione DATETIME,
-    Stato VARCHAR(30),
+    Stato ENUM(
+        'bozza',
+        'in revisione',
+        'approvato',
+        'respinto'
+    ),
     PRIMARY KEY (id, Ragione_sociale_azienda),
     FOREIGN KEY (Ragione_sociale_azienda) REFERENCES AZIENDA(Ragione_sociale)
 );
 
 -- 13. GIUDIZIO  (dipende da REVISORE_ESG e BILANCIO)
 CREATE TABLE GIUDIZIO (
-    Id INT PRIMARY KEY,
-    Esito VARCHAR(30),
+    Id INT PRIMARY KEY AUTO_INCREMENT,
+    Esito ENUM(
+        'approvazione',
+        'approvazione con rilievi',
+        'respingimento'
+    ),
     Data DATETIME,
     Rilievi VARCHAR(500),
     Username VARCHAR(30) NOT NULL,
@@ -158,16 +167,28 @@ CREATE TABLE GIUDIZIO (
 CREATE TABLE VALUTA_REVISORE_BILANCIO (
     Username_Revisore_ESG VARCHAR(30) NOT NULL,
     id_bilancio INT NOT NULL,
-    PRIMARY KEY (Username_Revisore_ESG, id_bilancio),
+    Ragione_sociale_bilancio VARCHAR(30) NOT NULL,
+    PRIMARY KEY (Username_Revisore_ESG, id_bilancio, Ragione_sociale_bilancio),
     FOREIGN KEY (Username_Revisore_ESG) REFERENCES REVISORE_ESG(Username),
-    FOREIGN KEY (id_bilancio) REFERENCES BILANCIO(id)
+    FOREIGN KEY (id_bilancio, Ragione_sociale_bilancio) REFERENCES BILANCIO(id, Ragione_sociale_azienda)
 );
 
 -- 15. ASSOCIA_BILANCIO_VOCE  (dipende da BILANCIO e VOCE)
 CREATE TABLE ASSOCIA_BILANCIO_VOCE (
     Nome_voce VARCHAR(30) NOT NULL,
     id_bilancio INT NOT NULL,
-    PRIMARY KEY (Nome_voce, id_bilancio),
-    FOREIGN KEY (id_bilancio) REFERENCES BILANCIO(id),
+    Ragione_sociale_bilancio VARCHAR(30) NOT NULL,
+    PRIMARY KEY (Nome_voce, id_bilancio, Ragione_sociale_bilancio),
+    FOREIGN KEY (id_bilancio, Ragione_sociale_bilancio) REFERENCES BILANCIO(id, Ragione_sociale_azienda),
     FOREIGN KEY (Nome_voce) REFERENCES VOCE(Nome)
 );
+-- 16. TEMPLATE_BILANCIO (dipende da AMMINISTRATORE)
+-- CREATO DA TOMMASO PER admin.php
+CREATE TABLE TEMPLATE_BILANCIO (
+    Nome VARCHAR(30) NOT NULL,
+    Anno INT NOT NULL,
+    Username_Amministratore VARCHAR(30) NOT NULL,
+    PRIMARY KEY (Nome, Anno),
+    FOREIGN KEY (Username_Amministratore) REFERENCES AMMINISTRATORE(Username)
+);
+

@@ -1,0 +1,54 @@
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+main {
+    text-align: center;
+    background-color: rgba(255, 255, 255, 0.9); 
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); 
+    padding: 3rem;
+    width: 100%;
+    max-width: 400px;
+    border: none;
+}
+
+h1.welcome_page {
+    color: #333;
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+    letter-spacing: 2px;
+}
+
+
+button {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 8px;
+    background-color: #764ba2;
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+button:hover {
+    background-color: #5a378c;
+    transform: translateY(-2px); 
+}
+
+a.welcome_page {
+    text-decoration: none; 
+    color: white;
+}
