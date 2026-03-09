@@ -97,7 +97,7 @@ CREATE TABLE VOCE (
 
 -- 9. NOTA  (dipende da VOCE e REVISORE_ESG)
 CREATE TABLE NOTA (
-    ID INT PRIMARY KEY,   
+    ID INT PRIMARY KEY AUTO_INCREMENT,   
     Data DATETIME,
     Testo VARCHAR(500),
     NomeVoce VARCHAR(30) NOT NULL,
@@ -148,7 +148,7 @@ CREATE TABLE BILANCIO (
 
 -- 13. GIUDIZIO  (dipende da REVISORE_ESG e BILANCIO)
 CREATE TABLE GIUDIZIO (
-    Id INT PRIMARY KEY,
+    Id INT PRIMARY KEY AUTO_INCREMENT,
     Esito ENUM(
         'approvazione',
         'approvazione con rilievi',
@@ -167,16 +167,19 @@ CREATE TABLE GIUDIZIO (
 CREATE TABLE VALUTA_REVISORE_BILANCIO (
     Username_Revisore_ESG VARCHAR(30) NOT NULL,
     id_bilancio INT NOT NULL,
-    PRIMARY KEY (Username_Revisore_ESG, id_bilancio),
+    Ragione_sociale_bilancio VARCHAR(30) NOT NULL,
+    PRIMARY KEY (Username_Revisore_ESG, id_bilancio, Ragione_sociale_bilancio),
     FOREIGN KEY (Username_Revisore_ESG) REFERENCES REVISORE_ESG(Username),
-    FOREIGN KEY (id_bilancio) REFERENCES BILANCIO(id)
+    FOREIGN KEY (id_bilancio, Ragione_sociale_bilancio) REFERENCES BILANCIO(id, Ragione_sociale_azienda)
 );
 
 -- 15. ASSOCIA_BILANCIO_VOCE  (dipende da BILANCIO e VOCE)
 CREATE TABLE ASSOCIA_BILANCIO_VOCE (
     Nome_voce VARCHAR(30) NOT NULL,
     id_bilancio INT NOT NULL,
-    PRIMARY KEY (Nome_voce, id_bilancio),
-    FOREIGN KEY (id_bilancio) REFERENCES BILANCIO(id),
+    Ragione_sociale_bilancio VARCHAR(30) NOT NULL,
+    PRIMARY KEY (Nome_voce, id_bilancio, Ragione_sociale_bilancio),
+    FOREIGN KEY (id_bilancio, Ragione_sociale_bilancio) REFERENCES BILANCIO(id, Ragione_sociale_azienda),
     FOREIGN KEY (Nome_voce) REFERENCES VOCE(Nome)
 );
+
