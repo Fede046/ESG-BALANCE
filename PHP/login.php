@@ -1,6 +1,46 @@
 <?php 
 session_start();
 require_once "db.php";
+
+// La logica va PRIMA dell'HTML, altrimenti header() non funziona
+if(isset($_POST["login"])){
+    if(!empty($_POST["usr"])&&!empty($_POST["psw"])){
+        if(control()){
+            $_SESSION["Username"] = $_POST["usr"];
+            header("Location: profile.php");
+            exit();
+        }
+    }
+}
+
+function control(){
+    try{
+        $pdo = getDB();
+        
+        $sql = "SELECT Password FROM UTENTE WHERE Username = '" . $_POST["usr"] . "';";            
+        
+        $result = $pdo->query($sql);
+
+        $riga = $result->fetch(PDO::FETCH_ASSOC);
+
+        //Aggiungere psw criptata
+        if(!empty($riga)){
+            if($riga["Password"]==$_POST['psw']){
+                echo "Login corretto!";
+                return true;
+            }else{
+                echo "Password errata";
+            }
+        }else{
+            echo "Username inesistente";
+        }
+        return false;
+
+    }catch(PDOException $e){
+        echo "Errore Connessione: {$e->getMessage()}";
+        exit();
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -22,45 +62,3 @@ require_once "db.php";
     <a href="home.html"><button>Home</button></a>
 </body>
 </html>
-<?php   
-    if(isset($_POST["login"])){
-        if(!empty($_POST["usr"])&&!empty($_POST["psw"])){
-
-            if(control()){
-                $_SESSION["Username"] = $_POST["usr"];
-                header("Location: profile.php");
-            }
-        }
-    }
-    
-    function control(){
-        try{
-            $pdo = getDB();
-            
-            $sql = "SELECT Password FROM UTENTE WHERE Username = '" . $_POST["usr"] . "';";            
-            
-            $result = $pdo->query($sql);
-
-            //Preso da chat al posto di fare  il ciclo for
-            // 2. APRI IL PACCHETTO: Estrai la riga come array associativo
-            $riga = $result->fetch(PDO::FETCH_ASSOC);
-
-            //Aggiungere psw criptata
-            if(!empty($riga)){
-                if($riga["Password"]==$_POST['psw']){
-                    echo "Login  corretto!";
-                    return true;
-                }else{
-                    echo "Password  errata";
-                }
-            }else{
-                echo "Username inesistente";
-            }
-            return false;
-
-        }catch(PDOException $e){
-            echo "Errore Connessione: {$e->getMessage()}";
-            exit();
-        }
-    }
-?>

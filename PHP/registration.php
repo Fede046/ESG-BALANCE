@@ -5,9 +5,14 @@
 
     if(isset($_POST["register"])){
         if(!empty($_POST["usr"])&&!empty($_POST["psw"])){
-            instertDB();
+            $message = instertDB();
+            // Redirect solo se registrazione riuscita
+            if($message === "ok"){
+                header("Location: login.php");
+                exit();
+            }
         }else{
-            $message = 'Inserisci alemno Username e  Password per proseguire con la registrazione';
+            $message = 'Inserisci almeno Username e Password per proseguire con la registrazione';
         }
     }
 
@@ -15,7 +20,7 @@
         try{
             $pdo = getDB();
 
-            $sql = query($_POST['usr'],$_POST['psw'],$_POST['CF'],$_POST['luogo'],$_POST['data'],);
+            $sql = query($_POST['usr'],$_POST['psw'],$_POST['CF'],$_POST['luogo'],$_POST['data']);
             $pdo->query($sql);       
 
             $arrayQuery = queryEmail($_POST['usr']);
@@ -28,11 +33,13 @@
                 $pdo->query($queryRuolo);
             }
 
+            return "ok";
+
         }catch(PDOException $e){
             if ($e->errorInfo[1] == 1062) {
-                echo "Errore: Lo username è già occupato. Scegline un altro.";
+                return "Errore: Lo username è già occupato. Scegline un altro.";
             } else {
-                echo "Si è verificato un errore imprevisto: " . $e->getMessage();
+                return "Si è verificato un errore imprevisto: " . $e->getMessage();
             }
         }
     }
@@ -134,7 +141,7 @@
     <a href="home.html"><button>Home</button></a>
 
     <?php
-        if (isset($message)) {
+        if ($message !== "" && $message !== "ok") {
             echo "<h3 style='color: red;'>{$message}</h3>";
         }    
     ?>
