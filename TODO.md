@@ -8,3 +8,4 @@
 - Valutere di mettere delle funzioni al posto delle query quando si fa il collegamento php (Osservazione il fatto che questo non sia del tutto menzionato nelle slide, potrebbe essere visto come un overkill, una soluzione implementa delle funzioni non utilizzate dal prof, ci sono. Il che mi fa dubitare anche se si tratta della scelta + pulita)
 - Valutare questa idea di implementazione di ogni profilo ARCHITETTURA MODULARE: abbiamo una pagina centrale, con tanti pulsanti che portano a pagine di operazioni, una sorta di menu principale dell'utente.
   Questo a mio parere fa sì che il codice è meno condensato in un unico file php.
+- Iniziare a capire come fare con mongoDB
