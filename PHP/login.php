@@ -1,5 +1,6 @@
 <?php 
-session_start()
+session_start();
+require_once "db.php";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -16,12 +17,9 @@ session_start()
         <input type="text" name='psw'>
         <br>
         <input type="submit" name='login' value="Login">
-
-
     </form>
 
     <a href="home.html"><button>Home</button></a>
-
 </body>
 </html>
 <?php   
@@ -30,24 +28,14 @@ session_start()
 
             if(control()){
                 $_SESSION["Username"] = $_POST["usr"];
-                //andiamo nell'altro file php
                 header("Location: profile.php");
             }
-            
-
         }
     }
     
     function control(){
         try{
-            $pdo = new PDO(
-            "mysql:host=127.0.0.1;port=3308;dbname=TEST",
-            "root",
-            "root"
-            );
-            $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
-            $pdo->exec('SET NAMES "utf8"');
-            
+            $pdo = getDB();
             
             $sql = "SELECT Password FROM UTENTE WHERE Username = '" . $_POST["usr"] . "';";            
             
@@ -60,7 +48,6 @@ session_start()
             //Aggiungere psw criptata
             if(!empty($riga)){
                 if($riga["Password"]==$_POST['psw']){
-                    
                     echo "Login  corretto!";
                     return true;
                 }else{
@@ -71,10 +58,9 @@ session_start()
             }
             return false;
 
-            }catch(PDOException $e){
-                echo "Errore Connessione: {$e->getMessage()}";
-                exit();
-            }
+        }catch(PDOException $e){
+            echo "Errore Connessione: {$e->getMessage()}";
+            exit();
+        }
     }
-
 ?>

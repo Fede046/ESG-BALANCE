@@ -1,23 +1,12 @@
 <?php
     session_start();
+    require_once "db.php";
+
     if(!isset($_SESSION["Username"])){
         header("Location: login.php");
         exit();
     }
 
-    function getDB() {
-    try{
-        $pdo = new PDO(
-            "mysql:host=127.0.0.1;port=3308;dbname=TEST",
-            "root", "root"
-        );
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $pdo->exec('SET NAMES "utf8"');
-        return $pdo;
-    } catch (PDOException $e) {
-        die("Errore connessione: " . $e->getMessage());
-    }
-}
 function getRuolo(PDO $pdo, string $username): ?string {
     foreach([
         "amministratore"=>"AMMINISTRATORE",
@@ -51,9 +40,6 @@ switch ($ruolo) {
         break;
 }
 exit();
-
-
-
 ?>
 
 <!DOCTYPE html>
@@ -67,7 +53,6 @@ exit();
     This is the homepage;
     <form action="home.php" method="post">
         <input type="submit" name="logout" value="logout">
-
     </form>
 </body>
 </html>

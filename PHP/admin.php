@@ -1,18 +1,13 @@
 <?php
 session_start();
+require_once "db.php";
 
 if (!isset($_SESSION["Username"])) {
     header("Location: login.php");
     exit();
 }
 
-try {
-    $pdo = new PDO("mysql:host=127.0.0.1;port=3308;dbname=TEST", "root", "root");
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->exec('SET NAMES "utf8"');
-} catch (PDOException $e) {
-    die("Errore connessione DB: " . $e->getMessage());
-}
+$pdo = getDB();
 
 $username = $_SESSION["Username"];
 

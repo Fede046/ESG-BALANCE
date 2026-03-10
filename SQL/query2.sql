@@ -1,4 +1,4 @@
---• Autenticazione/registrazione	sulla	piattaforma	
+-- Autenticazione/registrazione	sulla	piattaforma	
 DELIMITER //
 
 -- PROCEDURA DI REGISTRAZIONE
