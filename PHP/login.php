@@ -59,6 +59,6 @@ function control(){
         <input type="submit" name='login' value="Login">
     </form>
 
-    <a href="home.html"><button>Home</button></a>
+    <a href="home.php"><button>Home</button></a>
 </body>
 </html>

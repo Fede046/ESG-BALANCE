@@ -11,7 +11,7 @@ if (!isset($_SESSION["Username"])) {
 // Logout
 if (isset($_POST["logout"])) {
     session_destroy();
-    header("Location: home.html");
+    header("Location: home.php");
     exit();
 }
 
@@ -26,7 +26,7 @@ $voci_menu = [
         ["label" => "Associa Revisore a Bilancio", "href" => "actions/associa_revisore.php"],
     ],
     "revisore" => [
-        ["label" => "Le mie Competenze",           "href" => "actions/aggiungi_competenza.php"],
+        ["label" => "Le mie Competenze",           "href" => "actions/aggiungi_competenze.php"],
         ["label" => "Inserisci Nota su Voce",      "href" => "actions/inserisci_nota.php"],
         ["label" => "Inserisci Giudizio",          "href" => "actions/inserisci_giudizio.php"],
     ],

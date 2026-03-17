@@ -7,18 +7,7 @@
         exit();
     }
 
-    function getRuolo(PDO $pdo, string $username): ?string {
-        foreach([
-            "amministratore" => "AMMINISTRATORE",
-            "revisore"       => "REVISORE_ESG",
-            "responsabile"   => "RESPONSABILE_AZIENDALE",
-        ] as $ruolo => $tabella) {
-            $stmt = $pdo->prepare("SELECT Username FROM $tabella WHERE Username = ? LIMIT 1");
-            $stmt->execute([$username]);
-            if ($stmt->fetch()) return $ruolo;
-        }
-        return null;
-    }
+
 
     $pdo   = getDB();
     $ruolo = getRuolo($pdo, $_SESSION["Username"]);

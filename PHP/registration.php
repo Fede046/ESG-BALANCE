@@ -138,7 +138,7 @@
         <input type="submit" name='register' value="Register">
     </form>
 
-    <a href="home.html"><button>Home</button></a>
+    <a href="home.php"><button>Home</button></a>
 
     <?php
         if ($message !== "" && $message !== "ok") {

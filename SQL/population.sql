@@ -156,25 +156,26 @@ INSERT INTO GIUDIZIO (Id, Esito, Data, Rilievi, Username, id_bilancio, Ragione_s
 -- ─────────────────────────────────────────────
 -- 14. VALUTA_REVISORE_BILANCIO
 -- ─────────────────────────────────────────────
-INSERT INTO VALUTA_REVISORE_BILANCIO (Username_Revisore_ESG, id_bilancio) VALUES
-('giulia.bianchi', 1),
-('giulia.bianchi', 2),
-('giulia.bianchi', 3),
-('luca.verdi',     4),
-('luca.verdi',     5),
-('giulia.bianchi', 6),
-('luca.verdi',     7),
-('luca.verdi',     8);
+INSERT INTO VALUTA_REVISORE_BILANCIO (Username_Revisore_ESG, id_bilancio, Ragione_sociale_bilancio) VALUES
+('giulia.bianchi', 1, 'GreenTech SRL'),
+('giulia.bianchi', 2, 'GreenTech SRL'),
+('giulia.bianchi', 3, 'GreenTech SRL'),
+('luca.verdi',     4, 'EcoFarm SPA'),
+('luca.verdi',     5, 'EcoFarm SPA'),
+('giulia.bianchi', 6, 'BluEnergy SRL'),
+('luca.verdi',     7, 'BluEnergy SRL'),
+('luca.verdi',     8, 'BluEnergy SRL');
+
 
 -- ─────────────────────────────────────────────
 -- 15. ASSOCIA_BILANCIO_VOCE
 -- ─────────────────────────────────────────────
-INSERT INTO ASSOCIA_BILANCIO_VOCE (Nome_voce, id_bilancio) VALUES
-('Ricavi',            1), ('Costi operativi', 1), ('EBITDA', 1),
-('Ricavi',            2), ('Costi operativi', 2), ('Patrimonio netto', 2),
-('Ricavi',            3),
-('Ricavi',            4), ('EBITDA', 4), ('Debiti finanziari', 4),
-('Ricavi',            5), ('Costi operativi', 5),
-('Ricavi',            6), ('Patrimonio netto', 6), ('EBITDA', 6),
-('Ricavi',            7), ('Costi operativi', 7),
-('Debiti finanziari', 8);
+INSERT INTO ASSOCIA_BILANCIO_VOCE (Nome_voce, id_bilancio, Ragione_sociale_bilancio) VALUES
+('Ricavi',            1, 'GreenTech SRL'), ('Costi operativi',   1, 'GreenTech SRL'), ('EBITDA',            1, 'GreenTech SRL'),
+('Ricavi',            2, 'GreenTech SRL'), ('Costi operativi',   2, 'GreenTech SRL'), ('Patrimonio netto',  2, 'GreenTech SRL'),
+('Ricavi',            3, 'GreenTech SRL'),
+('Ricavi',            4, 'EcoFarm SPA'), ('EBITDA',            4, 'EcoFarm SPA'), ('Debiti finanziari', 4, 'EcoFarm SPA'),
+('Ricavi',            5, 'EcoFarm SPA'), ('Costi operativi',   5, 'EcoFarm SPA'),
+('Ricavi',            6, 'BluEnergy SRL'), ('Patrimonio netto',  6, 'BluEnergy SRL'), ('EBITDA',            6, 'BluEnergy SRL'),
+('Ricavi',            7, 'BluEnergy SRL'), ('Costi operativi',   7, 'BluEnergy SRL'),
+('Debiti finanziari', 8, 'BluEnergy SRL');
