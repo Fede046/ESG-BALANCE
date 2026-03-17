@@ -78,7 +78,7 @@ try {
     <?php if ($messaggio): ?><p style="color:green"><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
     <?php if ($errore):    ?><p style="color:red"><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
-    <form action="aggiungi_competenze.php" method="post">
+    <form action="aggiungi_competenza.php" method="post">
         <label>Nome competenza * (max 30 caratteri)</label><br>
         <input type="text" name="nome_competenza" maxlength="30" required><br>
 
