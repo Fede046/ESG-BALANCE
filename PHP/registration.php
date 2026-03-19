@@ -1,106 +1,92 @@
 <?php
-    require_once "db.php";
+require_once "db.php";
 
-    $message = "";
+$message = "";
 
-    if(isset($_POST["register"])){
-        if(!empty($_POST["usr"])&&!empty($_POST["psw"])){
-            $message = instertDB();
-            // Redirect solo se registrazione riuscita
-            if($message === "ok"){
-                header("Location: login.php");
-                exit();
-            }
-        }else{
-            $message = 'Inserisci almeno Username e Password per proseguire con la registrazione';
+if (isset($_POST["register"])) {
+    if (!empty($_POST["usr"]) && !empty($_POST["psw"])) {
+        $message = registraUtente();
+        if ($message === "ok") {
+            header("Location: login.php");
+            exit();
         }
+    } else {
+        $message = "Inserisci almeno Username e Password per proseguire con la registrazione.";
     }
+}
 
-    function instertDB(){
-        try{
-            $pdo = getDB();
+function registraUtente() {
+    try {
+        $pdo   = getDB();
+        $ruolo = $_POST["ruolo"] ?? '';
+        // p_extra: CV per il responsabile, stringa vuota per gli altri
+        $extra = ($ruolo === 'responsabile') ? (trim($_POST['cv'] ?? '')) : '';
 
-            $sql = query($_POST['usr'],$_POST['psw'],$_POST['CF'],$_POST['luogo'],$_POST['data']);
-            $pdo->query($sql);       
+        $stmt = $pdo->prepare("CALL sp_Registrazione(?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([
+            $_POST['usr'],
+            $_POST['CF']    ?? null,
+            $_POST['psw'],
+            $_POST['luogo'] ?? null,
+            $_POST['data']  ?? null,
+            $ruolo,
+            $extra
+        ]);
 
-            $arrayQuery = queryEmail($_POST['usr']);
-            foreach($arrayQuery as $q){
-                $pdo->query($q); 
-            }
-
-            $queryRuolo = queryRuolo($_POST['usr']);
-            if ($queryRuolo !== null) {
-                $pdo->query($queryRuolo);
-            }
-
-            return "ok";
-
-        }catch(PDOException $e){
-            if ($e->errorInfo[1] == 1062) {
-                return "Errore: Lo username è già occupato. Scegline un altro.";
-            } else {
-                return "Si è verificato un errore imprevisto: " . $e->getMessage();
+        // Inserimento email (una o più)
+        $emails = $_POST['emails'] ?? [];
+        foreach ($emails as $email) {
+            $email = trim($email);
+            if ($email !== '') {
+                $pdo->prepare(
+                    "INSERT INTO EMAIL (Username_Utente, Indirizzo) VALUES (?, ?)"
+                )->execute([$_POST['usr'], $email]);
             }
         }
-    }
 
-    function queryRuolo($usr) {
-        $ruolo = $_POST['ruolo'] ?? '';
-        
-        switch($ruolo) {
-            case 'RevisoreESG':
-                return "INSERT INTO REVISORE_ESG(Username, IndiceAffidabilita, NumRevisioni) VALUES ('{$usr}', 5, 0)";
-            case 'ResponsabileAziendale':
-                return "INSERT INTO RESPONSABILE_AZIENDALE(Username, CV) VALUES ('{$usr}', '')";
-            default:
-                return null;
+        return "ok";
+
+    } catch (PDOException $e) {
+        if ($e->errorInfo[1] == 1062) {
+            return "Errore: lo username è già occupato. Scegline un altro.";
         }
+        return "Si è verificato un errore imprevisto: " . $e->getMessage();
     }
-
-    function queryEmail($usr){
-        $arrayQuery = [];
-
-        $emails = $_POST['emails'];
-        foreach($emails as $email){
-            $arrayQuery[] = "INSERT INTO EMAIL(Username_Utente,Indirizzo) VALUES ('{$usr}','{$email}')";
-        }
-        return $arrayQuery;
-    }
-
-    function query($usr,$psw,$CF,$luogo,$data){
-        return "INSERT INTO UTENTE(Username,CodiceFiscale,Password,Luogo,Data)
-        VALUES ('{$usr}','{$CF}','{$psw}','{$luogo}','{$data}')";
-    }
+}
 ?>
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Registrazione – ESG Balance</title>
 </head>
 <body>
     <form action="registration.php" method="post">
         <h3>Username:</h3>
-        <input type="text" name='usr'>
+        <input type="text" name="usr">
 
         <h3>Password:</h3>
-        <input type="text" name='psw'>
+        <input type="password" name="psw">
 
-        <h3>CodiceFiscale:</h3>
-        <input type="text" name='CF'>   
-        
+        <h3>Codice Fiscale:</h3>
+        <input type="text" name="CF">
+
         <h3>Luogo di Nascita:</h3>
-        <input type="text" name='luogo'>
+        <input type="text" name="luogo">
 
         <h3>Data di Nascita:</h3>
-        <input type="date" name='data'>
+        <input type="date" name="data">
 
-        <h3>Ruolo</h3>
-        <label><input type="radio" name="ruolo" value="RevisoreESG"> Revisore ESG</label><br>
-        <label><input type="radio" name="ruolo" value="ResponsabileAziendale"> Responsabile Aziendale</label><br>
-        
+        <h3>Ruolo *</h3>
+        <label><input type="radio" name="ruolo" value="revisore" required> Revisore ESG</label><br>
+        <label><input type="radio" name="ruolo" value="responsabile"> Responsabile Aziendale</label><br>
+
+        <div id="cv_block" style="display:none">
+            <h3>CV (path al file):</h3>
+            <input type="text" name="cv" maxlength="500">
+        </div>
+
         <h3>Email:</h3>
         <div id="container">
             <div>
@@ -108,42 +94,38 @@
                 <button type="button" class="remove-btn">Remove</button>
             </div>
         </div>
-
         <input type="button" id="addEmail" value="Add Email">
 
         <script>
-            const container = document.getElementById('container');
-            const addButton = document.getElementById('addEmail');
-
-            addButton.addEventListener('click', () => {
-                const div = document.createElement('div');
-                div.innerHTML = `
-                    <input type="email" name="emails[]">
-                    <button type="button" class="remove-btn">Remove</button>
-                `;
-                container.appendChild(div);
+            // Mostra/nasconde il campo CV in base al ruolo selezionato
+            document.querySelectorAll('input[name="ruolo"]').forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    document.getElementById('cv_block').style.display =
+                        (this.value === 'responsabile') ? 'block' : 'none';
+                });
             });
 
-            container.addEventListener('click', (e) => {
+            const container = document.getElementById('container');
+            document.getElementById('addEmail').addEventListener('click', function() {
+                const div = document.createElement('div');
+                div.innerHTML = '<input type="email" name="emails[]"><button type="button" class="remove-btn">Remove</button>';
+                container.appendChild(div);
+            });
+            container.addEventListener('click', function(e) {
                 if (e.target.classList.contains('remove-btn')) {
-                    if (container.children.length > 1) {
-                        e.target.parentElement.remove();
-                    }
+                    if (container.children.length > 1) e.target.parentElement.remove();
                 }
             });
         </script>
 
-        <br>
-        <br>
-        <input type="submit" name='register' value="Register">
+        <br><br>
+        <input type="submit" name="register" value="Register">
     </form>
 
     <a href="home.php"><button>Home</button></a>
 
-    <?php
-        if ($message !== "" && $message !== "ok") {
-            echo "<h3 style='color: red;'>{$message}</h3>";
-        }    
-    ?>
+    <?php if ($message !== '' && $message !== 'ok'): ?>
+        <p><?= htmlspecialchars($message) ?></p>
+    <?php endif; ?>
 </body>
 </html>

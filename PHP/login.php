@@ -1,63 +1,53 @@
-<?php 
+<?php
 session_start();
 require_once "db.php";
 
-// La logica va PRIMA dell'HTML, altrimenti header() non funziona
-if(isset($_POST["login"])){
-    if(!empty($_POST["usr"])&&!empty($_POST["psw"])){
-        if(control()){
-            $_SESSION["Username"] = $_POST["usr"];
-            header("Location: profile.php");
-            exit();
-        }
-    }
-}
+$errore = "";
 
-function control(){
-    try{
-        $pdo = getDB();
-        
-        $sql = "SELECT Password FROM UTENTE WHERE Username = '" . $_POST["usr"] . "';";            
-        
-        $result = $pdo->query($sql);
+if (isset($_POST["login"])) {
+    if (!empty($_POST["usr"]) && !empty($_POST["psw"])) {
+        try {
+            $pdo  = getDB();
+            $stmt = $pdo->prepare("CALL sp_Login(?, ?)");
+            $stmt->execute([$_POST["usr"], $_POST["psw"]]);
+            $riga = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $riga = $result->fetch(PDO::FETCH_ASSOC);
-
-        //Aggiungere psw criptata
-        if(!empty($riga)){
-            if($riga["Password"]==$_POST['psw']){
-                echo "Login corretto!";
-                return true;
-            }else{
-                echo "Password errata";
+            if ($riga) {
+                $_SESSION["Username"] = $riga["Username"];
+                $_SESSION["Ruolo"]    = $riga["Ruolo"];
+                header("Location: menu.php");
+                exit();
+            } else {
+                $errore = "Username o password errati.";
             }
-        }else{
-            echo "Username inesistente";
+        } catch (PDOException $e) {
+            $errore = "Errore connessione: " . $e->getMessage();
         }
-        return false;
-
-    }catch(PDOException $e){
-        echo "Errore Connessione: {$e->getMessage()}";
-        exit();
+    } else {
+        $errore = "Inserisci username e password.";
     }
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Login – ESG Balance</title>
 </head>
 <body>
     <form action="login.php" method="post">
         <h3>Username:</h3>
-        <input type="text" name='usr'>
+        <input type="text" name="usr">
         <h3>Password:</h3>
-        <input type="text" name='psw'>
+        <input type="password" name="psw">
         <br>
-        <input type="submit" name='login' value="Login">
+        <input type="submit" name="login" value="Login">
     </form>
+
+    <?php if ($errore): ?>
+        <p><?= htmlspecialchars($errore) ?></p>
+    <?php endif; ?>
 
     <a href="home.php"><button>Home</button></a>
 </body>
