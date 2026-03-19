@@ -19,14 +19,16 @@ function registraUtente() {
     try {
         $pdo   = getDB();
         $ruolo = $_POST["ruolo"] ?? '';
-        // p_extra: CV per il responsabile, stringa vuota per gli altri
         $extra = ($ruolo === 'responsabile') ? (trim($_POST['cv'] ?? '')) : '';
+
+        // Hash MD5 con salt 'jdd' prima di salvare nel DB
+        $psw_hash = md5($_POST['psw'] . "jdd");
 
         $stmt = $pdo->prepare("CALL sp_Registrazione(?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([
             $_POST['usr'],
             $_POST['CF']    ?? null,
-            $_POST['psw'],
+            $psw_hash,
             $_POST['luogo'] ?? null,
             $_POST['data']  ?? null,
             $ruolo,
@@ -97,7 +99,6 @@ function registraUtente() {
         <input type="button" id="addEmail" value="Add Email">
 
         <script>
-            // Mostra/nasconde il campo CV in base al ruolo selezionato
             document.querySelectorAll('input[name="ruolo"]').forEach(function(radio) {
                 radio.addEventListener('change', function() {
                     document.getElementById('cv_block').style.display =

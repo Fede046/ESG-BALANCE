@@ -6,14 +6,16 @@ DROP DATABASE IF EXISTS TEST;
 CREATE DATABASE TEST;
 USE TEST;
 
+
 -- 1. UTENTE  (nessuna dipendenza)
 CREATE TABLE UTENTE (
     Username VARCHAR(30) PRIMARY KEY,
     CodiceFiscale VARCHAR(30),
-    Password VARCHAR(30) NOT NULL,
+    Password VARCHAR(32) NOT NULL,   -- MD5 produce sempre 32 caratteri hex
     Luogo VARCHAR(30),
     Data VARCHAR(30)
 );
+
 
 -- 2. EMAIL  (dipende da UTENTE)
 CREATE TABLE EMAIL (
@@ -22,6 +24,7 @@ CREATE TABLE EMAIL (
     PRIMARY KEY (Username_Utente, Indirizzo),
     FOREIGN KEY (Username_Utente) REFERENCES UTENTE(Username)
 );
+
 
 -- 3. Sottotipi di UTENTE  (dipendono da UTENTE)
 --    NOTA: il vincolo "un amministratore non può essere anche
@@ -46,6 +49,7 @@ CREATE TABLE RESPONSABILE_AZIENDALE (
     FOREIGN KEY (Username) REFERENCES UTENTE(Username)
 );
 
+
 -- 4. COMPETENZA  (dipende da REVISORE_ESG)
 CREATE TABLE COMPETENZA (
     Nome VARCHAR(30) NOT NULL,
@@ -53,6 +57,7 @@ CREATE TABLE COMPETENZA (
     PRIMARY KEY (Username, Nome),
     FOREIGN KEY (Username) REFERENCES REVISORE_ESG(Username)
 );
+
 
 -- 5. DICHIARA_COMPETENZA_REVISORE (dipende da COMPETENZA e REVISORE_ESG)
 CREATE TABLE DICHIARA_COMPETENZA_REVISORE (
@@ -65,6 +70,7 @@ CREATE TABLE DICHIARA_COMPETENZA_REVISORE (
     CONSTRAINT CHK_Valutazione CHECK (Livello >= 0 AND Livello <= 5)
 );
 
+
 -- 6. INDICATORE_ESG  (dipende da AMMINISTRATORE)
 CREATE TABLE INDICATORE_ESG (
     Nome VARCHAR(30) PRIMARY KEY,
@@ -74,6 +80,7 @@ CREATE TABLE INDICATORE_ESG (
     FOREIGN KEY (Username_Amministratore) REFERENCES AMMINISTRATORE(Username),
     CONSTRAINT CHK_Rilevanza CHECK (Rilevanza >= 0 AND Rilevanza <= 10)
 );
+
 
 -- 7. Sottotipi di INDICATORE_ESG  (dipendono da INDICATORE_ESG)
 CREATE TABLE ESG_AMBIENTALE (
@@ -89,6 +96,7 @@ CREATE TABLE ESG_INDICATORE_SOCIALE (
     FOREIGN KEY (NomeEsg) REFERENCES INDICATORE_ESG(Nome)
 );
 
+
 -- 8. VOCE  (dipende da amministratore)
 CREATE TABLE VOCE (
     Nome VARCHAR(30) PRIMARY KEY,
@@ -96,6 +104,7 @@ CREATE TABLE VOCE (
     Username_Amministratore VARCHAR(30) NOT NULL,
     FOREIGN KEY (Username_Amministratore) REFERENCES AMMINISTRATORE(Username)
 );
+
 
 -- 9. AZIENDA  (dipende da RESPONSABILE_AZIENDALE)
 CREATE TABLE AZIENDA (
@@ -109,6 +118,7 @@ CREATE TABLE AZIENDA (
     Username_Responsabile_Aziendale VARCHAR(30) NOT NULL,
     FOREIGN KEY (Username_Responsabile_Aziendale) REFERENCES RESPONSABILE_AZIENDALE(Username)
 );
+
 
 -- 10. BILANCIO  (dipende da AZIENDA)
 CREATE TABLE BILANCIO (
@@ -124,6 +134,7 @@ CREATE TABLE BILANCIO (
     PRIMARY KEY (id, Ragione_sociale_azienda),
     FOREIGN KEY (Ragione_sociale_azienda) REFERENCES AZIENDA(Ragione_sociale)
 );
+
 
 -- 11. GIUDIZIO  (dipende da REVISORE_ESG e BILANCIO)
 CREATE TABLE GIUDIZIO (
@@ -142,6 +153,7 @@ CREATE TABLE GIUDIZIO (
     FOREIGN KEY (Username) REFERENCES REVISORE_ESG(Username)
 );
 
+
 -- 12. VALUTA_REVISORE_BILANCIO (dipende da REVISORE_ESG e BILANCIO)
 CREATE TABLE VALUTA_REVISORE_BILANCIO (
     Username_Revisore_ESG VARCHAR(30) NOT NULL,
@@ -151,6 +163,7 @@ CREATE TABLE VALUTA_REVISORE_BILANCIO (
     FOREIGN KEY (Username_Revisore_ESG) REFERENCES REVISORE_ESG(Username),
     FOREIGN KEY (id_bilancio, Ragione_sociale_bilancio) REFERENCES BILANCIO(id, Ragione_sociale_azienda)
 );
+
 
 -- 13. ASSOCIA_BILANCIO_VOCE  (dipende da BILANCIO e VOCE)
 CREATE TABLE ASSOCIA_BILANCIO_VOCE (
@@ -163,7 +176,8 @@ CREATE TABLE ASSOCIA_BILANCIO_VOCE (
     FOREIGN KEY (Nome_voce) REFERENCES VOCE(Nome)
 );
 
--- 14. NOTA  
+
+-- 14. NOTA
 CREATE TABLE NOTA (
     ID INT PRIMARY KEY AUTO_INCREMENT,
     Data DATETIME,
@@ -176,16 +190,15 @@ CREATE TABLE NOTA (
     FOREIGN KEY (NomeVoce, id_bilancio, Ragione_sociale_bilancio) REFERENCES ASSOCIA_BILANCIO_VOCE(Nome_voce, id_bilancio, Ragione_sociale_bilancio)
 );
 
--- 15. COLLEGA_ESG_VOCE 
+
+-- 15. COLLEGA_ESG_VOCE
 CREATE TABLE COLLEGA_ESG_VOCE (
     NomeVoce VARCHAR(30) NOT NULL,
     NomeEsg VARCHAR(30) NOT NULL,
     Fonte VARCHAR(30),
-    Valore DECIMAL(10, 2), 
+    Valore DECIMAL(10, 2),
     Data DATETIME,
     PRIMARY KEY (NomeVoce, NomeEsg),
     FOREIGN KEY (NomeVoce) REFERENCES VOCE(Nome),
     FOREIGN KEY (NomeEsg) REFERENCES INDICATORE_ESG(Nome)
 );
-
-

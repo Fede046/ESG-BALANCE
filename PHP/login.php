@@ -7,9 +7,12 @@ $errore = "";
 if (isset($_POST["login"])) {
     if (!empty($_POST["usr"]) && !empty($_POST["psw"])) {
         try {
-            $pdo  = getDB();
+            $pdo = getDB();
+            // Hash MD5 con salt 'jdd' prima di confrontare col DB
+            $psw_hash = md5($_POST["psw"] . "jdd");
+
             $stmt = $pdo->prepare("CALL sp_Login(?, ?)");
-            $stmt->execute([$_POST["usr"], $_POST["psw"]]);
+            $stmt->execute([$_POST["usr"], $psw_hash]);
             $riga = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($riga) {
