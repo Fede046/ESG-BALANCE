@@ -2,13 +2,11 @@
 session_start();
 require_once "../db.php";
 
-// Controllo login
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
 
-// Controllo ruolo
 if ($_SESSION["Ruolo"] !== "responsabile") {
     header("Location: ../menu.php");
     exit();
@@ -19,24 +17,20 @@ $pdo       = getDB();
 $messaggio = "";
 $errore    = "";
 
-// Registra azienda
 if (isset($_POST["registra_azienda"])) {
     $ragione_sociale = trim($_POST["ragione_sociale"]);
     $nome            = trim($_POST["nome"]);
     $piva            = trim($_POST["piva"]);
-    $settore         = trim($_POST["settore"]);
-    $n_dip           = (int)$_POST["n_dip"];
+    $settore         = trim($_POST["settore"]) ?: null;
+    $n_dip           = (int)($_POST["n_dip"] ?? 0);
     $logo            = trim($_POST["logo"]) ?: null;
 
     if ($ragione_sociale === "" || $nome === "" || $piva === "") {
         $errore = "Ragione sociale, nome e partita IVA sono obbligatori.";
     } else {
         try {
-            $pdo->prepare(
-                "INSERT INTO AZIENDA
-                    (Ragione_sociale, Nome, p_IVA, Settore, n_dip, logo, nr_bilanci, Username_Responsabile_Aziendale)
-                 VALUES (?, ?, ?, ?, ?, ?, 0, ?)"
-            )->execute([$ragione_sociale, $nome, $piva, $settore, $n_dip, $logo, $username]);
+            $stmt = $pdo->prepare("CALL sp_RegistraAzienda(?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$ragione_sociale, $nome, $piva, $settore, $n_dip, $logo, $username]);
             $messaggio = "Azienda '$ragione_sociale' registrata.";
         } catch (PDOException $e) {
             if ($e->errorInfo[1] == 1062) {
@@ -73,8 +67,8 @@ try {
 <body>
     <h1>Registra Azienda</h1>
 
-    <?php if ($messaggio): ?><p style="color:green"><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
-    <?php if ($errore):    ?><p style="color:red"><?= htmlspecialchars($errore) ?></p><?php endif; ?>
+    <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
+    <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
     <form action="registra_azienda.php" method="post">
         <label>Ragione Sociale * (max 30 caratteri)</label><br>
@@ -84,7 +78,7 @@ try {
         <input type="text" name="nome" maxlength="30" required><br>
 
         <label>Partita IVA *</label><br>
-        <input type="text" name="piva" required><br>
+        <input type="number" name="piva" required><br>
 
         <label>Settore (max 30 caratteri)</label><br>
         <input type="text" name="settore" maxlength="30"><br>
@@ -92,7 +86,7 @@ try {
         <label>Numero dipendenti</label><br>
         <input type="number" name="n_dip" min="0" value="0"><br>
 
-        <label>Logo (path al file, opzionale)</label><br>
+        <label>Logo (path al file, opzionale, max 30 caratteri)</label><br>
         <input type="text" name="logo" maxlength="30"><br>
 
         <input type="submit" name="registra_azienda" value="Registra Azienda">
