@@ -2,13 +2,11 @@
 session_start();
 require_once "../db.php";
 
-// Controllo login
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
 
-// Controllo ruolo
 if ($_SESSION["Ruolo"] !== "revisore") {
     header("Location: ../menu.php");
     exit();
@@ -19,10 +17,9 @@ $pdo       = getDB();
 $messaggio = "";
 $errore    = "";
 
-// Inserisci nota
 if (isset($_POST["inserisci_nota"])) {
-    $id_bil  = (int)$_POST["id_bilancio"];
-    $rag_soc = trim($_POST["ragione_sociale"]);
+    $id_bil    = (int)$_POST["id_bilancio"];
+    $rag_soc   = trim($_POST["ragione_sociale"]);
     $nome_voce = trim($_POST["nome_voce"]);
     $testo     = trim($_POST["testo"]);
 
@@ -38,7 +35,7 @@ if (isset($_POST["inserisci_nota"])) {
         if ($stmt->fetchColumn() == 0) {
             $errore = "Non sei assegnato a questo bilancio.";
         } else {
-            // Verifica che la voce appartenga al bilancio selezionato
+            // Verifica che la voce appartenga al bilancio
             $stmt2 = $pdo->prepare(
                 "SELECT COUNT(*) FROM ASSOCIA_BILANCIO_VOCE
                  WHERE Nome_voce = ? AND id_bilancio = ? AND Ragione_sociale_bilancio = ?"
@@ -48,10 +45,9 @@ if (isset($_POST["inserisci_nota"])) {
                 $errore = "La voce selezionata non appartiene a questo bilancio.";
             } else {
                 try {
-                    $pdo->prepare(
-                        "INSERT INTO NOTA (Data, Testo, NomeVoce, Username_Revisore_ESG)
-                         VALUES (NOW(), ?, ?, ?)"
-                    )->execute([$testo, $nome_voce, $username]);
+                    // sp_InserisciNotaVoce(p_testo, p_nome_voce, p_username_revisore, p_id_bilancio, p_ragione_sociale)
+                    $stmt3 = $pdo->prepare("CALL sp_InserisciNotaVoce(?, ?, ?, ?, ?)");
+                    $stmt3->execute([$testo, $nome_voce, $username, $id_bil, $rag_soc]);
                     $messaggio = "Nota inserita sulla voce '$nome_voce' del bilancio #$id_bil.";
                 } catch (PDOException $e) {
                     $errore = "Errore DB: " . $e->getMessage();
@@ -78,10 +74,11 @@ try {
     $errore = "Errore lettura bilanci: " . $e->getMessage();
 }
 
-// Voci del bilancio selezionato (popolate via JS oppure tutte se nessun bilancio selezionato)
-$id_sel  = isset($_GET["id_bilancio"]) ? (int)$_GET["id_bilancio"] : 0;
+// Bilancio selezionato via GET
+$id_sel  = isset($_GET["id_bilancio"])     ? (int)$_GET["id_bilancio"]              : 0;
 $rag_sel = isset($_GET["ragione_sociale"]) ? trim($_GET["ragione_sociale"]) : "";
 
+// Voci del bilancio selezionato
 $voci = [];
 if ($id_sel > 0 && $rag_sel !== "") {
     try {
@@ -102,7 +99,7 @@ if ($id_sel > 0 && $rag_sel !== "") {
 $note = [];
 try {
     $stmt = $pdo->prepare(
-        "SELECT n.Data, n.NomeVoce, n.Testo
+        "SELECT n.Data, n.NomeVoce, n.id_bilancio, n.Ragione_sociale_bilancio, n.Testo
          FROM NOTA n
          WHERE n.Username_Revisore_ESG = ?
          ORDER BY n.Data DESC"
@@ -123,10 +120,9 @@ try {
 <body>
     <h1>Inserisci Nota su Voce di Bilancio</h1>
 
-    <?php if ($messaggio): ?><p style="color:green"><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
-    <?php if ($errore):    ?><p style="color:red"><?= htmlspecialchars($errore) ?></p><?php endif; ?>
+    <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
+    <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
-    <!-- Step 1: seleziona bilancio -->
     <h2>1. Seleziona Bilancio Assegnato</h2>
     <?php if ($bilanci): ?>
         <table border="1">
@@ -148,11 +144,10 @@ try {
         <p>Nessun bilancio assegnato.</p>
     <?php endif; ?>
 
-    <!-- Step 2: inserisci nota (solo se bilancio selezionato) -->
     <?php if ($id_sel > 0 && $rag_sel !== ""): ?>
         <h2>2. Inserisci Nota &mdash; Bilancio #<?= htmlspecialchars($id_sel) ?> (<?= htmlspecialchars($rag_sel) ?>)</h2>
         <form action="inserisci_nota.php" method="post">
-            <input type="hidden" name="id_bilancio" value="<?= htmlspecialchars($id_sel) ?>">
+            <input type="hidden" name="id_bilancio"     value="<?= htmlspecialchars($id_sel) ?>">
             <input type="hidden" name="ragione_sociale" value="<?= htmlspecialchars($rag_sel) ?>">
 
             <label>Voce contabile *</label><br>
@@ -177,11 +172,13 @@ try {
     <?php if ($note): ?>
         <h2>Le tue note (<?= count($note) ?>)</h2>
         <table border="1">
-            <tr><th>Data</th><th>Voce</th><th>Testo</th></tr>
+            <tr><th>Data</th><th>Voce</th><th>Bilancio</th><th>Azienda</th><th>Testo</th></tr>
             <?php foreach ($note as $r): ?>
                 <tr>
                     <td><?= htmlspecialchars($r["Data"]) ?></td>
                     <td><?= htmlspecialchars($r["NomeVoce"]) ?></td>
+                    <td><?= htmlspecialchars($r["id_bilancio"]) ?></td>
+                    <td><?= htmlspecialchars($r["Ragione_sociale_bilancio"]) ?></td>
                     <td><?= htmlspecialchars($r["Testo"]) ?></td>
                 </tr>
             <?php endforeach; ?>

@@ -2,13 +2,11 @@
 session_start();
 require_once "../db.php";
 
-// Controllo login
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
 
-// Controllo ruolo
 if ($_SESSION["Ruolo"] !== "revisore") {
     header("Location: ../menu.php");
     exit();
@@ -19,7 +17,6 @@ $pdo       = getDB();
 $messaggio = "";
 $errore    = "";
 
-// Inserisci giudizio
 if (isset($_POST["inserisci_giudizio"])) {
     $id_bil  = (int)$_POST["id_bilancio"];
     $rag_soc = trim($_POST["ragione_sociale"]);
@@ -30,11 +27,10 @@ if (isset($_POST["inserisci_giudizio"])) {
         $errore = "ID bilancio, ragione sociale ed esito sono obbligatori.";
     } else {
         try {
-            $pdo->prepare(
-                "INSERT INTO GIUDIZIO
-                    (Esito, Data, Rilievi, Username, id_bilancio, Ragione_sociale_bilancio)
-                 VALUES (?, NOW(), ?, ?, ?, ?)"
-            )->execute([$esito, $rilievi, $username, $id_bil, $rag_soc]);
+            // sp_InserisciGiudizioComplessivo(p_id_giudizio, p_esito, p_rilievi, p_username_revisore, p_id_bilancio, p_ragione_sociale)
+            // p_id_giudizio = NULL perché Id è AUTO_INCREMENT
+            $stmt = $pdo->prepare("CALL sp_InserisciGiudizioComplessivo(NULL, ?, ?, ?, ?, ?)");
+            $stmt->execute([$esito, $rilievi, $username, $id_bil, $rag_soc]);
             $messaggio = "Giudizio inserito sul bilancio #$id_bil ($rag_soc).";
         } catch (PDOException $e) {
             $errore = "Errore DB: " . $e->getMessage();
@@ -42,15 +38,14 @@ if (isset($_POST["inserisci_giudizio"])) {
     }
 }
 
-// Lettura bilanci assegnati al revisore loggato
+// Bilanci assegnati al revisore loggato
 $bilanci = [];
 try {
     $stmt = $pdo->prepare(
         "SELECT b.id, b.Ragione_sociale_azienda, b.Stato
          FROM BILANCIO b
          JOIN VALUTA_REVISORE_BILANCIO v
-           ON b.id = v.id_bilancio
-          AND b.Ragione_sociale_azienda = v.Ragione_sociale_bilancio
+           ON b.id = v.id_bilancio AND b.Ragione_sociale_azienda = v.Ragione_sociale_bilancio
          WHERE v.Username_Revisore_ESG = ?
          ORDER BY b.id DESC"
     );
@@ -60,7 +55,7 @@ try {
     $errore = "Errore lettura bilanci: " . $e->getMessage();
 }
 
-// Lettura giudizi già inseriti dal revisore loggato
+// Giudizi già inseriti dal revisore loggato
 $giudizi = [];
 try {
     $stmt = $pdo->prepare(
@@ -85,15 +80,21 @@ try {
 <body>
     <h1>Inserisci Giudizio su Bilancio</h1>
 
-    <?php if ($messaggio): ?><p style="color:green"><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
-    <?php if ($errore):    ?><p style="color:red"><?= htmlspecialchars($errore) ?></p><?php endif; ?>
+    <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
+    <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
     <form action="inserisci_giudizio.php" method="post">
-        <label>ID Bilancio *</label><br>
-        <input type="number" name="id_bilancio" min="1" required><br>
-
-        <label>Ragione Sociale Azienda * (max 30 caratteri)</label><br>
-        <input type="text" name="ragione_sociale" maxlength="30" required><br>
+        <label>Bilancio assegnato *</label><br>
+        <select name="id_bilancio" required onchange="sincronizzaRagioneSociale(this)">
+            <option value="">-- seleziona bilancio --</option>
+            <?php foreach ($bilanci as $b): ?>
+                <option value="<?= htmlspecialchars($b["id"]) ?>"
+                        data-ragione="<?= htmlspecialchars($b["Ragione_sociale_azienda"]) ?>">
+                    #<?= htmlspecialchars($b["id"]) ?> — <?= htmlspecialchars($b["Ragione_sociale_azienda"]) ?> (<?= htmlspecialchars($b["Stato"]) ?>)
+                </option>
+            <?php endforeach; ?>
+        </select><br>
+        <input type="hidden" name="ragione_sociale" id="ragione_sociale_hidden">
 
         <label>Esito *</label><br>
         <select name="esito" required>
@@ -108,6 +109,13 @@ try {
 
         <input type="submit" name="inserisci_giudizio" value="Inserisci Giudizio">
     </form>
+
+    <script>
+    function sincronizzaRagioneSociale(sel) {
+        var opt = sel.options[sel.selectedIndex];
+        document.getElementById('ragione_sociale_hidden').value = opt.dataset.ragione || '';
+    }
+    </script>
 
     <?php if ($bilanci): ?>
         <h2>Bilanci assegnati a te</h2>

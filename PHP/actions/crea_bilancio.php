@@ -2,13 +2,11 @@
 session_start();
 require_once "../db.php";
 
-// Controllo login
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
 
-// Controllo ruolo
 if ($_SESSION["Ruolo"] !== "responsabile") {
     header("Location: ../menu.php");
     exit();
@@ -19,7 +17,7 @@ $pdo       = getDB();
 $messaggio = "";
 $errore    = "";
 
-// Crea bilancio
+// Crea bilancio tramite SP
 if (isset($_POST["crea_bilancio"])) {
     $rag_soc = trim($_POST["ragione_sociale"]);
     $id_bil  = (int)$_POST["id_bilancio"];
@@ -28,18 +26,8 @@ if (isset($_POST["crea_bilancio"])) {
         $errore = "Ragione sociale e ID bilancio sono obbligatori.";
     } else {
         try {
-            // Inserisce il bilancio con stato 'bozza'
-            $pdo->prepare(
-                "INSERT INTO BILANCIO (id, Ragione_sociale_azienda, Data_creazione, Stato)
-                 VALUES (?, ?, NOW(), 'bozza')"
-            )->execute([$id_bil, $rag_soc]);
-
-            // Aggiorna il contatore nr_bilanci dell'azienda
-            $pdo->prepare(
-                "UPDATE AZIENDA SET nr_bilanci = nr_bilanci + 1
-                 WHERE Ragione_sociale = ?"
-            )->execute([$rag_soc]);
-
+            $stmt = $pdo->prepare("CALL sp_CreaBilancioEsercizio(?, ?)");
+            $stmt->execute([$id_bil, $rag_soc]);
             $messaggio = "Bilancio #$id_bil creato per '$rag_soc'.";
         } catch (PDOException $e) {
             if ($e->errorInfo[1] == 1062) {
@@ -51,22 +39,20 @@ if (isset($_POST["crea_bilancio"])) {
     }
 }
 
-// Associa voce al bilancio
+// Associa voce al bilancio tramite SP
 if (isset($_POST["associa_voce"])) {
     $rag_soc   = trim($_POST["ragione_sociale_voce"]);
     $id_bil    = (int)$_POST["id_bilancio_voce"];
     $nome_voce = trim($_POST["nome_voce"]);
+    $valore    = (int)$_POST["valore"];
 
     if ($rag_soc === "" || $id_bil <= 0 || $nome_voce === "") {
         $errore = "Tutti i campi sono obbligatori.";
     } else {
         try {
-            $pdo->prepare(
-                "INSERT INTO ASSOCIA_BILANCIO_VOCE
-                    (Nome_voce, id_bilancio, Ragione_sociale_bilancio)
-                 VALUES (?, ?, ?)"
-            )->execute([$nome_voce, $id_bil, $rag_soc]);
-            $messaggio = "Voce '$nome_voce' associata al bilancio #$id_bil.";
+            $stmt = $pdo->prepare("CALL sp_PopolaBilancioEsercizio(?, ?, ?, ?)");
+            $stmt->execute([$id_bil, $nome_voce, $rag_soc, $valore]);
+            $messaggio = "Voce '$nome_voce' (valore: $valore) associata al bilancio #$id_bil.";
         } catch (PDOException $e) {
             if ($e->errorInfo[1] == 1062) {
                 $errore = "Errore: questa voce è già associata al bilancio.";
@@ -91,12 +77,10 @@ try {
     $errore = "Errore lettura aziende: " . $e->getMessage();
 }
 
-// Lettura voci disponibili nel template
+// Lettura voci disponibili
 $voci = [];
 try {
-    $voci = $pdo->query(
-        "SELECT Nome FROM VOCE ORDER BY Nome"
-    )->fetchAll(PDO::FETCH_ASSOC);
+    $voci = $pdo->query("SELECT Nome FROM VOCE ORDER BY Nome")->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $errore = "Errore lettura VOCE: " . $e->getMessage();
 }
@@ -127,10 +111,9 @@ try {
 <body>
     <h1>Crea Bilancio di Esercizio</h1>
 
-    <?php if ($messaggio): ?><p style="color:green"><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
-    <?php if ($errore):    ?><p style="color:red"><?= htmlspecialchars($errore) ?></p><?php endif; ?>
+    <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
+    <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
-    <!-- Form crea bilancio -->
     <h2>Nuovo Bilancio</h2>
     <form action="crea_bilancio.php" method="post">
         <label>Ragione Sociale Azienda *</label><br>
@@ -149,7 +132,6 @@ try {
         <input type="submit" name="crea_bilancio" value="Crea Bilancio">
     </form>
 
-    <!-- Form associa voce al bilancio -->
     <h2>Associa Voce al Bilancio</h2>
     <form action="crea_bilancio.php" method="post">
         <label>Ragione Sociale Azienda *</label><br>
@@ -175,10 +157,12 @@ try {
             <?php endforeach; ?>
         </select><br>
 
+        <label>Valore *</label><br>
+        <input type="number" name="valore" required><br>
+
         <input type="submit" name="associa_voce" value="Associa Voce">
     </form>
 
-    <!-- Tabella bilanci esistenti -->
     <?php if ($bilanci): ?>
         <h2>I tuoi bilanci (<?= count($bilanci) ?>)</h2>
         <table border="1">
