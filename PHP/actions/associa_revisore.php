@@ -2,13 +2,10 @@
 session_start();
 require_once "../db.php";
 
-// Controllo login
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
-
-// Controllo ruolo
 if ($_SESSION["Ruolo"] !== "amministratore") {
     header("Location: ../menu.php");
     exit();
@@ -18,7 +15,6 @@ $pdo       = getDB();
 $messaggio = "";
 $errore    = "";
 
-// Associa revisore a bilancio
 if (isset($_POST["associa_revisore"])) {
     $id_bil  = (int)$_POST["id_bilancio"];
     $rag_soc = trim($_POST["ragione_sociale"]);
@@ -37,18 +33,17 @@ if (isset($_POST["associa_revisore"])) {
             $messaggio = "Revisore '$rev' associato al bilancio #$id_bil ($rag_soc).";
 
             require_once "../db_mongo.php";
-            logEvento('revisioni_log', [
-                'username_revisore' => $rev,
-                'id_bilancio'       => $id_bil,
-                'ragione_sociale'   => $rag_soc,
-            ]);
+            logEvento(
+                'ASSIGN_REVISORE',
+                "Revisore $rev assigned to bilancio #$id_bil",
+                0, $id_bil
+            );
         } catch (PDOException $e) {
             $errore = "Errore DB: " . $e->getMessage();
         }
     }
 }
 
-// Lettura revisori disponibili
 $revisori = [];
 try {
     $revisori = $pdo->query(
@@ -58,7 +53,6 @@ try {
     $errore = "Errore lettura REVISORE_ESG: " . $e->getMessage();
 }
 
-// Lettura ultimi 50 bilanci
 $bilanci = [];
 try {
     $bilanci = $pdo->query(
@@ -102,7 +96,7 @@ try {
     </form>
 
     <?php if ($bilanci): ?>
-        <h2>Ultimi 50 bilanci <small>(riferimento per ID e Ragione Sociale)</small></h2>
+        <h2>Ultimi 50 bilanci</h2>
         <table border="1">
             <tr><th>ID</th><th>Azienda</th><th>Stato</th></tr>
             <?php foreach ($bilanci as $r): ?>

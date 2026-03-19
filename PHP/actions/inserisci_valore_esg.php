@@ -2,13 +2,10 @@
 session_start();
 require_once "../db.php";
 
-// Controllo login
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
-
-// Controllo ruolo
 if ($_SESSION["Ruolo"] !== "responsabile") {
     header("Location: ../menu.php");
     exit();
@@ -19,7 +16,6 @@ $pdo       = getDB();
 $messaggio = "";
 $errore    = "";
 
-// Inserisci valore ESG
 if (isset($_POST["inserisci_valore"])) {
     $id_bil    = (int)$_POST["id_bilancio"];
     $rag_soc   = trim($_POST["ragione_sociale"]);
@@ -31,7 +27,6 @@ if (isset($_POST["inserisci_valore"])) {
     if ($id_bil <= 0 || $rag_soc === "" || $nome_voce === "" || $nome_esg === "" || $valore === "") {
         $errore = "Tutti i campi obbligatori devono essere compilati.";
     } else {
-        // Verifica che il bilancio appartenga a un'azienda del responsabile loggato
         $stmt = $pdo->prepare(
             "SELECT COUNT(*) FROM BILANCIO b
              JOIN AZIENDA a ON b.Ragione_sociale_azienda = a.Ragione_sociale
@@ -42,7 +37,6 @@ if (isset($_POST["inserisci_valore"])) {
         if ($stmt->fetchColumn() == 0) {
             $errore = "Bilancio non trovato o non di tua competenza.";
         } else {
-            // Verifica che la voce sia associata a quel bilancio
             $stmt2 = $pdo->prepare(
                 "SELECT COUNT(*) FROM ASSOCIA_BILANCIO_VOCE
                  WHERE Nome_voce = ? AND id_bilancio = ? AND Ragione_sociale_bilancio = ?"
@@ -61,11 +55,11 @@ if (isset($_POST["inserisci_valore"])) {
                     $messaggio = "Valore ESG inserito per voce '$nome_voce' — indicatore '$nome_esg'.";
 
                     require_once "../db_mongo.php";
-                    logEvento('valori_esg_log', [
-                        'voce'       => $nome_voce,
-                        'indicatore' => $nome_esg,
-                        'valore'     => (float)$valore,
-                    ]);
+                    logEvento(
+                        'INSERT_ESG',
+                        "ESG value inserted: $nome_voce - $nome_esg",
+                        0, $id_bil
+                    );
                 } catch (PDOException $e) {
                     $errore = "Errore DB: " . $e->getMessage();
                 }
@@ -74,7 +68,6 @@ if (isset($_POST["inserisci_valore"])) {
     }
 }
 
-// Bilanci delle aziende del responsabile loggato
 $bilanci = [];
 try {
     $stmt = $pdo->prepare(
@@ -90,11 +83,9 @@ try {
     $errore = "Errore lettura bilanci: " . $e->getMessage();
 }
 
-// Bilancio selezionato (via GET)
 $id_sel  = isset($_GET["id_bilancio"]) ? (int)$_GET["id_bilancio"] : 0;
 $rag_sel = isset($_GET["ragione_sociale"]) ? trim($_GET["ragione_sociale"]) : "";
 
-// Voci del bilancio selezionato
 $voci = [];
 if ($id_sel > 0 && $rag_sel !== "") {
     try {
@@ -111,7 +102,6 @@ if ($id_sel > 0 && $rag_sel !== "") {
     }
 }
 
-// Indicatori ESG disponibili
 $indicatori = [];
 try {
     $indicatori = $pdo->query(
@@ -121,7 +111,6 @@ try {
     $errore = "Errore lettura INDICATORE_ESG: " . $e->getMessage();
 }
 
-// Valori ESG già inseriti per il bilancio selezionato
 $valori = [];
 if ($id_sel > 0 && $rag_sel !== "") {
     try {
@@ -154,7 +143,6 @@ if ($id_sel > 0 && $rag_sel !== "") {
     <?php if ($messaggio): ?><p style="color:green"><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
     <?php if ($errore):    ?><p style="color:red"><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
-    <!-- Step 1: seleziona bilancio -->
     <h2>1. Seleziona Bilancio</h2>
     <?php if ($bilanci): ?>
         <table border="1">
@@ -176,12 +164,11 @@ if ($id_sel > 0 && $rag_sel !== "") {
         <p>Nessun bilancio disponibile.</p>
     <?php endif; ?>
 
-    <!-- Step 2: form inserimento (solo se bilancio selezionato) -->
     <?php if ($id_sel > 0 && $rag_sel !== ""): ?>
         <h2>2. Inserisci Valore ESG &mdash; Bilancio #<?= htmlspecialchars($id_sel) ?> (<?= htmlspecialchars($rag_sel) ?>)</h2>
 
         <?php if (empty($voci)): ?>
-            <p style="color:orange">Nessuna voce associata a questo bilancio. Aggiungile prima dalla pagina "Crea Bilancio".</p>
+            <p style="color:orange">Nessuna voce associata a questo bilancio.</p>
         <?php else: ?>
             <form action="inserisci_valore_esg.php" method="post">
                 <input type="hidden" name="id_bilancio" value="<?= htmlspecialchars($id_sel) ?>">
@@ -218,7 +205,7 @@ if ($id_sel > 0 && $rag_sel !== "") {
         <?php endif; ?>
 
         <?php if ($valori): ?>
-            <h2>Valori ESG già inseriti per questo bilancio (<?= count($valori) ?>)</h2>
+            <h2>Valori ESG già inseriti (<?= count($valori) ?>)</h2>
             <table border="1">
                 <tr><th>Voce</th><th>Indicatore ESG</th><th>Valore</th><th>Fonte</th><th>Data</th></tr>
                 <?php foreach ($valori as $r): ?>

@@ -2,13 +2,10 @@
 session_start();
 require_once "../db.php";
 
-// Controllo login
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
-
-// Controllo ruolo
 if ($_SESSION["Ruolo"] !== "responsabile") {
     header("Location: ../menu.php");
     exit();
@@ -19,7 +16,6 @@ $pdo       = getDB();
 $messaggio = "";
 $errore    = "";
 
-// Crea bilancio
 if (isset($_POST["crea_bilancio"])) {
     $rag_soc = trim($_POST["ragione_sociale"]);
     $id_bil  = (int)$_POST["id_bilancio"];
@@ -28,13 +24,11 @@ if (isset($_POST["crea_bilancio"])) {
         $errore = "Ragione sociale e ID bilancio sono obbligatori.";
     } else {
         try {
-            // Inserisce il bilancio con stato 'bozza'
             $pdo->prepare(
                 "INSERT INTO BILANCIO (id, Ragione_sociale_azienda, Data_creazione, Stato)
                  VALUES (?, ?, NOW(), 'bozza')"
             )->execute([$id_bil, $rag_soc]);
 
-            // Aggiorna il contatore nr_bilanci dell'azienda
             $pdo->prepare(
                 "UPDATE AZIENDA SET nr_bilanci = nr_bilanci + 1
                  WHERE Ragione_sociale = ?"
@@ -43,11 +37,11 @@ if (isset($_POST["crea_bilancio"])) {
             $messaggio = "Bilancio #$id_bil creato per '$rag_soc'.";
 
             require_once "../db_mongo.php";
-            logEvento('bilanci_log', [
-                'username_responsabile' => $username,
-                'ragione_sociale'       => $rag_soc,
-                'id_bilancio'           => $id_bil,
-            ]);
+            logEvento(
+                'CREATE_BILANCIO',
+                "Bilancio #$id_bil created for: $rag_soc",
+                0, $id_bil
+            );
         } catch (PDOException $e) {
             if ($e->errorInfo[1] == 1062) {
                 $errore = "Errore: un bilancio con questo ID esiste già per questa azienda.";
@@ -58,7 +52,6 @@ if (isset($_POST["crea_bilancio"])) {
     }
 }
 
-// Associa voce al bilancio
 if (isset($_POST["associa_voce"])) {
     $rag_soc   = trim($_POST["ragione_sociale_voce"]);
     $id_bil    = (int)$_POST["id_bilancio_voce"];
@@ -84,7 +77,6 @@ if (isset($_POST["associa_voce"])) {
     }
 }
 
-// Lettura aziende del responsabile loggato
 $aziende = [];
 try {
     $stmt = $pdo->prepare(
@@ -98,7 +90,6 @@ try {
     $errore = "Errore lettura aziende: " . $e->getMessage();
 }
 
-// Lettura voci disponibili nel template
 $voci = [];
 try {
     $voci = $pdo->query(
@@ -108,7 +99,6 @@ try {
     $errore = "Errore lettura VOCE: " . $e->getMessage();
 }
 
-// Lettura bilanci delle aziende del responsabile
 $bilanci = [];
 try {
     $stmt = $pdo->prepare(
@@ -137,7 +127,6 @@ try {
     <?php if ($messaggio): ?><p style="color:green"><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
     <?php if ($errore):    ?><p style="color:red"><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
-    <!-- Form crea bilancio -->
     <h2>Nuovo Bilancio</h2>
     <form action="crea_bilancio.php" method="post">
         <label>Ragione Sociale Azienda *</label><br>
@@ -156,7 +145,6 @@ try {
         <input type="submit" name="crea_bilancio" value="Crea Bilancio">
     </form>
 
-    <!-- Form associa voce al bilancio -->
     <h2>Associa Voce al Bilancio</h2>
     <form action="crea_bilancio.php" method="post">
         <label>Ragione Sociale Azienda *</label><br>
@@ -185,7 +173,6 @@ try {
         <input type="submit" name="associa_voce" value="Associa Voce">
     </form>
 
-    <!-- Tabella bilanci esistenti -->
     <?php if ($bilanci): ?>
         <h2>I tuoi bilanci (<?= count($bilanci) ?>)</h2>
         <table border="1">

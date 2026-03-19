@@ -1,23 +1,35 @@
 <?php
 require_once __DIR__ . '/../vendor/autoload.php';
 
-function getMongoCollection(string $collectionName): MongoDB\Collection {
+function getMongoEvents(): MongoDB\Collection {
     try {
         $client = new MongoDB\Client("mongodb://127.0.0.1:27017");
-        return $client->selectDatabase("esg_balance_logs")
-                      ->selectCollection($collectionName);
+        return $client->selectDatabase("TEST PROGETTO")
+                      ->selectCollection("events");
     } catch (Exception $e) {
         error_log("Errore connessione MongoDB: " . $e->getMessage());
         throw $e;
     }
 }
 
-function logEvento(string $collection, array $dati): void {
+/**
+ * Registra un evento nel formato unificato della collection 'events'.
+ *
+ * @param string $event_type  Es. 'CREATE_COMPANY', 'CREATE_BILANCIO', ...
+ * @param string $text        Descrizione leggibile dell'evento
+ * @param int    $user_id     ID numerico utente (0 se non disponibile)
+ * @param int    $entity_id   ID entità coinvolta (0 se non disponibile)
+ */
+function logEvento(string $event_type, string $text, int $user_id = 0, int $entity_id = 0): void {
     try {
-        $col = getMongoCollection($collection);
-        $col->insertOne(array_merge($dati, [
-            'timestamp' => new MongoDB\BSON\UTCDateTime()
-        ]));
+        $col = getMongoEvents();
+        $col->insertOne([
+            'text'       => $text,
+            'timestamp'  => new MongoDB\BSON\UTCDateTime(),
+            'user_id'    => $user_id,
+            'event_type' => $event_type,
+            'entity_id'  => $entity_id,
+        ]);
     } catch (Exception $e) {
         error_log("Errore log MongoDB: " . $e->getMessage());
     }

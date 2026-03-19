@@ -2,13 +2,10 @@
 session_start();
 require_once "../db.php";
 
-// Controllo login
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
-
-// Controllo ruolo
 if ($_SESSION["Ruolo"] !== "responsabile") {
     header("Location: ../menu.php");
     exit();
@@ -19,7 +16,6 @@ $pdo       = getDB();
 $messaggio = "";
 $errore    = "";
 
-// Registra azienda
 if (isset($_POST["registra_azienda"])) {
     $ragione_sociale = trim($_POST["ragione_sociale"]);
     $nome            = trim($_POST["nome"]);
@@ -40,10 +36,11 @@ if (isset($_POST["registra_azienda"])) {
             $messaggio = "Azienda '$ragione_sociale' registrata.";
 
             require_once "../db_mongo.php";
-            logEvento('aziende_log', [
-                'ragione_sociale'       => $ragione_sociale,
-                'username_responsabile' => $username,
-            ]);
+            logEvento(
+                'CREATE_COMPANY',
+                "New company created: $ragione_sociale",
+                0, 0
+            );
         } catch (PDOException $e) {
             if ($e->errorInfo[1] == 1062) {
                 $errore = "Errore: una azienda con questa ragione sociale esiste già.";
@@ -54,7 +51,6 @@ if (isset($_POST["registra_azienda"])) {
     }
 }
 
-// Lettura aziende del responsabile loggato
 $aziende = [];
 try {
     $stmt = $pdo->prepare(
