@@ -2,7 +2,6 @@
 session_start();
 require_once "db.php";
 
-// Controllo login
 if (!isset($_SESSION["Username"])) {
     header("Location: login.php");
     exit();
@@ -11,69 +10,34 @@ if (!isset($_SESSION["Username"])) {
 $pdo    = getDB();
 $errore = "";
 
-// ── Statistica 1 — Numero aziende registrate ─────────────────────────────────
+// Stat 1 — numero aziende (VIEW)
 $num_aziende = 0;
 try {
-    $num_aziende = $pdo->query(
-        "SELECT COUNT(*) FROM AZIENDA"
-    )->fetchColumn();
+    $num_aziende = $pdo->query("SELECT Numero_Aziende FROM VISTA_NUMERO_AZIENDE")->fetchColumn();
 } catch (PDOException $e) {
     $errore = "Errore stat 1: " . $e->getMessage();
 }
 
-// ── Statistica 2 — Numero revisori ESG registrati ────────────────────────────
+// Stat 2 — numero revisori (VIEW)
 $num_revisori = 0;
 try {
-    $num_revisori = $pdo->query(
-        "SELECT COUNT(*) FROM REVISORE_ESG"
-    )->fetchColumn();
+    $num_revisori = $pdo->query("SELECT Numero_Revisori FROM VISTA_NUMERO_REVISORI")->fetchColumn();
 } catch (PDOException $e) {
     $errore = "Errore stat 2: " . $e->getMessage();
 }
 
-// ── Statistica 3 — Azienda con affidabilità più alta ─────────────────────────
-// Affidabilità = % bilanci con esito "approvazione" (senza rilievi)
+// Stat 3 — azienda con affidabilità più alta (VIEW)
 $azienda_top = null;
 try {
-    $azienda_top = $pdo->query(
-        "SELECT
-            b.Ragione_sociale_azienda,
-            COUNT(CASE WHEN g.Esito = 'approvazione' THEN 1 END) AS approvati,
-            COUNT(g.Id) AS totale,
-            ROUND(
-                COUNT(CASE WHEN g.Esito = 'approvazione' THEN 1 END) * 100.0 / COUNT(g.Id),
-                2
-            ) AS affidabilita
-         FROM BILANCIO b
-         JOIN GIUDIZIO g
-           ON b.id = g.id_bilancio
-          AND b.Ragione_sociale_azienda = g.Ragione_sociale_bilancio
-         GROUP BY b.Ragione_sociale_azienda
-         ORDER BY affidabilita DESC
-         LIMIT 1"
-    )->fetch(PDO::FETCH_ASSOC);
+    $azienda_top = $pdo->query("SELECT Azienda, PercentualeAffidabilita FROM VISTA_AZIENDA_TOP_AFFIDABILITA")->fetch(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $errore = "Errore stat 3: " . $e->getMessage();
 }
 
-// ── Statistica 4 — Classifica bilanci per numero indicatori ESG collegati ────
+// Stat 4 — classifica bilanci per indicatori ESG (VIEW)
 $classifica = [];
 try {
-    $classifica = $pdo->query(
-        "SELECT
-            b.id,
-            b.Ragione_sociale_azienda,
-            b.Stato,
-            COUNT(c.NomeEsg) AS num_indicatori
-         FROM BILANCIO b
-         LEFT JOIN ASSOCIA_BILANCIO_VOCE abv
-           ON b.id = abv.id_bilancio
-          AND b.Ragione_sociale_azienda = abv.Ragione_sociale_bilancio
-         LEFT JOIN COLLEGA_ESG_VOCE c
-           ON abv.Nome_voce = c.NomeVoce
-         GROUP BY b.id, b.Ragione_sociale_azienda, b.Stato
-         ORDER BY num_indicatori DESC"
-    )->fetchAll(PDO::FETCH_ASSOC);
+    $classifica = $pdo->query("SELECT ID_Bilancio, Azienda, Totale_Indicatori_ESG FROM VISTA_CLASSIFICA_BILANCI")->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $errore = "Errore stat 4: " . $e->getMessage();
 }
@@ -88,43 +52,36 @@ try {
 <body>
     <h1>Statistiche ESG Balance</h1>
 
-    <?php if ($errore): ?><p style="color:red"><?= htmlspecialchars($errore) ?></p><?php endif; ?>
+    <?php if ($errore): ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
-    <!-- Stat 1 -->
     <h2>Aziende registrate</h2>
     <p><strong><?= htmlspecialchars($num_aziende) ?></strong> aziende presenti in piattaforma.</p>
 
-    <!-- Stat 2 -->
     <h2>Revisori ESG registrati</h2>
     <p><strong><?= htmlspecialchars($num_revisori) ?></strong> revisori ESG presenti in piattaforma.</p>
 
-    <!-- Stat 3 -->
     <h2>Azienda con affidabilità più alta</h2>
     <?php if ($azienda_top): ?>
         <table border="1">
-            <tr><th>Azienda</th><th>Bilanci approvati</th><th>Totale giudizi</th><th>Affidabilità %</th></tr>
+            <tr><th>Azienda</th><th>Affidabilità %</th></tr>
             <tr>
-                <td><?= htmlspecialchars($azienda_top["Ragione_sociale_azienda"]) ?></td>
-                <td><?= htmlspecialchars($azienda_top["approvati"]) ?></td>
-                <td><?= htmlspecialchars($azienda_top["totale"]) ?></td>
-                <td><?= htmlspecialchars($azienda_top["affidabilita"]) ?>%</td>
+                <td><?= htmlspecialchars($azienda_top["Azienda"]) ?></td>
+                <td><?= htmlspecialchars(round($azienda_top["PercentualeAffidabilita"], 2)) ?>%</td>
             </tr>
         </table>
     <?php else: ?>
         <p>Nessun dato disponibile.</p>
     <?php endif; ?>
 
-    <!-- Stat 4 -->
     <h2>Classifica bilanci per indicatori ESG collegati</h2>
     <?php if ($classifica): ?>
         <table border="1">
-            <tr><th>ID</th><th>Azienda</th><th>Stato</th><th>Nr. Indicatori ESG</th></tr>
+            <tr><th>ID Bilancio</th><th>Azienda</th><th>Nr. Indicatori ESG</th></tr>
             <?php foreach ($classifica as $r): ?>
                 <tr>
-                    <td><?= htmlspecialchars($r["id"]) ?></td>
-                    <td><?= htmlspecialchars($r["Ragione_sociale_azienda"]) ?></td>
-                    <td><?= htmlspecialchars($r["Stato"]) ?></td>
-                    <td><?= htmlspecialchars($r["num_indicatori"]) ?></td>
+                    <td><?= htmlspecialchars($r["ID_Bilancio"]) ?></td>
+                    <td><?= htmlspecialchars($r["Azienda"]) ?></td>
+                    <td><?= htmlspecialchars($r["Totale_Indicatori_ESG"]) ?></td>
                 </tr>
             <?php endforeach; ?>
         </table>

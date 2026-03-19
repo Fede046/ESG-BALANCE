@@ -2,13 +2,11 @@
 session_start();
 require_once "../db.php";
 
-// Controllo login
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
 
-// Controllo ruolo
 if ($_SESSION["Ruolo"] !== "amministratore") {
     header("Location: ../menu.php");
     exit();
@@ -19,19 +17,14 @@ $pdo       = getDB();
 $messaggio = "";
 $errore    = "";
 
-// Aggiungi indicatore
 if (isset($_POST["aggiungi_indicatore"])) {
     $nome      = trim($_POST["nome_indicatore"]);
-    $rilevanza = $_POST["rilevanza"] !== "" ? (int)$_POST["rilevanza"] : null;
+    $rilevanza = ($_POST["rilevanza"] !== "") ? (int)$_POST["rilevanza"] : null;
     $immagine  = trim($_POST["immagine"]) ?: null;
     $tipo      = $_POST["tipo"] ?? "";
-
-    // Campi ambientale
-    $cod_norm  = trim($_POST["cod_norm"] ?? "") ?: null;
-
-    // Campi sociale
-    $ambito    = trim($_POST["ambito"] ?? "") ?: null;
-    $frequenza = $_POST["frequenza"] !== "" ? (int)$_POST["frequenza"] : null;
+    $cod_norm  = trim($_POST["cod_norm"]  ?? "") ?: null;
+    $ambito    = trim($_POST["ambito"]    ?? "") ?: null;
+    $frequenza = ($_POST["frequenza"] ?? "") !== "" ? (int)$_POST["frequenza"] : null;
 
     if ($nome === "") {
         $errore = "Il nome dell'indicatore è obbligatorio.";
@@ -43,27 +36,24 @@ if (isset($_POST["aggiungi_indicatore"])) {
         $errore = "Ambito e frequenza sono obbligatori per indicatori sociali.";
     } else {
         try {
-            // Inserimento nella tabella padre
-            $pdo->prepare(
-                "INSERT INTO INDICATORE_ESG (Nome, Username_Amministratore, Immagine, Rilevanza)
-                 VALUES (?, ?, ?, ?)"
-            )->execute([$nome, $username, $immagine, $rilevanza]);
-
-            // Inserimento nella sotto-tabella in base al tipo
-            if ($tipo === "ambientale") {
-                $pdo->prepare(
-                    "INSERT INTO ESG_AMBIENTALE (NomeEsg, cod_norm_rilevamento) VALUES (?, ?)"
-                )->execute([$nome, $cod_norm]);
-            } elseif ($tipo === "sociale") {
-                $pdo->prepare(
-                    "INSERT INTO ESG_INDICATORE_SOCIALE (NomeEsg, Ambito, Frequenza_rilevazione) VALUES (?, ?, ?)"
-                )->execute([$nome, $ambito, $frequenza]);
-            }
-            // Se tipo = '' l'indicatore non rientra in nessuna sotto-categoria (consentito dalla traccia)
-
+            $stmt = $pdo->prepare("CALL sp_PopolaIndicatoreESG(?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([
+                $nome,
+                $username,
+                $immagine,
+                $rilevanza,
+                $tipo ?: null,
+                $cod_norm,
+                $ambito,
+                $frequenza
+            ]);
             $messaggio = "Indicatore '$nome' aggiunto" . ($tipo ? " (tipo: $tipo)" : " (generico)") . ".";
         } catch (PDOException $e) {
-            $errore = "Errore DB: " . $e->getMessage();
+            if ($e->errorInfo[1] == 1062) {
+                $errore = "Errore: un indicatore con questo nome esiste già.";
+            } else {
+                $errore = "Errore DB: " . $e->getMessage();
+            }
         }
     }
 }
@@ -104,8 +94,8 @@ try {
 <body>
     <h1>Aggiungi Indicatore ESG</h1>
 
-    <?php if ($messaggio): ?><p style="color:green"><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
-    <?php if ($errore):    ?><p style="color:red"><?= htmlspecialchars($errore) ?></p><?php endif; ?>
+    <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
+    <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
     <form action="aggiungi_indicatore.php" method="post">
         <label>Nome * (max 30 caratteri)</label><br>
@@ -117,22 +107,20 @@ try {
         <label>Immagine (path al file, opzionale)</label><br>
         <input type="text" name="immagine" maxlength="500"><br>
 
-        <label>Tipo indicatore *</label><br>
+        <label>Tipo indicatore</label><br>
         <select name="tipo" id="tipo" onchange="aggiornaFormTipo()">
             <option value="">-- generico (nessuna categoria) --</option>
             <option value="ambientale">Ambientale</option>
             <option value="sociale">Sociale</option>
         </select><br><br>
 
-        <!-- Campi solo per AMBIENTALE -->
-        <div id="form_ambientale" style="display:none; border:1px solid #aaa; padding:8px; margin-bottom:8px;">
+        <div id="form_ambientale" style="display:none">
             <strong>Dati ambientale</strong><br>
             <label>Codice normativa di rilevamento *</label><br>
             <input type="text" name="cod_norm" maxlength="30"><br>
         </div>
 
-        <!-- Campi solo per SOCIALE -->
-        <div id="form_sociale" style="display:none; border:1px solid #aaa; padding:8px; margin-bottom:8px;">
+        <div id="form_sociale" style="display:none">
             <strong>Dati sociale</strong><br>
             <label>Ambito sociale di riferimento *</label><br>
             <input type="text" name="ambito" maxlength="30"><br>
