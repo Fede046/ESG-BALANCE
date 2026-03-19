@@ -35,6 +35,13 @@ if (isset($_POST["associa_revisore"])) {
                  ON DUPLICATE KEY UPDATE Username_Revisore_ESG = VALUES(Username_Revisore_ESG)"
             )->execute([$rev, $id_bil, $rag_soc]);
             $messaggio = "Revisore '$rev' associato al bilancio #$id_bil ($rag_soc).";
+
+            require_once "../db_mongo.php";
+            logEvento('revisioni_log', [
+                'username_revisore' => $rev,
+                'id_bilancio'       => $id_bil,
+                'ragione_sociale'   => $rag_soc,
+            ]);
         } catch (PDOException $e) {
             $errore = "Errore DB: " . $e->getMessage();
         }
