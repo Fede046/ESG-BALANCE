@@ -3,16 +3,24 @@
 -- ============================================================
 USE TEST;
 
+-- Password originali e relativi hash MD5+salt 'jdd':
+--   pass123  →  5c021c2260a36b71c6e7199d43c9a592
+--   pass456  →  93d780adb0cd1fccb0a451f3b0a4f1a7
+--   pass789  →  d1662c159479b0a41d2cb9321b9999da
+--   passabc  →  8ff3be1fec1ac03e487cf805cd80547a
+--   passdef  →  90131af60b6091e6ab462442bfcaf711
+--   passghi  →  8e37056b18b6d4166d43a9a4468c318d
+
 -- ─────────────────────────────────────────────
 -- 1. UTENTE
 -- ─────────────────────────────────────────────
 INSERT INTO UTENTE (Username, CodiceFiscale, Password, Luogo, Data) VALUES
-('mario.rossi',    'RSSMRA80A01H501Z', 'pass123',  'Roma',    '1980-01-01'),
-('giulia.bianchi', 'BNCGLI90B02F205Y', 'pass456',  'Milano',  '1990-02-02'),
-('luca.verdi',     'VRDLCU85C03L219X', 'pass789',  'Torino',  '1985-03-03'),
-('anna.neri',      'NRANNA75D04G273W', 'passabc',  'Napoli',  '1975-04-04'),
-('paolo.gialli',   'GLLPLA92E05A662V', 'passdef',  'Bologna', '1992-05-05'),
-('sara.blu',       'BLASRA88F06H501U', 'passghi',  'Firenze', '1988-06-06');
+('mario.rossi',    'RSSMRA80A01H501Z', '5c021c2260a36b71c6e7199d43c9a592', 'Roma',    '1980-01-01'),
+('giulia.bianchi', 'BNCGLI90B02F205Y', '93d780adb0cd1fccb0a451f3b0a4f1a7', 'Milano',  '1990-02-02'),
+('luca.verdi',     'VRDLCU85C03L219X', 'd1662c159479b0a41d2cb9321b9999da', 'Torino',  '1985-03-03'),
+('anna.neri',      'NRANNA75D04G273W', '8ff3be1fec1ac03e487cf805cd80547a', 'Napoli',  '1975-04-04'),
+('paolo.gialli',   'GLLPLA92E05A662V', '90131af60b6091e6ab462442bfcaf711', 'Bologna', '1992-05-05'),
+('sara.blu',       'BLASRA88F06H501U', '8e37056b18b6d4166d43a9a4468c318d', 'Firenze', '1988-06-06');
 
 -- ─────────────────────────────────────────────
 -- 2. EMAIL
@@ -27,20 +35,20 @@ INSERT INTO EMAIL (Username_Utente, Indirizzo) VALUES
 ('sara.blu',       'sara.blu@libero.it');
 
 -- ─────────────────────────────────────────────
--- 3a. AMMINISTRATORE 
+-- 3a. AMMINISTRATORE
 -- ─────────────────────────────────────────────
 INSERT INTO AMMINISTRATORE (Username) VALUES
 ('mario.rossi');
 
 -- ─────────────────────────────────────────────
--- 3b. REVISORE_ESG 
+-- 3b. REVISORE_ESG
 -- ─────────────────────────────────────────────
 INSERT INTO REVISORE_ESG (Username, IndiceAffidabilita, NumRevisioni) VALUES
 ('giulia.bianchi', 8, 15),
-('luca.verdi',     6, 7);
+('luca.verdi',     6,  7);
 
 -- ─────────────────────────────────────────────
--- 3c. RESPONSABILE_AZIENDALE  
+-- 3c. RESPONSABILE_AZIENDALE
 -- ─────────────────────────────────────────────
 INSERT INTO RESPONSABILE_AZIENDALE (Username, CV) VALUES
 ('anna.neri',    '/cv/anna_neri.pdf'),
@@ -51,19 +59,19 @@ INSERT INTO RESPONSABILE_AZIENDALE (Username, CV) VALUES
 -- 4. COMPETENZA
 -- ─────────────────────────────────────────────
 INSERT INTO COMPETENZA (Nome, Username) VALUES
-('Ambiente',       'giulia.bianchi'),
-('Governance',     'giulia.bianchi'),
-('Sociale',        'luca.verdi'),
-('Rendicontazione','luca.verdi');
+('Ambiente',        'giulia.bianchi'),
+('Governance',      'giulia.bianchi'),
+('Sociale',         'luca.verdi'),
+('Rendicontazione', 'luca.verdi');
 
 -- ─────────────────────────────────────────────
 -- 5. DICHIARA_COMPETENZA_REVISORE
 -- ─────────────────────────────────────────────
 INSERT INTO DICHIARA_COMPETENZA_REVISORE (Nome_competenza, Username_revisore, Livello) VALUES
-('Ambiente',       'giulia.bianchi', 5),
-('Governance',     'giulia.bianchi', 4),
-('Sociale',        'luca.verdi',     3),
-('Rendicontazione','luca.verdi',     4);
+('Ambiente',        'giulia.bianchi', 5),
+('Governance',      'giulia.bianchi', 4),
+('Sociale',         'luca.verdi',     3),
+('Rendicontazione', 'luca.verdi',     4);
 
 -- ─────────────────────────────────────────────
 -- 6. INDICATORE_ESG
@@ -171,10 +179,10 @@ INSERT INTO ASSOCIA_BILANCIO_VOCE (Nome_voce, id_bilancio, Ragione_sociale_bilan
 -- 14. NOTA
 -- ─────────────────────────────────────────────
 INSERT INTO NOTA (ID, Data, Testo, Username_Revisore_ESG, NomeVoce, id_bilancio, Ragione_sociale_bilancio) VALUES
-(1, '2024-01-10 10:00:00', '/note/nota1.txt', 'giulia.bianchi', 'Ricavi',           1, 'GreenTech SRL'),
-(2, '2024-02-15 11:30:00', '/note/nota2.txt', 'giulia.bianchi', 'Costi operativi',  1, 'GreenTech SRL'),
-(3, '2024-03-20 09:15:00', '/note/nota3.txt', 'luca.verdi',     'EBITDA',           4, 'EcoFarm SPA'),
-(4, '2024-04-05 14:00:00', '/note/nota4.txt', 'luca.verdi',     'Debiti finanziari',4, 'EcoFarm SPA');
+(1, '2024-01-10 10:00:00', '/note/nota1.txt', 'giulia.bianchi', 'Ricavi',            1, 'GreenTech SRL'),
+(2, '2024-02-15 11:30:00', '/note/nota2.txt', 'giulia.bianchi', 'Costi operativi',   1, 'GreenTech SRL'),
+(3, '2024-03-20 09:15:00', '/note/nota3.txt', 'luca.verdi',     'EBITDA',            4, 'EcoFarm SPA'),
+(4, '2024-04-05 14:00:00', '/note/nota4.txt', 'luca.verdi',     'Debiti finanziari', 4, 'EcoFarm SPA');
 
 -- ─────────────────────────────────────────────
 -- 15. COLLEGA_ESG_VOCE
