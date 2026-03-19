@@ -2,13 +2,11 @@
 session_start();
 require_once "../db.php";
 
-// Controllo login
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
 
-// Controllo ruolo
 if ($_SESSION["Ruolo"] !== "responsabile") {
     header("Location: ../menu.php");
     exit();
@@ -19,7 +17,6 @@ $pdo       = getDB();
 $messaggio = "";
 $errore    = "";
 
-// Inserisci valore ESG
 if (isset($_POST["inserisci_valore"])) {
     $id_bil    = (int)$_POST["id_bilancio"];
     $rag_soc   = trim($_POST["ragione_sociale"]);
@@ -52,12 +49,9 @@ if (isset($_POST["inserisci_valore"])) {
                 $errore = "La voce selezionata non è associata a questo bilancio.";
             } else {
                 try {
-                    $pdo->prepare(
-                        "INSERT INTO COLLEGA_ESG_VOCE
-                            (NomeVoce, NomeEsg, Valore, Fonte, Data)
-                         VALUES (?, ?, ?, ?, NOW())
-                         ON DUPLICATE KEY UPDATE Valore = VALUES(Valore), Fonte = VALUES(Fonte), Data = NOW()"
-                    )->execute([$nome_voce, $nome_esg, $valore, $fonte]);
+                    // sp_InserisciValoreESG(p_nome_voce, p_nome_esg, p_fonte, p_valore)
+                    $stmt3 = $pdo->prepare("CALL sp_InserisciValoreESG(?, ?, ?, ?)");
+                    $stmt3->execute([$nome_voce, $nome_esg, $fonte, $valore]);
                     $messaggio = "Valore ESG inserito per voce '$nome_voce' — indicatore '$nome_esg'.";
                 } catch (PDOException $e) {
                     $errore = "Errore DB: " . $e->getMessage();
@@ -83,8 +77,8 @@ try {
     $errore = "Errore lettura bilanci: " . $e->getMessage();
 }
 
-// Bilancio selezionato (via GET)
-$id_sel  = isset($_GET["id_bilancio"]) ? (int)$_GET["id_bilancio"] : 0;
+// Bilancio selezionato via GET
+$id_sel  = isset($_GET["id_bilancio"])     ? (int)$_GET["id_bilancio"]     : 0;
 $rag_sel = isset($_GET["ragione_sociale"]) ? trim($_GET["ragione_sociale"]) : "";
 
 // Voci del bilancio selezionato
@@ -144,10 +138,9 @@ if ($id_sel > 0 && $rag_sel !== "") {
 <body>
     <h1>Inserisci Valore Indicatore ESG per Voce</h1>
 
-    <?php if ($messaggio): ?><p style="color:green"><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
-    <?php if ($errore):    ?><p style="color:red"><?= htmlspecialchars($errore) ?></p><?php endif; ?>
+    <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
+    <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
-    <!-- Step 1: seleziona bilancio -->
     <h2>1. Seleziona Bilancio</h2>
     <?php if ($bilanci): ?>
         <table border="1">
@@ -169,15 +162,14 @@ if ($id_sel > 0 && $rag_sel !== "") {
         <p>Nessun bilancio disponibile.</p>
     <?php endif; ?>
 
-    <!-- Step 2: form inserimento (solo se bilancio selezionato) -->
     <?php if ($id_sel > 0 && $rag_sel !== ""): ?>
         <h2>2. Inserisci Valore ESG &mdash; Bilancio #<?= htmlspecialchars($id_sel) ?> (<?= htmlspecialchars($rag_sel) ?>)</h2>
 
         <?php if (empty($voci)): ?>
-            <p style="color:orange">Nessuna voce associata a questo bilancio. Aggiungile prima dalla pagina "Crea Bilancio".</p>
+            <p>Nessuna voce associata a questo bilancio. Aggiungile prima dalla pagina "Crea Bilancio".</p>
         <?php else: ?>
             <form action="inserisci_valore_esg.php" method="post">
-                <input type="hidden" name="id_bilancio" value="<?= htmlspecialchars($id_sel) ?>">
+                <input type="hidden" name="id_bilancio"     value="<?= htmlspecialchars($id_sel) ?>">
                 <input type="hidden" name="ragione_sociale" value="<?= htmlspecialchars($rag_sel) ?>">
 
                 <label>Voce Contabile *</label><br>
@@ -203,7 +195,7 @@ if ($id_sel > 0 && $rag_sel !== "") {
                 <label>Valore *</label><br>
                 <input type="number" step="0.01" name="valore" required><br>
 
-                <label>Fonte (opzionale)</label><br>
+                <label>Fonte (opzionale, max 30 caratteri)</label><br>
                 <input type="text" name="fonte" maxlength="30"><br>
 
                 <input type="submit" name="inserisci_valore" value="Inserisci Valore">
