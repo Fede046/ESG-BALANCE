@@ -2,13 +2,11 @@
 session_start();
 require_once "../db.php";
 
-// Controllo login
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
 
-// Controllo ruolo
 if ($_SESSION["Ruolo"] !== "amministratore") {
     header("Location: ../menu.php");
     exit();
@@ -18,7 +16,7 @@ $pdo       = getDB();
 $messaggio = "";
 $errore    = "";
 
-// Associa revisore a bilancio
+// Associa revisore a bilancio tramite SP
 if (isset($_POST["associa_revisore"])) {
     $id_bil  = (int)$_POST["id_bilancio"];
     $rag_soc = trim($_POST["ragione_sociale"]);
@@ -28,15 +26,15 @@ if (isset($_POST["associa_revisore"])) {
         $errore = "Tutti i campi sono obbligatori.";
     } else {
         try {
-            $pdo->prepare(
-                "INSERT INTO VALUTA_REVISORE_BILANCIO
-                    (Username_Revisore_ESG, id_bilancio, Ragione_sociale_bilancio)
-                 VALUES (?, ?, ?)
-                 ON DUPLICATE KEY UPDATE Username_Revisore_ESG = VALUES(Username_Revisore_ESG)"
-            )->execute([$rev, $id_bil, $rag_soc]);
+            $stmt = $pdo->prepare("CALL sp_AssociaRevisore(?, ?, ?)");
+            $stmt->execute([$rev, $id_bil, $rag_soc]);
             $messaggio = "Revisore '$rev' associato al bilancio #$id_bil ($rag_soc).";
         } catch (PDOException $e) {
-            $errore = "Errore DB: " . $e->getMessage();
+            if ($e->errorInfo[1] == 1062) {
+                $errore = "Errore: il revisore è già assegnato a questo bilancio.";
+            } else {
+                $errore = "Errore DB: " . $e->getMessage();
+            }
         }
     }
 }
@@ -71,15 +69,21 @@ try {
 <body>
     <h1>Associa Revisore ESG a Bilancio</h1>
 
-    <?php if ($messaggio): ?><p style="color:green"><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
-    <?php if ($errore):    ?><p style="color:red"><?= htmlspecialchars($errore) ?></p><?php endif; ?>
+    <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
+    <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
     <form action="associa_revisore.php" method="post">
-        <label>ID Bilancio *</label><br>
-        <input type="number" name="id_bilancio" min="1" required><br>
-
-        <label>Ragione Sociale Azienda * (max 30 caratteri)</label><br>
-        <input type="text" name="ragione_sociale" maxlength="30" required><br>
+        <label>Bilancio * </label><br>
+        <select name="id_bilancio" required onchange="sincronizzaRagioneSociale(this)">
+            <option value="">-- seleziona bilancio --</option>
+            <?php foreach ($bilanci as $b): ?>
+                <option value="<?= htmlspecialchars($b["id"]) ?>"
+                        data-ragione="<?= htmlspecialchars($b["Ragione_sociale_azienda"]) ?>">
+                    #<?= htmlspecialchars($b["id"]) ?> — <?= htmlspecialchars($b["Ragione_sociale_azienda"]) ?> (<?= htmlspecialchars($b["Stato"]) ?>)
+                </option>
+            <?php endforeach; ?>
+        </select><br>
+        <input type="hidden" name="ragione_sociale" id="ragione_sociale_hidden">
 
         <label>Username Revisore ESG *</label><br>
         <select name="username_revisore" required>
@@ -94,8 +98,15 @@ try {
         <input type="submit" name="associa_revisore" value="Associa Revisore">
     </form>
 
+    <script>
+    function sincronizzaRagioneSociale(sel) {
+        var opt = sel.options[sel.selectedIndex];
+        document.getElementById('ragione_sociale_hidden').value = opt.dataset.ragione || '';
+    }
+    </script>
+
     <?php if ($bilanci): ?>
-        <h2>Ultimi 50 bilanci <small>(riferimento per ID e Ragione Sociale)</small></h2>
+        <h2>Ultimi 50 bilanci</h2>
         <table border="1">
             <tr><th>ID</th><th>Azienda</th><th>Stato</th></tr>
             <?php foreach ($bilanci as $r): ?>
