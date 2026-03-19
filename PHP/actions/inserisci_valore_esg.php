@@ -59,6 +59,13 @@ if (isset($_POST["inserisci_valore"])) {
                          ON DUPLICATE KEY UPDATE Valore = VALUES(Valore), Fonte = VALUES(Fonte), Data = NOW()"
                     )->execute([$nome_voce, $nome_esg, $valore, $fonte]);
                     $messaggio = "Valore ESG inserito per voce '$nome_voce' — indicatore '$nome_esg'.";
+
+                    require_once "../db_mongo.php";
+                    logEvento('valori_esg_log', [
+                        'voce'       => $nome_voce,
+                        'indicatore' => $nome_esg,
+                        'valore'     => (float)$valore,
+                    ]);
                 } catch (PDOException $e) {
                     $errore = "Errore DB: " . $e->getMessage();
                 }
