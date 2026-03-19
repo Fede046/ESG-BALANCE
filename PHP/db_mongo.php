@@ -4,7 +4,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 function getMongoEvents(): MongoDB\Collection {
     try {
         $client = new MongoDB\Client("mongodb://127.0.0.1:27017");
-        return $client->selectDatabase("TEST PROGETTO")
+        return $client->selectDatabase("TEST_PROGETTO")
                       ->selectCollection("events");
     } catch (Exception $e) {
         error_log("Errore connessione MongoDB: " . $e->getMessage());
