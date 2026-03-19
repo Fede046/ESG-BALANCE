@@ -89,36 +89,15 @@ CREATE TABLE ESG_INDICATORE_SOCIALE (
     FOREIGN KEY (NomeEsg) REFERENCES INDICATORE_ESG(Nome)
 );
 
--- 8. VOCE  (nessuna dipendenza)
+-- 8. VOCE  (dipende da amministratore)
 CREATE TABLE VOCE (
-    Nome        VARCHAR(30) PRIMARY KEY,
-    Descrizione VARCHAR(500)            -- path alla descrizione
+    Nome VARCHAR(30) PRIMARY KEY,
+    Descrizione VARCHAR(500),          -- path alla descrizione
+    Username_Amministratore VARCHAR(30) NOT NULL,
+    FOREIGN KEY (Username_Amministratore) REFERENCES AMMINISTRATORE(Username)
 );
 
--- 9. NOTA  (dipende da VOCE e REVISORE_ESG)
-CREATE TABLE NOTA (
-    ID INT PRIMARY KEY AUTO_INCREMENT,   
-    Data DATETIME,
-    Testo VARCHAR(500),
-    NomeVoce VARCHAR(30) NOT NULL,
-    Username_Revisore_ESG VARCHAR(30) NOT NULL,
-    FOREIGN KEY (NomeVoce) REFERENCES VOCE(Nome),
-    FOREIGN KEY (Username_Revisore_ESG) REFERENCES REVISORE_ESG(Username)
-);
-
--- 10. COLLEGA_ESG_VOCE  (dipende da VOCE e INDICATORE_ESG)
-CREATE TABLE COLLEGA_ESG_VOCE (
-    NomeVoce VARCHAR(30) NOT NULL,
-    NomeEsg VARCHAR(30) NOT NULL,
-    Fonte VARCHAR(30),
-    Valore DECIMAL(10, 2), 
-    Data DATETIME,
-    PRIMARY KEY (NomeVoce, NomeEsg),
-    FOREIGN KEY (NomeVoce) REFERENCES VOCE(Nome),
-    FOREIGN KEY (NomeEsg) REFERENCES INDICATORE_ESG(Nome)
-);
-
--- 11. AZIENDA  (dipende da RESPONSABILE_AZIENDALE)
+-- 9. AZIENDA  (dipende da RESPONSABILE_AZIENDALE)
 CREATE TABLE AZIENDA (
     Ragione_sociale VARCHAR(30) PRIMARY KEY,
     Nome VARCHAR(30),
@@ -131,7 +110,7 @@ CREATE TABLE AZIENDA (
     FOREIGN KEY (Username_Responsabile_Aziendale) REFERENCES RESPONSABILE_AZIENDALE(Username)
 );
 
--- 12. BILANCIO  (dipende da AZIENDA)
+-- 10. BILANCIO  (dipende da AZIENDA)
 CREATE TABLE BILANCIO (
     id INT NOT NULL,
     Ragione_sociale_azienda VARCHAR(30) NOT NULL,
@@ -146,7 +125,7 @@ CREATE TABLE BILANCIO (
     FOREIGN KEY (Ragione_sociale_azienda) REFERENCES AZIENDA(Ragione_sociale)
 );
 
--- 13. GIUDIZIO  (dipende da REVISORE_ESG e BILANCIO)
+-- 11. GIUDIZIO  (dipende da REVISORE_ESG e BILANCIO)
 CREATE TABLE GIUDIZIO (
     Id INT PRIMARY KEY AUTO_INCREMENT,
     Esito ENUM(
@@ -163,7 +142,7 @@ CREATE TABLE GIUDIZIO (
     FOREIGN KEY (Username) REFERENCES REVISORE_ESG(Username)
 );
 
--- 14. VALUTA_REVISORE_BILANCIO (dipende da REVISORE_ESG e BILANCIO)
+-- 12. VALUTA_REVISORE_BILANCIO (dipende da REVISORE_ESG e BILANCIO)
 CREATE TABLE VALUTA_REVISORE_BILANCIO (
     Username_Revisore_ESG VARCHAR(30) NOT NULL,
     id_bilancio INT NOT NULL,
@@ -173,22 +152,40 @@ CREATE TABLE VALUTA_REVISORE_BILANCIO (
     FOREIGN KEY (id_bilancio, Ragione_sociale_bilancio) REFERENCES BILANCIO(id, Ragione_sociale_azienda)
 );
 
--- 15. ASSOCIA_BILANCIO_VOCE  (dipende da BILANCIO e VOCE)
+-- 13. ASSOCIA_BILANCIO_VOCE  (dipende da BILANCIO e VOCE)
 CREATE TABLE ASSOCIA_BILANCIO_VOCE (
     Nome_voce VARCHAR(30) NOT NULL,
     id_bilancio INT NOT NULL,
     Ragione_sociale_bilancio VARCHAR(30) NOT NULL,
+    Valore INT NOT NULL,
     PRIMARY KEY (Nome_voce, id_bilancio, Ragione_sociale_bilancio),
     FOREIGN KEY (id_bilancio, Ragione_sociale_bilancio) REFERENCES BILANCIO(id, Ragione_sociale_azienda),
     FOREIGN KEY (Nome_voce) REFERENCES VOCE(Nome)
 );
--- 16. TEMPLATE_BILANCIO (dipende da AMMINISTRATORE)
--- CREATO DA TOMMASO PER admin.php
-CREATE TABLE TEMPLATE_BILANCIO (
-    Nome VARCHAR(30) NOT NULL,
-    Anno INT NOT NULL,
-    Username_Amministratore VARCHAR(30) NOT NULL,
-    PRIMARY KEY (Nome, Anno),
-    FOREIGN KEY (Username_Amministratore) REFERENCES AMMINISTRATORE(Username)
+
+-- 14. NOTA  
+CREATE TABLE NOTA (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    Data DATETIME,
+    Testo VARCHAR(500),
+    Username_Revisore_ESG VARCHAR(30) NOT NULL,
+    NomeVoce VARCHAR(30) NOT NULL,
+    id_bilancio INT NOT NULL,
+    Ragione_sociale_bilancio VARCHAR(30) NOT NULL,
+    FOREIGN KEY (Username_Revisore_ESG) REFERENCES REVISORE_ESG(Username),
+    FOREIGN KEY (NomeVoce, id_bilancio, Ragione_sociale_bilancio) REFERENCES ASSOCIA_BILANCIO_VOCE(Nome_voce, id_bilancio, Ragione_sociale_bilancio)
 );
+
+-- 15. COLLEGA_ESG_VOCE 
+CREATE TABLE COLLEGA_ESG_VOCE (
+    NomeVoce VARCHAR(30) NOT NULL,
+    NomeEsg VARCHAR(30) NOT NULL,
+    Fonte VARCHAR(30),
+    Valore DECIMAL(10, 2), 
+    Data DATETIME,
+    PRIMARY KEY (NomeVoce, NomeEsg),
+    FOREIGN KEY (NomeVoce) REFERENCES VOCE(Nome),
+    FOREIGN KEY (NomeEsg) REFERENCES INDICATORE_ESG(Nome)
+);
+
 

@@ -98,11 +98,12 @@ DELIMITER ;
 DELIMITER //
 CREATE PROCEDURE sp_CreaVoceTemplate(
     IN p_nome VARCHAR(30),
-    IN p_descrizione VARCHAR(500)
+    IN p_descrizione VARCHAR(500),
+    IN p_username_amministratore VARCHAR(30)
 )
 BEGIN
-    INSERT INTO VOCE (Nome, Descrizione)
-    VALUES (p_nome, p_descrizione);
+    INSERT INTO VOCE (Nome, Descrizione, Username_Amministratore)
+    VALUES (p_nome, p_descrizione, p_username_amministratore);
 END //
 DELIMITER ;
 
@@ -111,8 +112,7 @@ DELIMITER ;
 -- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 -- Associazione di revisore ESG ad un bilancio aziendale
--- FIX: aggiunto parametro p_ragione_sociale per completare la PK composta
---      (Username_Revisore_ESG, id_bilancio, Ragione_sociale_bilancio)
+
 DELIMITER //
 CREATE PROCEDURE sp_AssociaRevisore(
     IN p_revisore VARCHAR(30),
@@ -165,16 +165,17 @@ DELIMITER ;
 -- Inserimento delle note su voci di bilancio
 DELIMITER //
 CREATE PROCEDURE sp_InserisciNotaVoce(
-    IN p_id_nota INT,
     IN p_testo VARCHAR(500),
     IN p_nome_voce VARCHAR(30),
-    IN p_username_revisore VARCHAR(30)
+    IN p_username_revisore VARCHAR(30),
+    IN p_id_bilancio INT,
+    IN p_ragione_sociale VARCHAR(30)
 )
 BEGIN
     -- Inserisce una nuova nota collegando il revisore alla voce specifica.
     -- La funzione NOW() registra automaticamente il timestamp esatto dell'operazione.
-    INSERT INTO NOTA (ID, Data, Testo, NomeVoce, Username_Revisore_ESG)
-    VALUES (p_id_nota, NOW(), p_testo, p_nome_voce, p_username_revisore);
+    INSERT INTO NOTA (Data, Testo, Username_Revisore_ESG, NomeVoce, id_bilancio, Ragione_sociale_bilancio)
+    VALUES (NOW(), p_testo, p_username_revisore, p_nome_voce, p_id_bilancio, p_ragione_sociale);
 END //
 DELIMITER ;
 
@@ -283,26 +284,17 @@ END //
 DELIMITER ;
 
 -- 2. POPOLAMENTO DEL BILANCIO (Associazione delle voci)
--- FIX: aggiunto parametro p_ragione_sociale per completare la PK composta
---      (Nome_voce, id_bilancio, Ragione_sociale_bilancio)
+
 DELIMITER //
 CREATE PROCEDURE sp_PopolaBilancioEsercizio(
     IN p_id_bilancio INT,
     IN p_nome_voce VARCHAR(30),
-    IN p_ragione_sociale VARCHAR(30)
+    IN p_ragione_sociale VARCHAR(30),
+    IN p_valore INT
 )
 BEGIN
-    -- Associa una voce di bilancio (precedentemente creata dall'admin) al bilancio specifico
-    INSERT INTO ASSOCIA_BILANCIO_VOCE (
-        Nome_voce,
-        id_bilancio,
-        Ragione_sociale_bilancio
-    )
-    VALUES (
-        p_nome_voce,
-        p_id_bilancio,
-        p_ragione_sociale
-    );
+    INSERT INTO ASSOCIA_BILANCIO_VOCE (Nome_voce, id_bilancio, Ragione_sociale_bilancio, Valore)
+    VALUES (p_nome_voce, p_id_bilancio, p_ragione_sociale, p_valore);
 END //
 DELIMITER ;
 
