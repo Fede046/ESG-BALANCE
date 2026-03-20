@@ -11,7 +11,7 @@ USE TEST;
 CREATE TABLE UTENTE (
     Username VARCHAR(30) PRIMARY KEY,
     CodiceFiscale VARCHAR(30),
-    Password VARCHAR(32) NOT NULL,   -- MD5 produce sempre 32 caratteri hex
+    Password VARCHAR(255) NOT NULL, 
     Luogo VARCHAR(30),
     Data VARCHAR(30)
 );

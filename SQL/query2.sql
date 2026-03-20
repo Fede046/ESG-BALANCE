@@ -5,7 +5,7 @@ DELIMITER //
 CREATE PROCEDURE sp_Registrazione(
     IN p_username VARCHAR(30), 
     IN p_cf VARCHAR(30), 
-    IN p_password VARCHAR(30), 
+    IN p_password VARCHAR(255), 
     IN p_luogo VARCHAR(30), 
     IN p_data VARCHAR(30),
     IN p_ruolo VARCHAR(30), -- 'amministratore', 'revisore', 'responsabile'
@@ -35,7 +35,7 @@ END //
 -- PROCEDURA DI AUTENTICAZIONE (LOGIN)
 CREATE PROCEDURE sp_Login(
     IN p_username VARCHAR(30), 
-    IN p_password VARCHAR(30)
+    IN p_password VARCHAR(255)
 )
 BEGIN
     -- Verifica le credenziali e restituisce il ruolo dell'utente
