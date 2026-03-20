@@ -15,12 +15,13 @@ USE TEST;
 -- 1. UTENTE
 -- ─────────────────────────────────────────────
 INSERT INTO UTENTE (Username, CodiceFiscale, Password, Luogo, Data) VALUES
-('mario.rossi',    'RSSMRA80A01H501Z', '5c021c2260a36b71c6e7199d43c9a592', 'Roma',    '1980-01-01'),
-('giulia.bianchi', 'BNCGLI90B02F205Y', '93d780adb0cd1fccb0a451f3b0a4f1a7', 'Milano',  '1990-02-02'),
-('luca.verdi',     'VRDLCU85C03L219X', 'd1662c159479b0a41d2cb9321b9999da', 'Torino',  '1985-03-03'),
-('anna.neri',      'NRANNA75D04G273W', '8ff3be1fec1ac03e487cf805cd80547a', 'Napoli',  '1975-04-04'),
-('paolo.gialli',   'GLLPLA92E05A662V', '90131af60b6091e6ab462442bfcaf711', 'Bologna', '1992-05-05'),
-('sara.blu',       'BLASRA88F06H501U', '8e37056b18b6d4166d43a9a4468c318d', 'Firenze', '1988-06-06');
+
+('mario.rossi',    'RSSMRA80A01H501Z', '5c021c2260a36b71c6e7199d43c9a592'/*pass123*/, 'Roma',    '1980-01-01'),
+('giulia.bianchi', 'BNCGLI90B02F205Y', '93d780adb0cd1fccb0a451f3b0a4f1a7'/*pass456*/, 'Milano',  '1990-02-02'),
+('luca.verdi',     'VRDLCU85C03L219X', 'd1662c159479b0a41d2cb9321b9999da'/*pass789*/, 'Torino',  '1985-03-03'),
+('anna.neri',      'NRANNA75D04G273W', '8ff3be1fec1ac03e487cf805cd80547a'/*passabc*/, 'Napoli',  '1975-04-04'),
+('paolo.gialli',   'GLLPLA92E05A662V', '90131af60b6091e6ab462442bfcaf711'/*passdef*/, 'Bologna', '1992-05-05'),
+('sara.blu',       'BLASRA88F06H501U', '8e37056b18b6d4166d43a9a4468c318d'/*passghi*/, 'Firenze', '1988-06-06');
 
 -- ─────────────────────────────────────────────
 -- 2. EMAIL
