@@ -2,13 +2,10 @@
 session_start();
 require_once "../db.php";
 
-// Controllo login
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
-
-// Controllo ruolo
 if ($_SESSION["Ruolo"] !== "revisore") {
     header("Location: ../menu.php");
     exit();
@@ -19,17 +16,15 @@ $pdo       = getDB();
 $messaggio = "";
 $errore    = "";
 
-// Inserisci nota
 if (isset($_POST["inserisci_nota"])) {
-    $id_bil  = (int)$_POST["id_bilancio"];
-    $rag_soc = trim($_POST["ragione_sociale"]);
+    $id_bil    = (int)$_POST["id_bilancio"];
+    $rag_soc   = trim($_POST["ragione_sociale"]);
     $nome_voce = trim($_POST["nome_voce"]);
     $testo     = trim($_POST["testo"]);
 
     if ($id_bil <= 0 || $rag_soc === "" || $nome_voce === "" || $testo === "") {
         $errore = "Tutti i campi sono obbligatori.";
     } else {
-        // Verifica che il revisore sia assegnato a quel bilancio
         $stmt = $pdo->prepare(
             "SELECT COUNT(*) FROM VALUTA_REVISORE_BILANCIO
              WHERE Username_Revisore_ESG = ? AND id_bilancio = ? AND Ragione_sociale_bilancio = ?"
@@ -38,7 +33,6 @@ if (isset($_POST["inserisci_nota"])) {
         if ($stmt->fetchColumn() == 0) {
             $errore = "Non sei assegnato a questo bilancio.";
         } else {
-            // Verifica che la voce appartenga al bilancio selezionato
             $stmt2 = $pdo->prepare(
                 "SELECT COUNT(*) FROM ASSOCIA_BILANCIO_VOCE
                  WHERE Nome_voce = ? AND id_bilancio = ? AND Ragione_sociale_bilancio = ?"
@@ -53,6 +47,13 @@ if (isset($_POST["inserisci_nota"])) {
                          VALUES (NOW(), ?, ?, ?)"
                     )->execute([$testo, $nome_voce, $username]);
                     $messaggio = "Nota inserita sulla voce '$nome_voce' del bilancio #$id_bil.";
+
+                    require_once "../db_mongo.php";
+                    logEvento(
+                        'INSERT_NOTA',
+                        "Revisore $username inserted note on voce '$nome_voce' (bilancio #$id_bil)",
+                        0, $id_bil
+                    );
                 } catch (PDOException $e) {
                     $errore = "Errore DB: " . $e->getMessage();
                 }
@@ -61,7 +62,6 @@ if (isset($_POST["inserisci_nota"])) {
     }
 }
 
-// Bilanci assegnati al revisore loggato
 $bilanci = [];
 try {
     $stmt = $pdo->prepare(
@@ -78,7 +78,6 @@ try {
     $errore = "Errore lettura bilanci: " . $e->getMessage();
 }
 
-// Voci del bilancio selezionato (popolate via JS oppure tutte se nessun bilancio selezionato)
 $id_sel  = isset($_GET["id_bilancio"]) ? (int)$_GET["id_bilancio"] : 0;
 $rag_sel = isset($_GET["ragione_sociale"]) ? trim($_GET["ragione_sociale"]) : "";
 
@@ -98,7 +97,6 @@ if ($id_sel > 0 && $rag_sel !== "") {
     }
 }
 
-// Note già inserite dal revisore loggato
 $note = [];
 try {
     $stmt = $pdo->prepare(
@@ -126,7 +124,6 @@ try {
     <?php if ($messaggio): ?><p style="color:green"><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
     <?php if ($errore):    ?><p style="color:red"><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
-    <!-- Step 1: seleziona bilancio -->
     <h2>1. Seleziona Bilancio Assegnato</h2>
     <?php if ($bilanci): ?>
         <table border="1">
@@ -148,7 +145,6 @@ try {
         <p>Nessun bilancio assegnato.</p>
     <?php endif; ?>
 
-    <!-- Step 2: inserisci nota (solo se bilancio selezionato) -->
     <?php if ($id_sel > 0 && $rag_sel !== ""): ?>
         <h2>2. Inserisci Nota &mdash; Bilancio #<?= htmlspecialchars($id_sel) ?> (<?= htmlspecialchars($rag_sel) ?>)</h2>
         <form action="inserisci_nota.php" method="post">

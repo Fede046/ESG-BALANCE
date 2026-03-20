@@ -2,13 +2,10 @@
 session_start();
 require_once "../db.php";
 
-// Controllo login
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
-
-// Controllo ruolo
 if ($_SESSION["Ruolo"] !== "amministratore") {
     header("Location: ../menu.php");
     exit();
@@ -19,9 +16,8 @@ $pdo       = getDB();
 $messaggio = "";
 $errore    = "";
 
-// Aggiungi voce al template
 if (isset($_POST["aggiungi_voce"])) {
-    $nome_voce  = trim($_POST["nome_voce"]);
+    $nome_voce   = trim($_POST["nome_voce"]);
     $descrizione = trim($_POST["descrizione"]) ?: null;
 
     if ($nome_voce === "") {
@@ -32,6 +28,13 @@ if (isset($_POST["aggiungi_voce"])) {
                 "INSERT INTO VOCE (Nome, Descrizione) VALUES (?, ?)"
             )->execute([$nome_voce, $descrizione]);
             $messaggio = "Voce '$nome_voce' aggiunta al template.";
+
+            require_once "../db_mongo.php";
+            logEvento(
+                'ADD_VOCE',
+                "New template voice added: $nome_voce",
+                0, 0
+            );
         } catch (PDOException $e) {
             if ($e->errorInfo[1] == 1062) {
                 $errore = "Errore: una voce con questo nome esiste già.";
@@ -42,7 +45,6 @@ if (isset($_POST["aggiungi_voce"])) {
     }
 }
 
-// Crea template bilancio
 if (isset($_POST["crea_template"])) {
     $nome_tpl = trim($_POST["nome_template"]);
     $anno_tpl = (int)$_POST["anno_template"];
@@ -56,6 +58,13 @@ if (isset($_POST["crea_template"])) {
                  VALUES (?, ?, ?)"
             )->execute([$nome_tpl, $anno_tpl, $username]);
             $messaggio = "Template '$nome_tpl' ($anno_tpl) creato.";
+
+            require_once "../db_mongo.php";
+            logEvento(
+                'CREATE_TEMPLATE',
+                "New billing template created: $nome_tpl ($anno_tpl)",
+                0, 0
+            );
         } catch (PDOException $e) {
             if ($e->errorInfo[1] == 1062) {
                 $errore = "Errore: un template con questo nome e anno esiste già.";
@@ -66,7 +75,6 @@ if (isset($_POST["crea_template"])) {
     }
 }
 
-// Lettura voci esistenti
 $voci = [];
 try {
     $voci = $pdo->query(
@@ -76,7 +84,6 @@ try {
     $errore = "Errore lettura VOCE: " . $e->getMessage();
 }
 
-// Lettura template esistenti
 $templates = [];
 try {
     $templates = $pdo->query(
@@ -99,7 +106,6 @@ try {
     <?php if ($messaggio): ?><p style="color:green"><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
     <?php if ($errore):    ?><p style="color:red"><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
-    <!-- Form template -->
     <h2>Nuovo Template</h2>
     <form action="crea_template.php" method="post">
         <label>Nome template * (max 30 caratteri)</label><br>
@@ -126,13 +132,12 @@ try {
         <p>Nessun template presente.</p>
     <?php endif; ?>
 
-    <!-- Form voci contabili -->
     <h2>Aggiungi Voce Contabile</h2>
     <form action="crea_template.php" method="post">
         <label>Nome voce * (max 30 caratteri)</label><br>
         <input type="text" name="nome_voce" maxlength="30" required><br>
 
-        <label>Descrizione (path al file, opzionale)</label><br>
+        <label>Descrizione (opzionale)</label><br>
         <input type="text" name="descrizione" maxlength="500"><br>
 
         <input type="submit" name="aggiungi_voce" value="Aggiungi Voce">

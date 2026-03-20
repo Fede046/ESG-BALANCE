@@ -2,13 +2,10 @@
 session_start();
 require_once "../db.php";
 
-// Controllo login
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
-
-// Controllo ruolo
 if ($_SESSION["Ruolo"] !== "amministratore") {
     header("Location: ../menu.php");
     exit();
@@ -19,17 +16,13 @@ $pdo       = getDB();
 $messaggio = "";
 $errore    = "";
 
-// Aggiungi indicatore
 if (isset($_POST["aggiungi_indicatore"])) {
     $nome      = trim($_POST["nome_indicatore"]);
     $rilevanza = $_POST["rilevanza"] !== "" ? (int)$_POST["rilevanza"] : null;
     $immagine  = trim($_POST["immagine"]) ?: null;
     $tipo      = $_POST["tipo"] ?? "";
 
-    // Campi ambientale
     $cod_norm  = trim($_POST["cod_norm"] ?? "") ?: null;
-
-    // Campi sociale
     $ambito    = trim($_POST["ambito"] ?? "") ?: null;
     $frequenza = $_POST["frequenza"] !== "" ? (int)$_POST["frequenza"] : null;
 
@@ -43,13 +36,11 @@ if (isset($_POST["aggiungi_indicatore"])) {
         $errore = "Ambito e frequenza sono obbligatori per indicatori sociali.";
     } else {
         try {
-            // Inserimento nella tabella padre
             $pdo->prepare(
                 "INSERT INTO INDICATORE_ESG (Nome, Username_Amministratore, Immagine, Rilevanza)
                  VALUES (?, ?, ?, ?)"
             )->execute([$nome, $username, $immagine, $rilevanza]);
 
-            // Inserimento nella sotto-tabella in base al tipo
             if ($tipo === "ambientale") {
                 $pdo->prepare(
                     "INSERT INTO ESG_AMBIENTALE (NomeEsg, cod_norm_rilevamento) VALUES (?, ?)"
@@ -59,16 +50,21 @@ if (isset($_POST["aggiungi_indicatore"])) {
                     "INSERT INTO ESG_INDICATORE_SOCIALE (NomeEsg, Ambito, Frequenza_rilevazione) VALUES (?, ?, ?)"
                 )->execute([$nome, $ambito, $frequenza]);
             }
-            // Se tipo = '' l'indicatore non rientra in nessuna sotto-categoria (consentito dalla traccia)
 
             $messaggio = "Indicatore '$nome' aggiunto" . ($tipo ? " (tipo: $tipo)" : " (generico)") . ".";
+
+            require_once "../db_mongo.php";
+            logEvento(
+                'CREATE_INDICATORE',
+                "New ESG indicator created: $nome (tipo: " . ($tipo ?: 'generico') . ")",
+                0, 0
+            );
         } catch (PDOException $e) {
             $errore = "Errore DB: " . $e->getMessage();
         }
     }
 }
 
-// Lettura indicatori esistenti con tipo
 $indicatori = [];
 try {
     $indicatori = $pdo->query(
@@ -124,14 +120,12 @@ try {
             <option value="sociale">Sociale</option>
         </select><br><br>
 
-        <!-- Campi solo per AMBIENTALE -->
         <div id="form_ambientale" style="display:none; border:1px solid #aaa; padding:8px; margin-bottom:8px;">
             <strong>Dati ambientale</strong><br>
             <label>Codice normativa di rilevamento *</label><br>
             <input type="text" name="cod_norm" maxlength="30"><br>
         </div>
 
-        <!-- Campi solo per SOCIALE -->
         <div id="form_sociale" style="display:none; border:1px solid #aaa; padding:8px; margin-bottom:8px;">
             <strong>Dati sociale</strong><br>
             <label>Ambito sociale di riferimento *</label><br>

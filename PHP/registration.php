@@ -1,84 +1,78 @@
 <?php
-    require_once "db.php";
+require_once "db.php";
 
-    $message = "";
+$message = "";
 
-    if(isset($_POST["register"])){
-        if(!empty($_POST["usr"])&&!empty($_POST["psw"])){
-            $message = instertDB();
-            // Redirect solo se registrazione riuscita
-            if($message === "ok"){
-                header("Location: login.php");
-                exit();
-            }
-        }else{
-            $message = 'Inserisci almeno Username e Password per proseguire con la registrazione';
+if (isset($_POST["register"])) {
+    if (!empty($_POST["usr"]) && !empty($_POST["psw"])) {
+        $message = instertDB();
+        if ($message === "ok") {
+            header("Location: login.php");
+            exit();
         }
+    } else {
+        $message = 'Inserisci almeno Username e Password per proseguire con la registrazione';
     }
+}
 
-    function instertDB(){
-        try{
-            $pdo = getDB();
+function instertDB() {
+    try {
+        $pdo = getDB();
 
-            $sql = query($_POST['usr'],$_POST['psw'],$_POST['CF'],$_POST['luogo'],$_POST['data']);
-            $pdo->query($sql);       
+        $pdo->prepare(
+            "INSERT INTO UTENTE (Username, CodiceFiscale, Password, Luogo, Data)
+             VALUES (?, ?, ?, ?, ?)"
+        )->execute([
+            $_POST['usr'],
+            $_POST['CF'],
+            $_POST['psw'],
+            $_POST['luogo'],
+            $_POST['data']
+        ]);
 
-            $arrayQuery = queryEmail($_POST['usr']);
-            foreach($arrayQuery as $q){
-                $pdo->query($q); 
-            }
-
-            $queryRuolo = queryRuolo($_POST['usr']);
-            if ($queryRuolo !== null) {
-                $pdo->query($queryRuolo);
-            }
-
-            return "ok";
-
-        }catch(PDOException $e){
-            if ($e->errorInfo[1] == 1062) {
-                return "Errore: Lo username è già occupato. Scegline un altro.";
-            } else {
-                return "Si è verificato un errore imprevisto: " . $e->getMessage();
+        $emails = $_POST['emails'] ?? [];
+        foreach ($emails as $email) {
+            if (trim($email) !== '') {
+                $pdo->prepare(
+                    "INSERT INTO EMAIL (Username_Utente, Indirizzo) VALUES (?, ?)"
+                )->execute([$_POST['usr'], trim($email)]);
             }
         }
-    }
 
-    function queryRuolo($usr) {
         $ruolo = $_POST['ruolo'] ?? '';
-        
-        switch($ruolo) {
-            case 'RevisoreESG':
-                return "INSERT INTO REVISORE_ESG(Username, IndiceAffidabilita, NumRevisioni) VALUES ('{$usr}', 5, 0)";
-            case 'ResponsabileAziendale':
-                return "INSERT INTO RESPONSABILE_AZIENDALE(Username, CV) VALUES ('{$usr}', '')";
-            default:
-                return null;
+        if ($ruolo === 'RevisoreESG') {
+            $pdo->prepare(
+                "INSERT INTO REVISORE_ESG (Username, IndiceAffidabilita, NumRevisioni) VALUES (?, 5, 0)"
+            )->execute([$_POST['usr']]);
+        } elseif ($ruolo === 'ResponsabileAziendale') {
+            $pdo->prepare(
+                "INSERT INTO RESPONSABILE_AZIENDALE (Username, CV) VALUES (?, '')"
+            )->execute([$_POST['usr']]);
+        }
+
+        require_once "db_mongo.php";
+        logEvento(
+            'USER_REGISTER',
+            "New user registered: " . $_POST['usr'] . " (ruolo: $ruolo)",
+            0, 0
+        );
+
+        return "ok";
+    } catch (PDOException $e) {
+        if ($e->errorInfo[1] == 1062) {
+            return "Errore: Lo username è già occupato. Scegline un altro.";
+        } else {
+            return "Si è verificato un errore imprevisto: " . $e->getMessage();
         }
     }
-
-    function queryEmail($usr){
-        $arrayQuery = [];
-
-        $emails = $_POST['emails'];
-        foreach($emails as $email){
-            $arrayQuery[] = "INSERT INTO EMAIL(Username_Utente,Indirizzo) VALUES ('{$usr}','{$email}')";
-        }
-        return $arrayQuery;
-    }
-
-    function query($usr,$psw,$CF,$luogo,$data){
-        return "INSERT INTO UTENTE(Username,CodiceFiscale,Password,Luogo,Data)
-        VALUES ('{$usr}','{$CF}','{$psw}','{$luogo}','{$data}')";
-    }
+}
 ?>
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Registrazione</title>
 </head>
 <body>
     <form action="registration.php" method="post">
@@ -89,8 +83,8 @@
         <input type="text" name='psw'>
 
         <h3>CodiceFiscale:</h3>
-        <input type="text" name='CF'>   
-        
+        <input type="text" name='CF'>
+
         <h3>Luogo di Nascita:</h3>
         <input type="text" name='luogo'>
 
@@ -100,7 +94,7 @@
         <h3>Ruolo</h3>
         <label><input type="radio" name="ruolo" value="RevisoreESG"> Revisore ESG</label><br>
         <label><input type="radio" name="ruolo" value="ResponsabileAziendale"> Responsabile Aziendale</label><br>
-        
+
         <h3>Email:</h3>
         <div id="container">
             <div>
@@ -133,17 +127,14 @@
             });
         </script>
 
-        <br>
-        <br>
+        <br><br>
         <input type="submit" name='register' value="Register">
     </form>
 
     <a href="home.php"><button>Home</button></a>
 
-    <?php
-        if ($message !== "" && $message !== "ok") {
-            echo "<h3 style='color: red;'>{$message}</h3>";
-        }    
-    ?>
+    <?php if ($message !== "" && $message !== "ok"): ?>
+        <h3 style='color: red;'><?= htmlspecialchars($message) ?></h3>
+    <?php endif; ?>
 </body>
 </html>

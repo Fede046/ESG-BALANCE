@@ -34,10 +34,18 @@ function getCategoryFromEventType(string $event_type): string {
         'CREATE_REVISIONE' => 'REVISIONE',
         'UPDATE_REVISIONE' => 'REVISIONE',
         'CLOSE_REVISIONE'  => 'REVISIONE',
+        'ASSIGN_REVISORE'  => 'REVISIONE',
+        'INSERT_NOTA'      => 'REVISIONE',
+        'INSERT_GIUDIZIO'  => 'REVISIONE',
 
         'CREATE_TEMPLATE'  => 'TEMPLATE',
         'UPDATE_TEMPLATE'  => 'TEMPLATE',
         'DELETE_TEMPLATE'  => 'TEMPLATE',
+        'ADD_VOCE'         => 'TEMPLATE',
+
+        'CREATE_INDICATORE' => 'ESG',
+        'INSERT_ESG'        => 'ESG',
+        'ADD_COMPETENZA'    => 'ESG',
     ];
 
     return $map[$event_type] ?? 'GENERAL';

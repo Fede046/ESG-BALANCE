@@ -2,13 +2,10 @@
 session_start();
 require_once "../db.php";
 
-// Controllo login
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
-
-// Controllo ruolo
 if ($_SESSION["Ruolo"] !== "revisore") {
     header("Location: ../menu.php");
     exit();
@@ -19,7 +16,6 @@ $pdo       = getDB();
 $messaggio = "";
 $errore    = "";
 
-// Aggiungi competenza
 if (isset($_POST["aggiungi_competenza"])) {
     $nome_comp = trim($_POST["nome_competenza"]);
     $livello   = $_POST["livello"] !== "" ? (int)$_POST["livello"] : null;
@@ -30,12 +26,10 @@ if (isset($_POST["aggiungi_competenza"])) {
         $errore = "Il livello deve essere tra 0 e 5.";
     } else {
         try {
-            // Prima inserisce la competenza in COMPETENZA (se non esiste)
             $pdo->prepare(
                 "INSERT IGNORE INTO COMPETENZA (Nome, Username) VALUES (?, ?)"
             )->execute([$nome_comp, $username]);
 
-            // Poi dichiara il livello in DICHIARA_COMPETENZA_REVISORE
             $pdo->prepare(
                 "INSERT INTO DICHIARA_COMPETENZA_REVISORE
                     (Username_revisore, Nome_competenza, Livello)
@@ -44,13 +38,19 @@ if (isset($_POST["aggiungi_competenza"])) {
             )->execute([$username, $nome_comp, $livello]);
 
             $messaggio = "Competenza '$nome_comp' (livello $livello) aggiunta.";
+
+            require_once "../db_mongo.php";
+            logEvento(
+                'ADD_COMPETENZA',
+                "Revisore $username added competence: $nome_comp (livello $livello)",
+                0, 0
+            );
         } catch (PDOException $e) {
             $errore = "Errore DB: " . $e->getMessage();
         }
     }
 }
 
-// Lettura competenze del revisore loggato
 $competenze = [];
 try {
     $stmt = $pdo->prepare(
@@ -78,7 +78,7 @@ try {
     <?php if ($messaggio): ?><p style="color:green"><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
     <?php if ($errore):    ?><p style="color:red"><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
-    <form action="aggiungi_competenza.php" method="post">
+    <form action="aggiungi_competenze.php" method="post">
         <label>Nome competenza * (max 30 caratteri)</label><br>
         <input type="text" name="nome_competenza" maxlength="30" required><br>
 

@@ -2,13 +2,10 @@
 session_start();
 require_once "../db.php";
 
-// Controllo login
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
-
-// Controllo ruolo
 if ($_SESSION["Ruolo"] !== "revisore") {
     header("Location: ../menu.php");
     exit();
@@ -19,7 +16,6 @@ $pdo       = getDB();
 $messaggio = "";
 $errore    = "";
 
-// Inserisci giudizio
 if (isset($_POST["inserisci_giudizio"])) {
     $id_bil  = (int)$_POST["id_bilancio"];
     $rag_soc = trim($_POST["ragione_sociale"]);
@@ -36,13 +32,19 @@ if (isset($_POST["inserisci_giudizio"])) {
                  VALUES (?, NOW(), ?, ?, ?, ?)"
             )->execute([$esito, $rilievi, $username, $id_bil, $rag_soc]);
             $messaggio = "Giudizio inserito sul bilancio #$id_bil ($rag_soc).";
+
+            require_once "../db_mongo.php";
+            logEvento(
+                'INSERT_GIUDIZIO',
+                "Revisore $username inserted judgment on bilancio #$id_bil ($rag_soc): $esito",
+                0, $id_bil
+            );
         } catch (PDOException $e) {
             $errore = "Errore DB: " . $e->getMessage();
         }
     }
 }
 
-// Lettura bilanci assegnati al revisore loggato
 $bilanci = [];
 try {
     $stmt = $pdo->prepare(
@@ -60,7 +62,6 @@ try {
     $errore = "Errore lettura bilanci: " . $e->getMessage();
 }
 
-// Lettura giudizi già inseriti dal revisore loggato
 $giudizi = [];
 try {
     $stmt = $pdo->prepare(
