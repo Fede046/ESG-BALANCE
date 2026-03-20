@@ -137,93 +137,129 @@ if ($id_sel > 0 && $rag_sel !== "") {
     <link rel="stylesheet" href="../../STYLE/style.css">
 </head>
 <body>
-    <h1>Inserisci Valore Indicatore ESG per Voce</h1>
+    <div class="card-full">
+        <div class="card-header">
+            <h1>Inserisci Valore Indicatore ESG per Voce</h1>
+            <a href="../menu.php" class="btn-logout">← Torna al menu</a>
+        </div>
 
-    <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
-    <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
+        <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
+        <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
-    <h2>1. Seleziona Bilancio</h2>
-    <?php if ($bilanci): ?>
-        <table border="1">
-            <tr><th>ID</th><th>Azienda</th><th>Stato</th><th>Azione</th></tr>
-            <?php foreach ($bilanci as $r): ?>
-                <tr>
-                    <td><?= htmlspecialchars($r["id"]) ?></td>
-                    <td><?= htmlspecialchars($r["Ragione_sociale_azienda"]) ?></td>
-                    <td><?= htmlspecialchars($r["Stato"]) ?></td>
-                    <td>
-                        <a href="inserisci_valore_esg.php?id_bilancio=<?= urlencode($r["id"]) ?>&ragione_sociale=<?= urlencode($r["Ragione_sociale_azienda"]) ?>">
-                            Seleziona
-                        </a>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    <?php else: ?>
-        <p>Nessun bilancio disponibile.</p>
-    <?php endif; ?>
+        <div class="table-container">
+            <h2>1. Seleziona Bilancio</h2>
+            <?php if ($bilanci): ?>
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Azienda</th>
+                            <th>Stato</th>
+                            <th>Azione</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($bilanci as $r): ?>
+                            <tr>
+                                <td><code class="id-badge">#<?= htmlspecialchars($r["id"]) ?></code></td>
+                                <td><strong><?= htmlspecialchars($r["Ragione_sociale_azienda"]) ?></strong></td>
+                                <td>
+                                    <span class="status-pill stato-default">
+                                        <?= htmlspecialchars($r["Stato"]) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="inserisci_valore_esg.php?id_bilancio=<?= urlencode($r["id"]) ?>&ragione_sociale=<?= urlencode($r["Ragione_sociale_azienda"]) ?>" 
+                                    class="btn-action-small">
+                                        Seleziona
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <p class="empty-msg">Nessun bilancio disponibile.</p>
+            <?php endif; ?>
+        </div>
 
-    <?php if ($id_sel > 0 && $rag_sel !== ""): ?>
-        <h2>2. Inserisci Valore ESG &mdash; Bilancio #<?= htmlspecialchars($id_sel) ?> (<?= htmlspecialchars($rag_sel) ?>)</h2>
+        <?php if ($id_sel > 0 && $rag_sel !== ""): ?>
+            <h2>2. Inserisci Valore ESG &mdash; Bilancio #<?= htmlspecialchars($id_sel) ?> (<?= htmlspecialchars($rag_sel) ?>)</h2>
 
-        <?php if (empty($voci)): ?>
-            <p>Nessuna voce associata a questo bilancio. Aggiungile prima dalla pagina "Crea Bilancio".</p>
-        <?php else: ?>
-            <form action="inserisci_valore_esg.php" method="post">
-                <input type="hidden" name="id_bilancio"     value="<?= htmlspecialchars($id_sel) ?>">
-                <input type="hidden" name="ragione_sociale" value="<?= htmlspecialchars($rag_sel) ?>">
+            <?php if (empty($voci)): ?>
+                <p>Nessuna voce associata a questo bilancio. Aggiungile prima dalla pagina "Crea Bilancio".</p>
+            <?php else: ?>
+                <form action="inserisci_valore_esg.php" method="post">
+                    <input type="hidden" name="id_bilancio"     value="<?= htmlspecialchars($id_sel) ?>">
+                    <input type="hidden" name="ragione_sociale" value="<?= htmlspecialchars($rag_sel) ?>">
+                    <div class="input-group2">
+                        <label>Voce Contabile *</label>
+                        <select name="nome_voce" required>
+                            <option value="">-- seleziona voce --</option>
+                            <?php foreach ($voci as $v): ?>
+                                <option value="<?= htmlspecialchars($v["Nome_voce"]) ?>">
+                                    <?= htmlspecialchars($v["Nome_voce"]) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="input-group2">
+                        <label>Indicatore ESG *</label>
+                        <select name="nome_esg" required>
+                            <option value="">-- seleziona indicatore --</option>
+                            <?php foreach ($indicatori as $i): ?>
+                                <option value="<?= htmlspecialchars($i["Nome"]) ?>">
+                                    <?= htmlspecialchars($i["Nome"]) ?> (rilevanza: <?= $i["Rilevanza"] ?? "—" ?>)
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="input-group2">
+                        <label>Valore *</label>
+                        <input type="number" step="0.01" name="valore" required>
+                    </div>
+                    <div class="input-group2">
+                        <label>Fonte (opzionale, max 30 caratteri)</label>
+                        <input type="text" name="fonte" maxlength="30">
+                    </div>
+                    <input type="submit" name="inserisci_valore" value="Inserisci Valore" class="add-btn">
+                </form>
+            <?php endif; ?>
 
-                <label>Voce Contabile *</label><br>
-                <select name="nome_voce" required>
-                    <option value="">-- seleziona voce --</option>
-                    <?php foreach ($voci as $v): ?>
-                        <option value="<?= htmlspecialchars($v["Nome_voce"]) ?>">
-                            <?= htmlspecialchars($v["Nome_voce"]) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select><br>
+           <div class="table-container">
+                <?php if ($valori): ?>
+                    <h2>Valori ESG già inseriti per questo bilancio (<?= count($valori) ?>)</h2>
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>Voce</th>
+                                <th>Indicatore ESG</th>
+                                <th>Valore</th>
+                                <th>Fonte</th>
+                                <th>Data</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($valori as $r): ?>
+                                <tr>
+                                    <td><strong><?= htmlspecialchars($r["NomeVoce"]) ?></strong></td>
+                                    <td><strong><?= htmlspecialchars($r["NomeEsg"]) ?></strong></td>
+                                    <td><span class="badge"><?= htmlspecialchars($r["Valore"]) ?></span></td>
+                                    <td><?= htmlspecialchars($r["Fonte"] ?? "—") ?></td>
+                                    <td><?= htmlspecialchars($r["Data"]) ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php else: ?>
+                    <p class="empty-msg">Nessun valore ESG inserito per questo bilancio.</p>
+                <?php endif; ?>
+            </div>
 
-                <label>Indicatore ESG *</label><br>
-                <select name="nome_esg" required>
-                    <option value="">-- seleziona indicatore --</option>
-                    <?php foreach ($indicatori as $i): ?>
-                        <option value="<?= htmlspecialchars($i["Nome"]) ?>">
-                            <?= htmlspecialchars($i["Nome"]) ?> (rilevanza: <?= $i["Rilevanza"] ?? "—" ?>)
-                        </option>
-                    <?php endforeach; ?>
-                </select><br>
+            <?php elseif (count($bilanci) > 0): ?>
+                <p class="empty-msg"><em>Clicca "Seleziona" su un bilancio per inserire i valori ESG.</em></p>
+            <?php endif; ?>
 
-                <label>Valore *</label><br>
-                <input type="number" step="0.01" name="valore" required><br>
-
-                <label>Fonte (opzionale, max 30 caratteri)</label><br>
-                <input type="text" name="fonte" maxlength="30"><br>
-
-                <input type="submit" name="inserisci_valore" value="Inserisci Valore">
-            </form>
-        <?php endif; ?>
-
-        <?php if ($valori): ?>
-            <h2>Valori ESG già inseriti per questo bilancio (<?= count($valori) ?>)</h2>
-            <table border="1">
-                <tr><th>Voce</th><th>Indicatore ESG</th><th>Valore</th><th>Fonte</th><th>Data</th></tr>
-                <?php foreach ($valori as $r): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($r["NomeVoce"]) ?></td>
-                        <td><?= htmlspecialchars($r["NomeEsg"]) ?></td>
-                        <td><?= htmlspecialchars($r["Valore"]) ?></td>
-                        <td><?= htmlspecialchars($r["Fonte"] ?? "—") ?></td>
-                        <td><?= htmlspecialchars($r["Data"]) ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            </table>
-        <?php else: ?>
-            <p>Nessun valore ESG inserito per questo bilancio.</p>
-        <?php endif; ?>
-    <?php elseif (count($bilanci) > 0): ?>
-        <p><em>Clicca "Seleziona" su un bilancio per inserire i valori ESG.</em></p>
-    <?php endif; ?>
-
-    <br><a href="../menu.php">← Torna al menu</a>
+    </div>
 </body>
 </html>

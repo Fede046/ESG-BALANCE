@@ -110,77 +110,104 @@ try {
     <link rel="stylesheet" href="../../STYLE/style.css">
 </head>
 <body>
-    <h1>Crea Bilancio di Esercizio</h1>
+    <div class="card-full">
+        <div class="card-header">
+            <h1>Crea Bilancio di Esercizio</h1>
+            <a href="../menu.php" class="btn-logout">← Torna al menu</a>
+        </div>
 
-    <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
-    <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
+        <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
+        <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
-    <h2>Nuovo Bilancio</h2>
-    <form action="crea_bilancio.php" method="post">
-        <label>Ragione Sociale Azienda *</label><br>
-        <select name="ragione_sociale" required>
-            <option value="">-- seleziona azienda --</option>
-            <?php foreach ($aziende as $a): ?>
-                <option value="<?= htmlspecialchars($a["Ragione_sociale"]) ?>">
-                    <?= htmlspecialchars($a["Ragione_sociale"]) ?>
-                </option>
-            <?php endforeach; ?>
-        </select><br>
+        <h2>Nuovo Bilancio</h2>
+        <form action="crea_bilancio.php" method="post">
+            <div class="input-group2">
+                <label>Ragione Sociale Azienda *</label>
+                <select name="ragione_sociale" required>
+                    <option value="">-- seleziona azienda --</option>
+                    <?php foreach ($aziende as $a): ?>
+                        <option value="<?= htmlspecialchars($a["Ragione_sociale"]) ?>">
+                            <?= htmlspecialchars($a["Ragione_sociale"]) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="input-group2">
+                <label>ID Bilancio *</label>
+                <input type="number" name="id_bilancio" min="1" required>
+            </div>
+            <input type="submit" name="crea_bilancio" value="Crea Bilancio" class="add-btn">
+        </form>
+        <br>
+        <h2>Associa Voce al Bilancio</h2>
+        <form action="crea_bilancio.php" method="post">
+            <div class="input-group2">
+                <label>Ragione Sociale Azienda *</label>
+                <select name="ragione_sociale_voce" required>
+                    <option value="">-- seleziona azienda --</option>
+                    <?php foreach ($aziende as $a): ?>
+                        <option value="<?= htmlspecialchars($a["Ragione_sociale"]) ?>">
+                            <?= htmlspecialchars($a["Ragione_sociale"]) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        <div class="input-group2">
+            <label>ID Bilancio *</label>
+            <input type="number" name="id_bilancio_voce" min="1" required>
+        </div>
+        <div class="input-group2">
+            <label>Voce Contabile *</label>
+            <select name="nome_voce" required>
+                <option value="">-- seleziona voce --</option>
+                <?php foreach ($voci as $v): ?>
+                    <option value="<?= htmlspecialchars($v["Nome"]) ?>">
+                        <?= htmlspecialchars($v["Nome"]) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="input-group2">
+            <label>Valore *</label>
+            <input type="number" name="valore" required>
+        </div>
+            <input type="submit" name="associa_voce" value="Associa Voce" class="add-btn">
+        </form>
 
-        <label>ID Bilancio *</label><br>
-        <input type="number" name="id_bilancio" min="1" required><br>
+        <div class="table-container">
+            <?php if ($bilanci): ?>
+                <h2>I tuoi bilanci (<?= count($bilanci) ?>)</h2>
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Azienda</th>
+                            <th>Data creazione</th>
+                            <th>Stato</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($bilanci as $r): ?>
+                            <tr>
+                                <td><code class="id-badge">#<?= htmlspecialchars($r["id"]) ?></code></td>
+                                <td><strong><?= htmlspecialchars($r["Ragione_sociale_azienda"]) ?></strong></td>
+                                <td style="color: #64748b; font-size: 0.9rem;">
+                                    <?= htmlspecialchars($r["Data_creazione"]) ?>
+                                </td>
+                                <td>
+                                    <span class="status-pill stato-default">
+                                        <?= htmlspecialchars($r["Stato"]) ?>
+                                    </span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <p class="empty-msg">Nessun bilancio presente.</p>
+            <?php endif; ?>
+        </div>
 
-        <input type="submit" name="crea_bilancio" value="Crea Bilancio">
-    </form>
-
-    <h2>Associa Voce al Bilancio</h2>
-    <form action="crea_bilancio.php" method="post">
-        <label>Ragione Sociale Azienda *</label><br>
-        <select name="ragione_sociale_voce" required>
-            <option value="">-- seleziona azienda --</option>
-            <?php foreach ($aziende as $a): ?>
-                <option value="<?= htmlspecialchars($a["Ragione_sociale"]) ?>">
-                    <?= htmlspecialchars($a["Ragione_sociale"]) ?>
-                </option>
-            <?php endforeach; ?>
-        </select><br>
-
-        <label>ID Bilancio *</label><br>
-        <input type="number" name="id_bilancio_voce" min="1" required><br>
-
-        <label>Voce Contabile *</label><br>
-        <select name="nome_voce" required>
-            <option value="">-- seleziona voce --</option>
-            <?php foreach ($voci as $v): ?>
-                <option value="<?= htmlspecialchars($v["Nome"]) ?>">
-                    <?= htmlspecialchars($v["Nome"]) ?>
-                </option>
-            <?php endforeach; ?>
-        </select><br>
-
-        <label>Valore *</label><br>
-        <input type="number" name="valore" required><br>
-
-        <input type="submit" name="associa_voce" value="Associa Voce">
-    </form>
-
-    <?php if ($bilanci): ?>
-        <h2>I tuoi bilanci (<?= count($bilanci) ?>)</h2>
-        <table border="1">
-            <tr><th>ID</th><th>Azienda</th><th>Data creazione</th><th>Stato</th></tr>
-            <?php foreach ($bilanci as $r): ?>
-                <tr>
-                    <td><?= htmlspecialchars($r["id"]) ?></td>
-                    <td><?= htmlspecialchars($r["Ragione_sociale_azienda"]) ?></td>
-                    <td><?= htmlspecialchars($r["Data_creazione"]) ?></td>
-                    <td><?= htmlspecialchars($r["Stato"]) ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    <?php else: ?>
-        <p>Nessun bilancio presente.</p>
-    <?php endif; ?>
-
-    <br><a href="../menu.php">← Torna al menu</a>
+    </div>
 </body>
 </html>

@@ -66,52 +66,82 @@ try {
     <link rel="stylesheet" href="../../STYLE/style.css">
 </head>
 <body>
-    <h1>Registra Azienda</h1>
+    <div class="card-full">
+        <div class="card-header">
+            <h1>Registra Azienda</h1>
+            <a href="../menu.php" class="btn-logout">← Torna al menu</a>
+        </div>
+        <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
+        <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
-    <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
-    <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
+        <form action="registra_azienda.php" method="post">
+            <div class="input-group2">
+                <label>Ragione Sociale * (max 30 caratteri)</label>
+                <input type="text" name="ragione_sociale" maxlength="30" required>
+                 </div>
+            <div class="input-group2">
+                <label>Nome * (max 30 caratteri)</label>
+                <input type="text" name="nome" maxlength="30" required>
+                 </div>
+            <div class="input-group2">
+                <label>Partita IVA *</label>
+                <input type="text" name="piva" pattern="[0-9]+" inputmode="numeric" required>
+                 </div>
+            <div class="input-group2">
+                <label>Settore (max 30 caratteri)</label>
+                <input type="text" name="settore" maxlength="30">
+                 </div>
+            <div class="input-group2">
+                <label>Numero dipendenti</label>
+                <input type="number" name="n_dip" min="0" value="0">
+                 </div>
+            <div class="input-group2">
+                <label>Logo (path al file, opzionale, max 30 caratteri)</label>
+                <input type="text" name="logo" maxlength="30">
+                 </div>
 
-    <form action="registra_azienda.php" method="post">
-        <label>Ragione Sociale * (max 30 caratteri)</label><br>
-        <input type="text" name="ragione_sociale" maxlength="30" required><br>
+            <input type="submit" name="registra_azienda" value="Registra Azienda" class="add-btn">
+        </form>
 
-        <label>Nome * (max 30 caratteri)</label><br>
-        <input type="text" name="nome" maxlength="30" required><br>
-
-        <label>Partita IVA *</label><br>
-        <input type="number" name="piva" required><br>
-
-        <label>Settore (max 30 caratteri)</label><br>
-        <input type="text" name="settore" maxlength="30"><br>
-
-        <label>Numero dipendenti</label><br>
-        <input type="number" name="n_dip" min="0" value="0"><br>
-
-        <label>Logo (path al file, opzionale, max 30 caratteri)</label><br>
-        <input type="text" name="logo" maxlength="30"><br>
-
-        <input type="submit" name="registra_azienda" value="Registra Azienda">
-    </form>
-
-    <?php if ($aziende): ?>
-        <h2>Le tue aziende (<?= count($aziende) ?>)</h2>
-        <table border="1">
-            <tr><th>Ragione Sociale</th><th>Nome</th><th>P.IVA</th><th>Settore</th><th>Dipendenti</th><th>Nr Bilanci</th></tr>
-            <?php foreach ($aziende as $r): ?>
-                <tr>
-                    <td><?= htmlspecialchars($r["Ragione_sociale"]) ?></td>
-                    <td><?= htmlspecialchars($r["Nome"]) ?></td>
-                    <td><?= htmlspecialchars($r["p_IVA"]) ?></td>
-                    <td><?= htmlspecialchars($r["Settore"] ?? "—") ?></td>
-                    <td><?= htmlspecialchars($r["n_dip"]) ?></td>
-                    <td><?= htmlspecialchars($r["nr_bilanci"]) ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    <?php else: ?>
-        <p>Nessuna azienda registrata.</p>
-    <?php endif; ?>
-
-    <br><a href="../menu.php">← Torna al menu</a>
+        <div class="table-container">
+            <?php if ($aziende): ?>
+                <h2>Le tue aziende (<?= count($aziende) ?>)</h2>
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Ragione Sociale</th>
+                            <th>Nome</th>
+                            <th>P.IVA</th>
+                            <th>Settore</th>
+                            <th>Dipendenti</th>
+                            <th>Nr Bilanci</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($aziende as $r): ?>
+                            <tr>
+                                <td><strong><?= htmlspecialchars($r["Ragione_sociale"]) ?></strong></td>
+                                <td><?= htmlspecialchars($r["Nome"]) ?></td>
+                                <td><code class="id-badge"><?= htmlspecialchars($r["p_IVA"]) ?></code></td>
+                                <td><?= htmlspecialchars($r["Settore"] ?? "—") ?></td>
+                                <td>
+                                    <span class="badge" >
+                                        <?= htmlspecialchars($r["n_dip"]) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge">
+                                        <?= htmlspecialchars($r["nr_bilanci"]) ?>
+                                    </span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <p class="empty-msg">Nessuna azienda registrata.</p>
+            <?php endif; ?>
+        </div>
+    </div>
 </body>
 </html>
