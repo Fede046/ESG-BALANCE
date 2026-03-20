@@ -79,79 +79,114 @@ try {
     <link rel="stylesheet" href="../../STYLE/style.css">
 </head>
 <body>
-    <h1>Inserisci Giudizio su Bilancio</h1>
+    <div class="card-full">
+        <div class="card-header">
+            <h1>Inserisci Giudizio su Bilancio</h1>
+            <a href="../menu.php" class="btn-logout">← Torna al menu</a>
+        </div>
+        <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
+        <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
-    <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
-    <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
+        <form action="inserisci_giudizio.php" method="post">
+            <div class="input-group2">
+                <label>Bilancio assegnato *</label>
+                <select name="id_bilancio" required onchange="sincronizzaRagioneSociale(this)">
+                    <option value="">-- seleziona bilancio --</option>
+                    <?php foreach ($bilanci as $b): ?>
+                        <option value="<?= htmlspecialchars($b["id"]) ?>"
+                                data-ragione="<?= htmlspecialchars($b["Ragione_sociale_azienda"]) ?>">
+                            #<?= htmlspecialchars($b["id"]) ?> — <?= htmlspecialchars($b["Ragione_sociale_azienda"]) ?> (<?= htmlspecialchars($b["Stato"]) ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <input type="hidden" name="ragione_sociale" id="ragione_sociale_hidden">
+            <div class="input-group2">
+                <label>Esito *</label>
+                <select name="esito" required>
+                    <option value="">-- seleziona esito --</option>
+                    <option value="approvazione">Approvazione</option>
+                    <option value="approvazione con rilievi">Approvazione con rilievi</option>
+                    <option value="respingimento">Respingimento</option>
+                </select>
+            </div>
+            <div class="input-group2">
+                <label>Rilievi (opzionale)</label>
+                <textarea name="rilievi" rows="4" cols="50"></textarea>
+            </div>
+            <input type="submit" name="inserisci_giudizio" value="Inserisci Giudizio" class="add-btn">
+        </form>
 
-    <form action="inserisci_giudizio.php" method="post">
-        <label>Bilancio assegnato *</label><br>
-        <select name="id_bilancio" required onchange="sincronizzaRagioneSociale(this)">
-            <option value="">-- seleziona bilancio --</option>
-            <?php foreach ($bilanci as $b): ?>
-                <option value="<?= htmlspecialchars($b["id"]) ?>"
-                        data-ragione="<?= htmlspecialchars($b["Ragione_sociale_azienda"]) ?>">
-                    #<?= htmlspecialchars($b["id"]) ?> — <?= htmlspecialchars($b["Ragione_sociale_azienda"]) ?> (<?= htmlspecialchars($b["Stato"]) ?>)
-                </option>
-            <?php endforeach; ?>
-        </select><br>
-        <input type="hidden" name="ragione_sociale" id="ragione_sociale_hidden">
+        <script>
+        function sincronizzaRagioneSociale(sel) {
+            var opt = sel.options[sel.selectedIndex];
+            document.getElementById('ragione_sociale_hidden').value = opt.dataset.ragione || '';
+        }
+        </script>
 
-        <label>Esito *</label><br>
-        <select name="esito" required>
-            <option value="">-- seleziona esito --</option>
-            <option value="approvazione">Approvazione</option>
-            <option value="approvazione con rilievi">Approvazione con rilievi</option>
-            <option value="respingimento">Respingimento</option>
-        </select><br>
+        <div class="table-container">
+            <?php if ($bilanci): ?>
+                <h2>Bilanci assegnati a te</h2>
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Azienda</th>
+                            <th>Stato</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($bilanci as $r): ?>
+                            <tr>
+                                <td><code class="id-badge">#<?= htmlspecialchars($r["id"]) ?></code></td>
+                                <td><strong><?= htmlspecialchars($r["Ragione_sociale_azienda"]) ?></strong></td>
+                                <td>
+                                    <span class="status-pill stato-default">
+                                        <?= htmlspecialchars($r["Stato"]) ?>
+                                    </span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <p class="empty-msg">Nessun bilancio assegnato.</p>
+            <?php endif; ?>
+        </div>
 
-        <label>Rilievi (opzionale)</label><br>
-        <textarea name="rilievi" rows="4" cols="50"></textarea><br>
-
-        <input type="submit" name="inserisci_giudizio" value="Inserisci Giudizio">
-    </form>
-
-    <script>
-    function sincronizzaRagioneSociale(sel) {
-        var opt = sel.options[sel.selectedIndex];
-        document.getElementById('ragione_sociale_hidden').value = opt.dataset.ragione || '';
-    }
-    </script>
-
-    <?php if ($bilanci): ?>
-        <h2>Bilanci assegnati a te</h2>
-        <table border="1">
-            <tr><th>ID</th><th>Azienda</th><th>Stato</th></tr>
-            <?php foreach ($bilanci as $r): ?>
-                <tr>
-                    <td><?= htmlspecialchars($r["id"]) ?></td>
-                    <td><?= htmlspecialchars($r["Ragione_sociale_azienda"]) ?></td>
-                    <td><?= htmlspecialchars($r["Stato"]) ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    <?php else: ?>
-        <p>Nessun bilancio assegnato.</p>
-    <?php endif; ?>
-
-    <?php if ($giudizi): ?>
-        <h2>I tuoi giudizi (<?= count($giudizi) ?>)</h2>
-        <table border="1">
-            <tr><th>Data</th><th>ID Bilancio</th><th>Azienda</th><th>Esito</th><th>Rilievi</th></tr>
-            <?php foreach ($giudizi as $r): ?>
-                <tr>
-                    <td><?= htmlspecialchars($r["Data"]) ?></td>
-                    <td><?= htmlspecialchars($r["id_bilancio"]) ?></td>
-                    <td><?= htmlspecialchars($r["Ragione_sociale_bilancio"]) ?></td>
-                    <td><?= htmlspecialchars($r["Esito"]) ?></td>
-                    <td><?= htmlspecialchars($r["Rilievi"] ?? "—") ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    <?php else: ?>
-        <p>Nessun giudizio inserito.</p>
-    <?php endif; ?>
-
-    <br><a href="../menu.php">← Torna al menu</a>
+        <div class="table-container">
+            <?php if ($giudizi): ?>
+                <h2>I tuoi giudizi (<?= count($giudizi) ?>)</h2>
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>ID Bilancio</th>
+                            <th>Azienda</th>
+                            <th>Esito</th>
+                            <th>Rilievi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($giudizi as $r): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($r["Data"]) ?></td>
+                                <td><code class="id-badge">#<?= htmlspecialchars($r["id_bilancio"]) ?></code></td>
+                                <td><strong><?= htmlspecialchars($r["Ragione_sociale_bilancio"]) ?></strong></td>
+                                <td>
+                                    <span class="status-pill <?= (strtolower($r['Esito']) == 'positivo') ? 'stato-success' : 'stato-warning' ?>">
+                                        <?= htmlspecialchars($r["Esito"]) ?>
+                                    </span>
+                                </td>
+                                <td><?= htmlspecialchars($r["Rilievi"] ?? "—") ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <p class="empty-msg">Nessun giudizio inserito.</p>
+            <?php endif; ?>
+        </div>
+    </div>
 </body>
 </html>

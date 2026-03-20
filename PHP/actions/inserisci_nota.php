@@ -119,75 +119,108 @@ try {
     <link rel="stylesheet" href="../../STYLE/style.css">
 </head>
 <body>
-    <h1>Inserisci Nota su Voce di Bilancio</h1>
+    <div class="card-full">
+        <div class="card-header">
+            <h1>Inserisci Nota su Voce di Bilancio</h1>
+            <a href="../menu.php" class="btn-logout">← Torna al menu</a>
+        </div>
+    
 
-    <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
-    <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
+        <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
+        <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
-    <h2>1. Seleziona Bilancio Assegnato</h2>
-    <?php if ($bilanci): ?>
-        <table border="1">
-            <tr><th>ID</th><th>Azienda</th><th>Stato</th><th>Azione</th></tr>
-            <?php foreach ($bilanci as $r): ?>
-                <tr>
-                    <td><?= htmlspecialchars($r["id"]) ?></td>
-                    <td><?= htmlspecialchars($r["Ragione_sociale_azienda"]) ?></td>
-                    <td><?= htmlspecialchars($r["Stato"]) ?></td>
-                    <td>
-                        <a href="inserisci_nota.php?id_bilancio=<?= urlencode($r["id"]) ?>&ragione_sociale=<?= urlencode($r["Ragione_sociale_azienda"]) ?>">
-                            Seleziona
-                        </a>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    <?php else: ?>
-        <p>Nessun bilancio assegnato.</p>
-    <?php endif; ?>
+        <div class="table-container">
+            <h2>1. Seleziona Bilancio Assegnato</h2>
+            <?php if ($bilanci): ?>
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Azienda</th>
+                            <th>Stato</th>
+                            <th>Azione</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($bilanci as $r): ?>
+                            <tr>
+                                <td><code class="id-badge">#<?= htmlspecialchars($r["id"]) ?></code></td>
+                                <td><strong><?= htmlspecialchars($r["Ragione_sociale_azienda"]) ?></strong></td>
+                                <td>
+                                    <span class="status-pill stato-default">
+                                        <?= htmlspecialchars($r["Stato"]) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="inserisci_nota.php?id_bilancio=<?= urlencode($r["id"]) ?>&ragione_sociale=<?= urlencode($r["Ragione_sociale_azienda"]) ?>" 
+                                    class="btn-action-small">
+                                        Seleziona
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <p class="empty-msg">Nessun bilancio assegnato.</p>
+            <?php endif; ?>
+        </div>
 
-    <?php if ($id_sel > 0 && $rag_sel !== ""): ?>
-        <h2>2. Inserisci Nota &mdash; Bilancio #<?= htmlspecialchars($id_sel) ?> (<?= htmlspecialchars($rag_sel) ?>)</h2>
-        <form action="inserisci_nota.php" method="post">
-            <input type="hidden" name="id_bilancio"     value="<?= htmlspecialchars($id_sel) ?>">
-            <input type="hidden" name="ragione_sociale" value="<?= htmlspecialchars($rag_sel) ?>">
+        <?php if ($id_sel > 0 && $rag_sel !== ""): ?>
+            <h2>2. Inserisci Nota &mdash; Bilancio #<?= htmlspecialchars($id_sel) ?> (<?= htmlspecialchars($rag_sel) ?>)</h2>
+            <form action="inserisci_nota.php" method="post">
+                <input type="hidden" name="id_bilancio"     value="<?= htmlspecialchars($id_sel) ?>">
+                <input type="hidden" name="ragione_sociale" value="<?= htmlspecialchars($rag_sel) ?>">
+                <div class="input-group2">
+                    <label>Voce contabile *</label>
+                    <select name="nome_voce" required>
+                        <option value="">-- seleziona voce --</option>
+                        <?php foreach ($voci as $v): ?>
+                            <option value="<?= htmlspecialchars($v["Nome_voce"]) ?>">
+                                <?= htmlspecialchars($v["Nome_voce"]) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="input-group2">
+                    <label>Testo nota *</label>
+                    <textarea name="testo" rows="4" cols="50" required></textarea><br>
+                </div>
+                <input type="submit" name="inserisci_nota" value="Inserisci Nota" class="add-btn">
+            </form>
+        <?php elseif (count($bilanci) > 0): ?>
+            <p><em>Clicca "Seleziona" su un bilancio per inserire una nota.</em></p>
+        <?php endif; ?>
 
-            <label>Voce contabile *</label><br>
-            <select name="nome_voce" required>
-                <option value="">-- seleziona voce --</option>
-                <?php foreach ($voci as $v): ?>
-                    <option value="<?= htmlspecialchars($v["Nome_voce"]) ?>">
-                        <?= htmlspecialchars($v["Nome_voce"]) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select><br>
+        <div class="table-container">
+            <?php if ($note): ?>
+                <h2>Le tue note (<?= count($note) ?>)</h2>
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Voce</th>
+                            <th>Bilancio</th>
+                            <th>Azienda</th>
+                            <th>Testo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($note as $r): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($r["Data"]) ?></td>
+                                <td><strong><?= htmlspecialchars($r["NomeVoce"]) ?></strong></td>
+                                <td><code class="id-badge">#<?= htmlspecialchars($r["id_bilancio"]) ?></code></td>
+                                <td><?= htmlspecialchars($r["Ragione_sociale_bilancio"]) ?></td>
+                                <td><?= htmlspecialchars($r["Testo"]) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <p class="empty-msg">Nessuna nota inserita.</p>
+            <?php endif; ?>
+        </div>
 
-            <label>Testo nota *</label><br>
-            <textarea name="testo" rows="4" cols="50" required></textarea><br>
-
-            <input type="submit" name="inserisci_nota" value="Inserisci Nota">
-        </form>
-    <?php elseif (count($bilanci) > 0): ?>
-        <p><em>Clicca "Seleziona" su un bilancio per inserire una nota.</em></p>
-    <?php endif; ?>
-
-    <?php if ($note): ?>
-        <h2>Le tue note (<?= count($note) ?>)</h2>
-        <table border="1">
-            <tr><th>Data</th><th>Voce</th><th>Bilancio</th><th>Azienda</th><th>Testo</th></tr>
-            <?php foreach ($note as $r): ?>
-                <tr>
-                    <td><?= htmlspecialchars($r["Data"]) ?></td>
-                    <td><?= htmlspecialchars($r["NomeVoce"]) ?></td>
-                    <td><?= htmlspecialchars($r["id_bilancio"]) ?></td>
-                    <td><?= htmlspecialchars($r["Ragione_sociale_bilancio"]) ?></td>
-                    <td><?= htmlspecialchars($r["Testo"]) ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    <?php else: ?>
-        <p>Nessuna nota inserita.</p>
-    <?php endif; ?>
-
-    <br><a href="../menu.php">← Torna al menu</a>
 </body>
 </html>
