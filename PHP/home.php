@@ -7,10 +7,10 @@
     <link rel="stylesheet" href="../STYLE/style.css">
 </head>
 <body>
-    <main>
-    <h1 class="welcome_page">WELCOME</h1>
-    <button><a href="login.php" class="welcome_page">Login</a></button>
-    <button><a href="registration.php" class="welcome_page">Registration</a></button>    
-    </main>
+    <div class="card">
+        <h1 class="welcome_page">WELCOME</h1>
+        <a href="login.php" class="welcome_page btn">Login</a>
+        <a href="registration.php" class="welcome_page btn">Registration</a>
+    </div>
 </body>
 </html>

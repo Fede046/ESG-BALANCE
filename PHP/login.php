@@ -37,21 +37,30 @@ if (isset($_POST["login"])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login – ESG Balance</title>
+    <link rel="stylesheet" href="../STYLE/style.css">
+
 </head>
 <body>
-    <form action="login.php" method="post">
-        <h3>Username:</h3>
-        <input type="text" name="usr">
-        <h3>Password:</h3>
-        <input type="password" name="psw">
-        <br>
-        <input type="submit" name="login" value="Login">
-    </form>
+    <div class="card">
+        <form action="login.php" method="post">
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" name="usr" placeholder="Inserisci username" required>
+            </div>
+            
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" name="psw" placeholder="••••••••" required>
+            </div>
 
-    <?php if ($errore): ?>
-        <p><?= htmlspecialchars($errore) ?></p>
-    <?php endif; ?>
+            <input type="submit" name="login" value="Accedi" class="btn-login">
+        </form>
 
-    <a href="home.php"><button>Home</button></a>
+        <?php if ($errore): ?>
+            <p class="error-msg"><?= htmlspecialchars($errore) ?></p>
+        <?php endif; ?>
+
+        <a href="home.php" class="btn-home">Home</a>
+    </div>
 </body>
 </html>

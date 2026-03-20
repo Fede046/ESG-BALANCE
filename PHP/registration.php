@@ -62,71 +62,83 @@ function registraUtente() {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registrazione – ESG Balance</title>
+        <link rel="stylesheet" href="../STYLE/style.css">
+
 </head>
 <body>
-    <form action="registration.php" method="post">
-        <h3>Username:</h3>
-        <input type="text" name="usr">
-
-        <h3>Password:</h3>
-        <input type="password" name="psw">
-
-        <h3>Codice Fiscale:</h3>
-        <input type="text" name="CF">
-
-        <h3>Luogo di Nascita:</h3>
-        <input type="text" name="luogo">
-
-        <h3>Data di Nascita:</h3>
-        <input type="date" name="data">
-
-        <h3>Ruolo *</h3>
-        <label><input type="radio" name="ruolo" value="revisore" required> Revisore ESG</label><br>
-        <label><input type="radio" name="ruolo" value="responsabile"> Responsabile Aziendale</label><br>
-
-        <div id="cv_block" style="display:none">
-            <h3>CV (path al file):</h3>
-            <input type="text" name="cv" maxlength="500">
-        </div>
-
-        <h3>Email:</h3>
-        <div id="container">
-            <div>
-                <input type="email" name="emails[]">
-                <button type="button" class="remove-btn">Remove</button>
+    <div class="card">
+        <form action="registration.php" method="post">
+            <div class="input-group">
+                <label>Username:</label>
+                <input type="text" name="usr" placeholder="Inserisci username" required>
             </div>
-        </div>
-        <input type="button" id="addEmail" value="Add Email">
+            <div class="input-group">
+                <label>Password:</label>
+                <input type="password" name="psw" placeholder="••••••••" required>
+            </div>
+            <div class="input-group">
+                <label>Codice Fiscale:</label>
+                <input type="text" name="CF" placeholder="Es: RSSMRA50R15H501Y" required>
+            </div>
+            <div class="input-group">
+                <label>Luogo di Nascita:</label>
+                <input type="text" name="luogo" placeholder="Es: Bologna" required>
+            </div>
+            <div class="input-group">
+                <label>Data di Nascita:</label>
+                <input type="date" name="data" required>
+            </div>
+            <div class="input-group">
+                <label>Ruolo *</label>
+                <label><input type="radio" name="ruolo" value="revisore" required> Revisore ESG</label>
+                <label><input type="radio" name="ruolo" value="responsabile" > Responsabile Aziendale</label>
+            </div>
+            <div class="input-group">
+                <div id="cv_block" style="display:none">
+                    <label>CV (PDF):</label>
+                    <input type="file" name="cv" accept=".pdf">
+                </div>
+            </div>
+            <div class="input-group">
+                <div id="container">
+                    <div>
+                        <input type="email" name="emails[]" placeholder="mario.rossi@gmail.com">
+                        <button type="button" class="remove-btn">Remove</button>
+                    </div>
+                </div>
+                <input type="button" id="addEmail" value="Add Email">
+            </div>
 
-        <script>
-            document.querySelectorAll('input[name="ruolo"]').forEach(function(radio) {
-                radio.addEventListener('change', function() {
-                    document.getElementById('cv_block').style.display =
-                        (this.value === 'responsabile') ? 'block' : 'none';
+            <script>
+                document.querySelectorAll('input[name="ruolo"]').forEach(function(radio) {
+                    radio.addEventListener('change', function() {
+                        document.getElementById('cv_block').style.display =
+                            (this.value === 'responsabile') ? 'block' : 'none';
+                    });
                 });
-            });
 
-            const container = document.getElementById('container');
-            document.getElementById('addEmail').addEventListener('click', function() {
-                const div = document.createElement('div');
-                div.innerHTML = '<input type="email" name="emails[]"><button type="button" class="remove-btn">Remove</button>';
-                container.appendChild(div);
-            });
-            container.addEventListener('click', function(e) {
-                if (e.target.classList.contains('remove-btn')) {
-                    if (container.children.length > 1) e.target.parentElement.remove();
-                }
-            });
-        </script>
+                const container = document.getElementById('container');
+                document.getElementById('addEmail').addEventListener('click', function() {
+                    const div = document.createElement('div');
+                    div.innerHTML = '<input type="email" name="emails[]"><button type="button" class="remove-btn">Remove</button>';
+                    container.appendChild(div);
+                });
+                container.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('remove-btn')) {
+                        if (container.children.length > 1) e.target.parentElement.remove();
+                    }
+                });
+            </script>
 
-        <br><br>
-        <input type="submit" name="register" value="Register">
-    </form>
+            <br><br>
+            <input type="submit" name="register" value="Register" class="btn-login">
+        </form>
 
-    <a href="home.php"><button>Home</button></a>
+        <a href="home.php" class="btn-home">Home</a>
+</div>
 
     <?php if ($message !== '' && $message !== 'ok'): ?>
-        <p><?= htmlspecialchars($message) ?></p>
+        <p class="error-msg"><?= htmlspecialchars($message) ?></p>
     <?php endif; ?>
 </body>
 </html>
