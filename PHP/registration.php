@@ -106,7 +106,7 @@ function registraUtente() {
                         <button type="button" class="remove-btn">Remove</button>
                     </div>
                 </div>
-                <input type="button" id="addEmail" value="Add Email">
+                <input type="button" id="addEmail" class="add-btn" value="Add Email">
             </div>
 
             <script>

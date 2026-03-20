@@ -83,6 +83,7 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aggiungi Indicatore ESG</title>
+    <link rel="stylesheet" href="../../STYLE/style.css">
     <script>
     function aggiornaFormTipo() {
         var tipo = document.getElementById("tipo").value;
@@ -92,61 +93,81 @@ try {
     </script>
 </head>
 <body>
-    <h1>Aggiungi Indicatore ESG</h1>
-
-    <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
-    <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
-
-    <form action="aggiungi_indicatore.php" method="post">
-        <label>Nome * (max 30 caratteri)</label><br>
-        <input type="text" name="nome_indicatore" maxlength="30" required><br>
-
-        <label>Rilevanza (0–10, opzionale)</label><br>
-        <input type="number" name="rilevanza" min="0" max="10"><br>
-
-        <label>Immagine (path al file, opzionale)</label><br>
-        <input type="text" name="immagine" maxlength="500"><br>
-
-        <label>Tipo indicatore</label><br>
-        <select name="tipo" id="tipo" onchange="aggiornaFormTipo()">
-            <option value="">-- generico (nessuna categoria) --</option>
-            <option value="ambientale">Ambientale</option>
-            <option value="sociale">Sociale</option>
-        </select><br><br>
-
-        <div id="form_ambientale" style="display:none">
-            <strong>Dati ambientale</strong><br>
-            <label>Codice normativa di rilevamento *</label><br>
-            <input type="text" name="cod_norm" maxlength="30"><br>
+    <div class="card-full">
+        <div class="card-header">
+            <h1>Aggiungi Indicatore ESG</h1>
+            <a href="../menu.php" class="btn-logout">← Torna al menu</a>
         </div>
+        <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
+        <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
-        <div id="form_sociale" style="display:none">
-            <strong>Dati sociale</strong><br>
-            <label>Ambito sociale di riferimento *</label><br>
-            <input type="text" name="ambito" maxlength="30"><br>
-            <label>Frequenza di rilevazione (giorni) *</label><br>
-            <input type="number" name="frequenza" min="1"><br>
-        </div>
+        <form action="aggiungi_indicatore.php" method="post">
+            <div class="input-group2">
+                <label>Nome * (max 30 caratteri)</label>
+                <input type="text" name="nome_indicatore" maxlength="30" required>
+            </div>
+            <div class="input-group2">
+                <label>Rilevanza (0–10, opzionale)</label>
+                <input type="number" name="rilevanza" min="0" max="10">
+            </div>
+            <div class="input-group2">
+                <label>Immagine (opzionale)</label>
+                <input type="file" name="immagine" accept="image/*">
+            </div>
+            <div class="input-group2">
+                <label>Tipo indicatore</label>
+                <select name="tipo" id="tipo" onchange="aggiornaFormTipo()">
+                    <option value="">-- generico (nessuna categoria) --</option>
+                    <option value="ambientale">Ambientale</option>
+                    <option value="sociale">Sociale</option>
+                </select>
+            </div>
+            <div class="input-group2">
+                <div id="form_ambientale" style="display:none">
+                    <strong>Dati ambientale</strong>
+                    <label>Codice normativa di rilevamento *</label>
+                    <input type="text" name="cod_norm" maxlength="30">
+                </div>
+            </div>
+            <div class="input-group2">
+                <div id="form_sociale" style="display:none">
+                    <strong>Dati sociale</strong><br>
+                    <label>Ambito sociale di riferimento *</label>
+                    <input type="text" name="ambito" maxlength="30"><br><br>
+                    <label>Frequenza di rilevazione (giorni) *</label>
+                    <input type="number" name="frequenza" min="1">
+                </div>
+            </div>
+            <input type="submit" name="aggiungi_indicatore" value="Aggiungi Indicatore" class="add-btn">
+        </form>
 
-        <input type="submit" name="aggiungi_indicatore" value="Aggiungi Indicatore">
-    </form>
-
-    <?php if ($indicatori): ?>
-        <h2>Indicatori presenti (<?= count($indicatori) ?>)</h2>
-        <table border="1">
-            <tr><th>Nome</th><th>Rilevanza</th><th>Tipo</th></tr>
-            <?php foreach ($indicatori as $r): ?>
-                <tr>
-                    <td><?= htmlspecialchars($r["Nome"]) ?></td>
-                    <td><?= $r["Rilevanza"] ?? "—" ?></td>
-                    <td><?= htmlspecialchars($r["Tipo"]) ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    <?php else: ?>
-        <p>Nessun indicatore presente.</p>
-    <?php endif; ?>
-
-    <br><a href="../menu.php">← Torna al menu</a>
+        <?php if ($indicatori): ?>
+            <div class="table-container">
+                <h2>Indicatori presenti (<?= count($indicatori) ?>)</h2>
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Rilevanza</th>
+                            <th>Tipo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($indicatori as $r): ?>
+                            <tr>
+                                <td><strong><?= htmlspecialchars($r["Nome"]) ?></strong></td>
+                                <td><span class="badge"><?= $r["Rilevanza"] ?? "—" ?></span></td>
+                                <td><span class="type-tag <?= strtolower($r["Tipo"]) ?>"><?= htmlspecialchars($r["Tipo"] ?: 'Generico') ?></span></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php else: ?>
+            <p class="empty-msg">Nessun indicatore presente nel sistema.</p>
+        <?php endif; ?>
+    
+    </div>
+    
 </body>
 </html>

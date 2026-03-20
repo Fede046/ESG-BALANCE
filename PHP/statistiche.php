@@ -52,45 +52,76 @@ try {
 
 </head>
 <body>
-    <h1>Statistiche ESG Balance</h1>
+    <div class="card-full">
+        <div class="card-header">
+            <h1>Statistiche ESG Balance</h1>
+            <a href="menu.php" class="btn-logout">← Torna al menu</a>
+        </div>
 
-    <?php if ($errore): ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
+        <?php if ($errore): ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
-    <h2>Aziende registrate</h2>
-    <p><strong><?= htmlspecialchars($num_aziende) ?></strong> aziende presenti in piattaforma.</p>
+        <h2>Aziende registrate</h2>
+        <p><strong><?= htmlspecialchars($num_aziende) ?></strong> aziende presenti in piattaforma.</p>
 
-    <h2>Revisori ESG registrati</h2>
-    <p><strong><?= htmlspecialchars($num_revisori) ?></strong> revisori ESG presenti in piattaforma.</p>
+        <h2>Revisori ESG registrati</h2>
+        <p><strong><?= htmlspecialchars($num_revisori) ?></strong> revisori ESG presenti in piattaforma.</p>
 
-    <h2>Azienda con affidabilità più alta</h2>
-    <?php if ($azienda_top): ?>
-        <table border="1">
-            <tr><th>Azienda</th><th>Affidabilità %</th></tr>
-            <tr>
-                <td><?= htmlspecialchars($azienda_top["Azienda"]) ?></td>
-                <td><?= htmlspecialchars(round($azienda_top["PercentualeAffidabilita"], 2)) ?>%</td>
-            </tr>
-        </table>
-    <?php else: ?>
-        <p>Nessun dato disponibile.</p>
-    <?php endif; ?>
+        <h2>Azienda con affidabilità più alta</h2>
+        <div class="table-container">
+            <?php if ($azienda_top): ?>
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Azienda</th>
+                            <th>Affidabilità %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong><?= htmlspecialchars($azienda_top["Azienda"]) ?></strong></td>
+                            <td>
+                                <span class="badge">
+                                    <?= htmlspecialchars(round($azienda_top["PercentualeAffidabilita"], 2)) ?>%
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <p class="empty-msg">Nessun dato disponibile.</p>
+            <?php endif; ?>
+        </div>
 
-    <h2>Classifica bilanci per indicatori ESG collegati</h2>
-    <?php if ($classifica): ?>
-        <table border="1">
-            <tr><th>ID Bilancio</th><th>Azienda</th><th>Nr. Indicatori ESG</th></tr>
-            <?php foreach ($classifica as $r): ?>
-                <tr>
-                    <td><?= htmlspecialchars($r["ID_Bilancio"]) ?></td>
-                    <td><?= htmlspecialchars($r["Azienda"]) ?></td>
-                    <td><?= htmlspecialchars($r["Totale_Indicatori_ESG"]) ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    <?php else: ?>
-        <p>Nessun bilancio presente.</p>
-    <?php endif; ?>
+        <hr class="separator">
 
-    <br><a href="menu.php">← Torna al menu</a>
+        <div class="table-container">
+            <h2>Classifica bilanci per indicatori ESG collegati</h2>
+            <?php if ($classifica): ?>
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>ID Bilancio</th>
+                            <th>Azienda</th>
+                            <th>Nr. Indicatori ESG</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($classifica as $r): ?>
+                            <tr>
+                                <td><code>#<?= htmlspecialchars($r["ID_Bilancio"]) ?></code></td>
+                                <td><strong><?= htmlspecialchars($r["Azienda"]) ?></strong></td>
+                                <td>
+                                    <span class="badge">
+                                        <?= htmlspecialchars($r["Totale_Indicatori_ESG"]) ?> indicatori
+                                    </span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <p class="empty-msg">Nessun bilancio presente.</p>
+            <?php endif; ?>
+    </div></div>
 </body>
 </html>

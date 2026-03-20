@@ -43,24 +43,26 @@ $voci_menu = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Menu – ESG Balance</title>
-        <link rel="stylesheet" href="../STYLE/style.css">
-
+    <link rel="stylesheet" href="../STYLE/style.css">
 </head>
 <body>
-    <h1>ESG Balance</h1>
-    <p>Benvenuto <strong><?= htmlspecialchars($username) ?></strong> — ruolo: <strong><?= htmlspecialchars($ruolo) ?></strong></p>
+    <div class="card-full">
+        <div class="card-header">
+            <h1>ESG Balance</h1>
+            <form action="menu.php" method="post">
+                <input type="submit" name="logout" value="Logout" class="btn-logout">
+            </form>
+        </div>
+        <p>Benvenuto <strong><?= htmlspecialchars($username) ?></strong> — ruolo: <strong><?= htmlspecialchars($ruolo) ?></strong></p>
 
-    <ul>
-        <?php foreach ($voci_menu[$ruolo] as $voce): ?>
-            <li><a href="<?= htmlspecialchars($voce["href"]) ?>"><?= htmlspecialchars($voce["label"]) ?></a></li>
-        <?php endforeach; ?>
+        <ul>
+            <?php foreach ($voci_menu[$ruolo] as $voce): ?>
+                <li><a href="<?= htmlspecialchars($voce["href"]) ?>"><?= htmlspecialchars($voce["label"]) ?></a></li>
+            <?php endforeach; ?>
 
-        <!-- Statistiche visibili a tutti -->
-        <li><a href="statistiche.php">Statistiche</a></li>
-    </ul>
-
-    <form action="menu.php" method="post">
-        <input type="submit" name="logout" value="Logout">
-    </form>
+            <!-- Statistiche visibili a tutti -->
+            <li><a href="statistiche.php">Statistiche</a></li>
+        </ul>
+    </div>
 </body>
 </html>

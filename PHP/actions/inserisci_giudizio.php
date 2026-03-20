@@ -76,6 +76,7 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inserisci Giudizio</title>
+    <link rel="stylesheet" href="../../STYLE/style.css">
 </head>
 <body>
     <h1>Inserisci Giudizio su Bilancio</h1>

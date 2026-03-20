@@ -57,38 +57,42 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Le mie Competenze</title>
+    <link rel="stylesheet" href="../../STYLE/style.css">
 </head>
 <body>
-    <h1>Le mie Competenze</h1>
+    <div class="card-full">
+        <div class="card-header">
+                <h1>Le mie Competenze</h1>
+                <a href="../menu.php" class="btn-logout">← Torna al menu</a>
+            </div>
+        <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
+        <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
-    <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
-    <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
+        <form action="aggiungi_competenze.php" method="post">
+            <label>Nome competenza * (max 30 caratteri)</label><br>
+            <input type="text" name="nome_competenza" maxlength="30" required><br>
 
-    <form action="aggiungi_competenze.php" method="post">
-        <label>Nome competenza * (max 30 caratteri)</label><br>
-        <input type="text" name="nome_competenza" maxlength="30" required><br>
+            <label>Livello * (0–5)</label><br>
+            <input type="number" name="livello" min="0" max="5" required><br>
 
-        <label>Livello * (0–5)</label><br>
-        <input type="number" name="livello" min="0" max="5" required><br>
+            <input type="submit" name="aggiungi_competenza" value="Aggiungi Competenza">
+        </form>
 
-        <input type="submit" name="aggiungi_competenza" value="Aggiungi Competenza">
-    </form>
+        <?php if ($competenze): ?>
+            <h2>Le tue competenze (<?= count($competenze) ?>)</h2>
+            <table border="1">
+                <tr><th>Competenza</th><th>Livello</th></tr>
+                <?php foreach ($competenze as $r): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($r["Nome_competenza"]) ?></td>
+                        <td><?= htmlspecialchars($r["Livello"]) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </table>
+        <?php else: ?>
+            <p>Nessuna competenza dichiarata.</p>
+        <?php endif; ?>
 
-    <?php if ($competenze): ?>
-        <h2>Le tue competenze (<?= count($competenze) ?>)</h2>
-        <table border="1">
-            <tr><th>Competenza</th><th>Livello</th></tr>
-            <?php foreach ($competenze as $r): ?>
-                <tr>
-                    <td><?= htmlspecialchars($r["Nome_competenza"]) ?></td>
-                    <td><?= htmlspecialchars($r["Livello"]) ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    <?php else: ?>
-        <p>Nessuna competenza dichiarata.</p>
-    <?php endif; ?>
-
-    <br><a href="../menu.php">← Torna al menu</a>
+    </div>
 </body>
 </html>
