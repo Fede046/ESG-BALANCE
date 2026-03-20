@@ -130,7 +130,7 @@ function registraUtente() {
                 });
             </script>
 
-            <br><br>
+            <br>
             <input type="submit" name="register" value="Register" class="btn-login">
         </form>
 
