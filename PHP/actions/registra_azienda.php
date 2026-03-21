@@ -32,6 +32,10 @@ if (isset($_POST["registra_azienda"])) {
             $stmt = $pdo->prepare("CALL sp_RegistraAzienda(?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([$ragione_sociale, $nome, $piva, $settore, $n_dip, $logo, $username]);
             $messaggio = "Azienda '$ragione_sociale' registrata.";
+
+            require_once "../db_mongo.php";
+            logEvento('CREATE_COMPANY', "Azienda registrata: " . $ragione_sociale . " da " . $username, 0, 0);
+
         } catch (PDOException $e) {
             if ($e->errorInfo[1] == 1062) {
                 $errore = "Errore: una azienda con questa ragione sociale esiste già.";

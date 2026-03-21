@@ -46,6 +46,9 @@ function registraUtente() {
             }
         }
 
+        require_once "db_mongo.php";
+        logEvento('USER_REGISTER', "Nuovo utente registrato: " . $_POST['usr'] . " (ruolo: " . $ruolo . ")", 0, 0);
+
         return "ok";
 
     } catch (PDOException $e) {

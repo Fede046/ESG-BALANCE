@@ -15,12 +15,20 @@ if (isset($_POST["login"])) {
             $stmt->execute([$_POST["usr"], $psw_hash]);
             $riga = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($riga) {
-                $_SESSION["Username"] = $riga["Username"];
-                $_SESSION["Ruolo"]    = $riga["Ruolo"];
-                header("Location: menu.php");
-                exit();
-            } else {
+if ($riga) {
+    $_SESSION["Username"] = $riga["Username"];
+    $_SESSION["Ruolo"]    = $riga["Ruolo"];
+
+    require_once "db_mongo.php";
+    logEvento(
+        'USER_LOGIN',
+        "Login effettuato: " . $riga["Username"] . " (ruolo: " . $riga["Ruolo"] . ")",
+        0, 0
+    );
+
+    header("Location: menu.php");
+    exit();
+} else {
                 $errore = "Username o password errati.";
             }
         } catch (PDOException $e) {
