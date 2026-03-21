@@ -1,11 +1,25 @@
 <?php
 require_once __DIR__ . '/../vendor/autoload.php';
 
-function getMongoEvents(): MongoDB\Collection {
+function getMongoCollection(string $event_type): MongoDB\Collection {
     try {
         $client = new MongoDB\Client("mongodb://127.0.0.1:27017");
-        return $client->selectDatabase("TEST_PROGETTO")
-                      ->selectCollection("events");
+        $db = $client->selectDatabase("TEST_PROGETTO");
+
+        $category = getCategoryFromEventType($event_type);
+        $collectionMap = [
+            'USER'      => 'events_user',
+            'BILANCIO'  => 'events_bilancio',
+            'REVISIONE' => 'events_revisione',
+            'TEMPLATE'  => 'events_template',
+            'ESG'       => 'events_esg',
+            'COMPANY'   => 'events_company',
+            'GENERAL'   => 'events_general',
+        ];
+
+        $collectionName = $collectionMap[$category] ?? 'events_general';
+        return $db->selectCollection($collectionName);
+
     } catch (Exception $e) {
         error_log("Errore connessione MongoDB: " . $e->getMessage());
         throw $e;
@@ -52,7 +66,7 @@ function getCategoryFromEventType(string $event_type): string {
 }
 
 /**
- * Registra un evento nel formato unificato della collection 'events'.
+ * Registra un evento nella collection corrispondente alla categoria.
  *
  * @param string $event_type  Es. 'CREATE_COMPANY', 'CREATE_BILANCIO', ...
  * @param string $text        Descrizione leggibile dell'evento
@@ -61,7 +75,7 @@ function getCategoryFromEventType(string $event_type): string {
  */
 function logEvento(string $event_type, string $text, int $user_id = 0, int $entity_id = 0): void {
     try {
-        $col = getMongoEvents();
+        $col = getMongoCollection($event_type);
         $col->insertOne([
             'text'       => $text,
             'timestamp'  => new MongoDB\BSON\UTCDateTime(),
