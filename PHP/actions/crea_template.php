@@ -29,6 +29,10 @@ if (isset($_POST["aggiungi_voce"])) {
             $stmt = $pdo->prepare("CALL sp_CreaVoceTemplate(?, ?, ?)");
             $stmt->execute([$nome_voce, $descrizione, $username]);
             $messaggio = "Voce '$nome_voce' aggiunta al template.";
+
+            require_once "../db_mongo.php";
+            logEvento('ADD_VOCE', "Voce template aggiunta: '$nome_voce' da $username", 0, 0);
+
         } catch (PDOException $e) {
             if ($e->errorInfo[1] == 1062) {
                 $errore = "Errore: una voce con questo nome esiste già.";

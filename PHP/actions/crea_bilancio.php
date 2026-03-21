@@ -29,6 +29,10 @@ if (isset($_POST["crea_bilancio"])) {
             $stmt = $pdo->prepare("CALL sp_CreaBilancioEsercizio(?, ?)");
             $stmt->execute([$id_bil, $rag_soc]);
             $messaggio = "Bilancio #$id_bil creato per '$rag_soc'.";
+
+            require_once "../db_mongo.php";
+            logEvento('CREATE_BILANCIO', "Bilancio #$id_bil creato per '$rag_soc' da $username", 0, $id_bil);
+
         } catch (PDOException $e) {
             if ($e->errorInfo[1] == 1062) {
                 $errore = "Errore: un bilancio con questo ID esiste già per questa azienda.";
