@@ -53,6 +53,10 @@ if (isset($_POST["inserisci_valore"])) {
                     $stmt3 = $pdo->prepare("CALL sp_InserisciValoreESG(?, ?, ?, ?)");
                     $stmt3->execute([$nome_voce, $nome_esg, $fonte, $valore]);
                     $messaggio = "Valore ESG inserito per voce '$nome_voce' — indicatore '$nome_esg'.";
+
+                    require_once "../db_mongo.php";
+                    logEvento('INSERT_ESG', "Valore ESG inserito: voce '$nome_voce', indicatore '$nome_esg' nel bilancio #$id_bil ($rag_soc) da $username", 0, $id_bil);
+
                 } catch (PDOException $e) {
                     $errore = "Errore DB: " . $e->getMessage();
                 }

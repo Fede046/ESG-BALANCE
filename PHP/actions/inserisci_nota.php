@@ -49,6 +49,10 @@ if (isset($_POST["inserisci_nota"])) {
                     $stmt3 = $pdo->prepare("CALL sp_InserisciNotaVoce(?, ?, ?, ?, ?)");
                     $stmt3->execute([$testo, $nome_voce, $username, $id_bil, $rag_soc]);
                     $messaggio = "Nota inserita sulla voce '$nome_voce' del bilancio #$id_bil.";
+
+                    require_once "../db_mongo.php";
+                    logEvento('INSERT_NOTA', "Nota inserita sulla voce '$nome_voce' del bilancio #$id_bil ($rag_soc) da $username", 0, $id_bil);
+
                 } catch (PDOException $e) {
                     $errore = "Errore DB: " . $e->getMessage();
                 }

@@ -48,6 +48,10 @@ if (isset($_POST["aggiungi_indicatore"])) {
                 $frequenza
             ]);
             $messaggio = "Indicatore '$nome' aggiunto" . ($tipo ? " (tipo: $tipo)" : " (generico)") . ".";
+
+            require_once "../db_mongo.php";
+            logEvento('CREATE_INDICATORE', "Indicatore ESG creato: '$nome' (tipo: " . ($tipo ?: 'generico') . ") da $username", 0, 0);
+
         } catch (PDOException $e) {
             if ($e->errorInfo[1] == 1062) {
                 $errore = "Errore: un indicatore con questo nome esiste già.";

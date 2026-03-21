@@ -30,6 +30,10 @@ if (isset($_POST["aggiungi_competenza"])) {
             $stmt = $pdo->prepare("CALL sp_InserisciCompetenzaRevisore(?, ?, ?)");
             $stmt->execute([$username, $nome_comp, $livello]);
             $messaggio = "Competenza '$nome_comp' (livello $livello) aggiunta.";
+
+            require_once "../db_mongo.php";
+            logEvento('ADD_COMPETENZA', "Competenza '$nome_comp' (livello $livello) aggiunta da $username", 0, 0);
+
         } catch (PDOException $e) {
             $errore = "Errore DB: " . $e->getMessage();
         }

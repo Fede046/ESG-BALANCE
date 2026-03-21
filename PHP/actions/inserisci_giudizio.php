@@ -32,6 +32,10 @@ if (isset($_POST["inserisci_giudizio"])) {
             $stmt = $pdo->prepare("CALL sp_InserisciGiudizioComplessivo(NULL, ?, ?, ?, ?, ?)");
             $stmt->execute([$esito, $rilievi, $username, $id_bil, $rag_soc]);
             $messaggio = "Giudizio inserito sul bilancio #$id_bil ($rag_soc).";
+
+            require_once "../db_mongo.php";
+            logEvento('INSERT_GIUDIZIO', "Giudizio '$esito' inserito sul bilancio #$id_bil ($rag_soc) da $username", 0, $id_bil);
+
         } catch (PDOException $e) {
             $errore = "Errore DB: " . $e->getMessage();
         }
