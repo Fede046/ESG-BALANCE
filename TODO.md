@@ -12,12 +12,12 @@ FATTO  - Registrare evento su MongoDB alla **creazione di un bilancio** (`crea_b
 FATTO  - Registrare evento su MongoDB all'**inserimento di un valore ESG** (`inserisci_valore_esg.php`) con: voce, indicatore, valore, timestamp
 FATTO  - Registrare evento su MongoDB all'**inizio revisione** (`associa_revisore.php`) con: username revisore, id bilancio, ragione sociale, timestamp
 FATTO  - Registrare evento su MongoDB alla **registrazione di una nuova azienda** (`registra_azienda.php`) con: ragione sociale, username responsabile, timestamp
-
-### Controllo unicità ruolo utente
--  Aggiungere in `sp_Registrazione` (o come trigger su `UTENTE`) un controllo che impedisca di registrare lo stesso username in più di una tabella ruolo (`AMMINISTRATORE`, `REVISORE_ESG`, `RESPONSABILE_AZIENDALE`)
-- Replicare lo stesso controllo in `registration.php` lato applicativo, con messaggio di errore chiaro
+- finire di inserire i LogEvento(), es. logout ecc.
 
 
+ALESSIA 
+- modificare la aprte di errori per fare in modo che siano coerenti e più belli.
+- modificare all'interno di menu come si venono usernaem e ruolo
 ## Pagina statistiche
 
 La traccia richiede statistiche sulla piattaforma. Nel database esistono già 4 VIEW pronte:
