@@ -35,6 +35,18 @@ if (isset($_POST["inserisci_giudizio"])) {
 
             require_once "../db_mongo.php";
             logEvento('INSERT_GIUDIZIO', "Giudizio '$esito' inserito sul bilancio #$id_bil ($rag_soc) da $username", 0, $id_bil);
+            // Controlla se il trigger ha cambiato lo stato del bilancio
+            $stmt_stato = $pdo->prepare(
+                "SELECT Stato FROM BILANCIO WHERE id = ? AND Ragione_sociale_azienda = ?"
+            );
+            $stmt_stato->execute([$id_bil, $rag_soc]);
+            $stato_attuale = $stmt_stato->fetchColumn();
+            
+            if ($stato_attuale === 'approvato') {
+                logEvento('APPROVE_BILANCIO', "Bilancio #$id_bil ($rag_soc) approvato dopo tutti i giudizi", 0, $id_bil);
+            } elseif ($stato_attuale === 'respinto') {
+                logEvento('REJECT_BILANCIO', "Bilancio #$id_bil ($rag_soc) respinto dopo tutti i giudizi", 0, $id_bil);
+            }
 
         } catch (PDOException $e) {
             $errore = "Errore DB: " . $e->getMessage();

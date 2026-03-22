@@ -31,35 +31,26 @@ function getMongoCollection(string $event_type): MongoDB\Collection {
  */
 function getCategoryFromEventType(string $event_type): string {
     $map = [
-        'CREATE_COMPANY'   => 'COMPANY',
-        'UPDATE_COMPANY'   => 'COMPANY',
-        'DELETE_COMPANY'   => 'COMPANY',
+    'CREATE_COMPANY'   => 'COMPANY',
+    
+    'CREATE_BILANCIO'  => 'BILANCIO',
+    'APPROVE_BILANCIO' => 'BILANCIO',
+    'REJECT_BILANCIO'  => 'BILANCIO',
 
-        'CREATE_BILANCIO'  => 'BILANCIO',
-        'SUBMIT_BILANCIO'  => 'BILANCIO',
-        'APPROVE_BILANCIO' => 'BILANCIO',
-        'REJECT_BILANCIO'  => 'BILANCIO',
+    'USER_LOGIN'       => 'USER',
+    'USER_LOGOUT'      => 'USER',
+    'USER_REGISTER'    => 'USER',
 
-        'USER_LOGIN'       => 'USER',
-        'USER_LOGOUT'      => 'USER',
-        'USER_REGISTER'    => 'USER',
-        'USER_UPDATE'      => 'USER',
+    'INSERT_NOTA'      => 'REVISIONE',
+    'INSERT_GIUDIZIO'  => 'REVISIONE',
+    'ASSIGN_REVISORE'  => 'REVISIONE',
+    'CREATE_REVISIONE' => 'REVISIONE',
 
-        'CREATE_REVISIONE' => 'REVISIONE',
-        'UPDATE_REVISIONE' => 'REVISIONE',
-        'CLOSE_REVISIONE'  => 'REVISIONE',
-        'ASSIGN_REVISORE'  => 'REVISIONE',
-        'INSERT_NOTA'      => 'REVISIONE',
-        'INSERT_GIUDIZIO'  => 'REVISIONE',
+    'ADD_VOCE'         => 'TEMPLATE',
 
-        'CREATE_TEMPLATE'  => 'TEMPLATE',
-        'UPDATE_TEMPLATE'  => 'TEMPLATE',
-        'DELETE_TEMPLATE'  => 'TEMPLATE',
-        'ADD_VOCE'         => 'TEMPLATE',
-
-        'CREATE_INDICATORE' => 'ESG',
-        'INSERT_ESG'        => 'ESG',
-        'ADD_COMPETENZA'    => 'ESG',
+    'CREATE_INDICATORE' => 'ESG',
+    'INSERT_ESG'        => 'ESG',
+    'ADD_COMPETENZA'    => 'ESG',
     ];
 
     return $map[$event_type] ?? 'GENERAL';

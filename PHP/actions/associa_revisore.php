@@ -30,8 +30,10 @@ if (isset($_POST["associa_revisore"])) {
             $stmt->execute([$rev, $id_bil, $rag_soc]);
             $messaggio = "Revisore '$rev' associato al bilancio #$id_bil ($rag_soc).";
 
+           // in PHP/actions/associa_revisore.php, dopo il logEvento esistente
             require_once "../db_mongo.php";
             logEvento('ASSIGN_REVISORE', "Revisore '$rev' assegnato al bilancio #$id_bil ($rag_soc)", 0, $id_bil);
+            logEvento('CREATE_REVISIONE', "Revisione avviata sul bilancio #$id_bil ($rag_soc)", 0, $id_bil);
 
         } catch (PDOException $e) {
             if ($e->errorInfo[1] == 1062) {

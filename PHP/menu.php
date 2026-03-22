@@ -10,6 +10,11 @@ if (!isset($_SESSION["Username"])) {
 
 // Logout
 if (isset($_POST["logout"])) {
+    // ── AGGIUNGERE QUESTE 3 RIGHE ──
+    $username_log = $_SESSION["Username"];
+    require_once "db_mongo.php";
+    logEvento('USER_LOGOUT', "Logout effettuato: " . $username_log, 0, 0);
+    // ──────────────────────────────
     session_destroy();
     header("Location: home.php");
     exit();
