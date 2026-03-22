@@ -12,7 +12,7 @@ FATTO  - Registrare evento su MongoDB alla **creazione di un bilancio** (`crea_b
 FATTO  - Registrare evento su MongoDB all'**inserimento di un valore ESG** (`inserisci_valore_esg.php`) con: voce, indicatore, valore, timestamp
 FATTO  - Registrare evento su MongoDB all'**inizio revisione** (`associa_revisore.php`) con: username revisore, id bilancio, ragione sociale, timestamp
 FATTO  - Registrare evento su MongoDB alla **registrazione di una nuova azienda** (`registra_azienda.php`) con: ragione sociale, username responsabile, timestamp
-- finire di inserire i LogEvento(), es. logout ecc.
+FATTO??? - finire di inserire i LogEvento(), es. logout ecc.
 
 
 ALESSIA 
