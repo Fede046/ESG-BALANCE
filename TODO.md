@@ -17,7 +17,7 @@ FATTO  - Registrare evento su MongoDB alla **registrazione di una nuova azienda*
 
 ALESSIA 
 - modificare la aprte di errori per fare in modo che siano coerenti e più belli.
-- modificare all'interno di menu come si venono usernaem e ruolo
+- modificare all'interno di menu come si venono username e ruolo. 
 ## Pagina statistiche
 
 La traccia richiede statistiche sulla piattaforma. Nel database esistono già 4 VIEW pronte:
