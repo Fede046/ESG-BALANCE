@@ -25,36 +25,57 @@ if (isset($_POST["inserisci_nota"])) {
 
     if ($id_bil <= 0 || $rag_soc === "" || $nome_voce === "" || $testo === "") {
         $errore = "Tutti i campi sono obbligatori.";
-    } else {
-        // Verifica che il revisore sia assegnato a quel bilancio
-        $stmt = $pdo->prepare(
-            "SELECT COUNT(*) FROM VALUTA_REVISORE_BILANCIO
-             WHERE Username_Revisore_ESG = ? AND id_bilancio = ? AND Ragione_sociale_bilancio = ?"
-        );
-        $stmt->execute([$username, $id_bil, $rag_soc]);
-        if ($stmt->fetchColumn() == 0) {
-            $errore = "Non sei assegnato a questo bilancio.";
         } else {
-            // Verifica che la voce appartenga al bilancio
-            $stmt2 = $pdo->prepare(
-                "SELECT COUNT(*) FROM ASSOCIA_BILANCIO_VOCE
-                 WHERE Nome_voce = ? AND id_bilancio = ? AND Ragione_sociale_bilancio = ?"
+        // 1. Limite lunghezza testo nota lato PHP
+        if (strlen($testo) > 500) {
+            $errore = "Il testo non può superare 500 caratteri.";
+
+        } else {
+            // 2. Controlla stato bilancio: non modificabile se chiuso
+            $chk_stato = $pdo->prepare(
+                "SELECT Stato FROM BILANCIO
+                 WHERE id = ? AND Ragione_sociale_azienda = ?"
             );
-            $stmt2->execute([$nome_voce, $id_bil, $rag_soc]);
-            if ($stmt2->fetchColumn() == 0) {
-                $errore = "La voce selezionata non appartiene a questo bilancio.";
+            $chk_stato->execute([$id_bil, $rag_soc]);
+            $bilancio = $chk_stato->fetch(PDO::FETCH_ASSOC);
+
+            if (!$bilancio) {
+                $errore = "Bilancio non trovato.";
+
+            } elseif (in_array(strtolower($bilancio['Stato']), ['approvato', 'respinto'])) {
+                $errore = "Non puoi aggiungere note a un bilancio già chiuso.";
+
             } else {
-                try {
-                    // sp_InserisciNotaVoce(p_testo, p_nome_voce, p_username_revisore, p_id_bilancio, p_ragione_sociale)
-                    $stmt3 = $pdo->prepare("CALL sp_InserisciNotaVoce(?, ?, ?, ?, ?)");
-                    $stmt3->execute([$testo, $nome_voce, $username, $id_bil, $rag_soc]);
-                    $messaggio = "Nota inserita sulla voce '$nome_voce' del bilancio #$id_bil.";
+                // Verifica che il revisore sia assegnato a quel bilancio
+                $stmt = $pdo->prepare(
+                    "SELECT COUNT(*) FROM VALUTA_REVISORE_BILANCIO
+                     WHERE Username_Revisore_ESG = ? AND id_bilancio = ? AND Ragione_sociale_bilancio = ?"
+                );
+                $stmt->execute([$username, $id_bil, $rag_soc]);
+                if ($stmt->fetchColumn() == 0) {
+                    $errore = "Non sei assegnato a questo bilancio.";
+                } else {
+                    // Verifica che la voce appartenga al bilancio
+                    $stmt2 = $pdo->prepare(
+                        "SELECT COUNT(*) FROM ASSOCIA_BILANCIO_VOCE
+                         WHERE Nome_voce = ? AND id_bilancio = ? AND Ragione_sociale_bilancio = ?"
+                    );
+                    $stmt2->execute([$nome_voce, $id_bil, $rag_soc]);
+                    if ($stmt2->fetchColumn() == 0) {
+                        $errore = "La voce selezionata non appartiene a questo bilancio.";
+                    } else {
+                        try {
+                            $stmt3 = $pdo->prepare("CALL sp_InserisciNotaVoce(?, ?, ?, ?, ?)");
+                            $stmt3->execute([$testo, $nome_voce, $username, $id_bil, $rag_soc]);
+                            $messaggio = "Nota inserita sulla voce '$nome_voce' del bilancio #$id_bil.";
 
-                    require_once "../db_mongo.php";
-                    logEvento('INSERT_NOTA', "Nota inserita sulla voce '$nome_voce' del bilancio #$id_bil ($rag_soc) da $username", 0, $id_bil);
+                            require_once "../db_mongo.php";
+                            logEvento('INSERT_NOTA', "Nota inserita sulla voce '$nome_voce' del bilancio #$id_bil ($rag_soc) da $username", 0, $id_bil);
 
-                } catch (PDOException $e) {
-                    $errore = "Errore DB: " . $e->getMessage();
+                        } catch (PDOException $e) {
+                            $errore = "Errore DB: " . $e->getMessage();
+                        }
+                    }
                 }
             }
         }
