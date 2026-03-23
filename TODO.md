@@ -35,53 +35,48 @@ per ciascuna VIEW e la mostri a schermo. Se la pagina calcola i dati con query d
 sulle tabelle o è ancora incompleta, va aggiornata per **usare le VIEW già definite nel SQL**.
 
 
-## 🔒 VALIDAZIONI & WARNING – Tutti i file
+## Validazioni & Warning – Implementate
 
 ### `login.php`
-- [ ] Nessun controllo se i campi sono stati lasciati vuoti lato server (solo `required` HTML) → aggiungere: "Inserisci username e password." (già presente ma verificare che copra anche POST vuoti forzati)
+- [x] Controllo campi vuoti lato server già presente (`!empty`) – nessuna modifica necessaria
 
 ### `registration.php`
-- [ ] Password troppo corta: `strlen($psw) >= 8` → "La password deve essere di almeno 8 caratteri."
-- [ ] Ruolo non selezionato: `$ruolo` può arrivare vuoto se nessun radio è selezionato → `if (!in_array($ruolo, ['revisore', 'responsabile']))` → "Seleziona un ruolo valido."
-- [ ] Codice Fiscale: nessuna validazione formato → `preg_match('/^[A-Z0-9]{16}$/i', $CF)` → "Codice Fiscale non valido (16 caratteri alfanumerici)."
-- [ ] Data di nascita: nessun controllo che non sia nel futuro o che l'utente abbia almeno 18 anni → "Data di nascita non valida."
-- [ ] Email: validare ogni indirizzo con `filter_var($email, FILTER_VALIDATE_EMAIL)` lato PHP → "L'indirizzo email '$email' non è valido."
-- [ ] Nessuna conferma password (campo "Ripeti password") → aggiungere campo e check `$psw === $psw_confirm`
-
-### `statistiche.php`
-- [ ] Nessun messaggio se le VIEW restituiscono `null` o `0` per un motivo diverso dall'assenza di dati (es. errore DB silenzioso) → distinguere tra "0 aziende registrate" e "impossibile caricare i dati"
-- [ ] Nessun controllo accesso per ruolo: tutti i ruoli vedono le statistiche (probabilmente voluto, ma verificare)
+- [x] Password minimo 8 caratteri → "La password deve essere di almeno 8 caratteri."
+- [x] Conferma password → campo `psw_confirm` + check `$psw === $psw_confirm`
+- [x] Ruolo non valido → `in_array($ruolo, ['revisore','responsabile'])` → "Seleziona un ruolo valido."
+- [x] Codice Fiscale formato → `preg_match('/^[A-Z0-9]{16}$/i', $CF)` → "Codice Fiscale non valido."
+- [x] Data di nascita → controllo futuro + età minima 18 anni
+- [x] Email → `filter_var($email, FILTER_VALIDATE_EMAIL)` su ogni indirizzo
 
 ### `actions/registra_azienda.php`
-- [ ] Partita IVA: nessuna validazione formato → `preg_match('/^\d{11}$/', $piva)` → "La P.IVA deve contenere esattamente 11 cifre numeriche."
-- [ ] Numero dipendenti: nessun controllo PHP che `$n_dip >= 0` (solo `min="0"` HTML aggirabile) → "Il numero di dipendenti non può essere negativo."
+- [x] Partita IVA → `preg_match('/^\d{11}$/', $piva)` → "La P.IVA deve contenere esattamente 11 cifre numeriche."
+- [x] Numero dipendenti → `$n_dip < 0` → "Il numero di dipendenti non può essere negativo."
 
 ### `actions/aggiungi_competenze.php`
-- [ ] Nome competenza: nessun controllo su caratteri speciali o se è già presente per questo revisore → "Hai già dichiarato questa competenza." (prima della SP, per un messaggio più chiaro)
+- [x] Competenza duplicata → SELECT preventivo su `DICHIARA_COMPETENZA_REVISORE` → "Hai già dichiarato questa competenza."
 
 ### `actions/aggiungi_indicatore.php`
-- [ ] Frequenza per indicatori sociali: controllato se `!== null` ma non se `> 0` → "La frequenza deve essere maggiore di 0 giorni."
-- [ ] Rilevanza: controllata solo se `!== null`; se l'utente mette un valore non intero (es. "abc") `(int)` lo converte a 0 silenziosamente → aggiungere `is_numeric($_POST['rilevanza'])` prima del cast
+- [x] Rilevanza non numerica → `is_numeric($_POST['rilevanza'])` prima del cast → "La rilevanza deve essere un numero intero."
+- [x] Frequenza sociale → `$frequenza <= 0` → "La frequenza deve essere maggiore di 0 giorni."
 
 ### `actions/crea_template.php`
-- [ ] Nessun controllo lunghezza minima sul nome voce (es. 1 solo carattere è accettato) → aggiungere `strlen($nome_voce) >= 2` → "Il nome della voce deve avere almeno 2 caratteri."
+- [x] Lunghezza minima nome voce → `strlen($nome_voce) >= 2` → "Il nome della voce deve avere almeno 2 caratteri."
 
 ### `actions/crea_bilancio.php`
-- [ ] `id_bilancio` inserito manualmente: nessun check preventivo se esiste già per quell'azienda → mostra errore DB grezzo; sostituire con query di verifica prima della SP e messaggio: "Un bilancio con questo ID esiste già per questa azienda."
-- [ ] Azione `associa_voce`: nessun controllo che il bilancio inserito appartenga davvero a un'azienda del responsabile loggato → "Bilancio non trovato o non di tua competenza."
+- [x] ID bilancio duplicato → SELECT preventivo su `BILANCIO` → "Un bilancio con questo ID esiste già per questa azienda."
+- [x] Ownership bilancio in `associa_voce` → JOIN su `AZIENDA` → "Bilancio non trovato o non di tua competenza."
 
 ### `actions/associa_revisore.php`
-- [ ] Nessun controllo che il bilancio non sia già in stato `approvato` o `respinto` → "Non puoi assegnare un revisore a un bilancio già chiuso."
-- [ ] Nessun controllo che il revisore scelto abbia competenze rilevanti (opzionale/miglioramento)
+- [x] Bilancio già chiuso → SELECT su `Stato` → "Non puoi assegnare un revisore a un bilancio già chiuso."
 
 ### `actions/inserisci_giudizio.php`
-- [ ] Nessun controllo che il revisore non abbia già inserito un giudizio su quel bilancio → "Hai già inserito un giudizio per questo bilancio."
-- [ ] Nessun controllo che il bilancio non sia già in stato finale (`approvato`/`respinto`) → "Il bilancio è già chiuso, non puoi inserire un nuovo giudizio."
+- [x] Bilancio già chiuso → SELECT su `Stato` → "Il bilancio è già chiuso, non puoi inserire un nuovo giudizio."
+- [x] Giudizio duplicato → SELECT su `GIUDIZIO` → "Hai già inserito un giudizio per questo bilancio."
 
 ### `actions/inserisci_nota.php`
-- [ ] Nessun limite di lunghezza sul testo nota lato PHP (solo textarea HTML) → `strlen($testo) <= 500` → "Il testo non può superare 500 caratteri."
-- [ ] Nessun controllo che il bilancio non sia già in stato finale prima di inserire la nota → "Non puoi aggiungere note a un bilancio già chiuso."
+- [x] Limite lunghezza testo → `strlen($testo) <= 500` → "Il testo non può superare 500 caratteri."
+- [x] Bilancio già chiuso → SELECT su `Stato` → "Non puoi aggiungere note a un bilancio già chiuso."
 
 ### `actions/inserisci_valore_esg.php`
-- [ ] `$valore` non viene validato come numerico: `is_numeric($valore)` → "Il valore deve essere un numero."
-- [ ] Nessun controllo che il bilancio non sia già in stato `approvato`/`respinto` prima di inserire valori → "Non puoi modificare un bilancio già chiuso."
+- [x] Valore non numerico → `is_numeric($valore)` → "Il valore deve essere un numero."
+- [x] Bilancio già chiuso → SELECT su `Stato` → "Non puoi modificare un bilancio già chiuso."
