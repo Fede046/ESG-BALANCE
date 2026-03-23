@@ -23,23 +23,36 @@ if (isset($_POST["associa_revisore"])) {
     $rev     = trim($_POST["username_revisore"]);
 
     if ($id_bil <= 0 || $rag_soc === "" || $rev === "") {
-        $errore = "Tutti i campi sono obbligatori.";
-    } else {
-        try {
+    $errore = "Tutti i campi sono obbligatori.";
+} else {
+    try {
+        // 1. Controllo che il bilancio non sia già in stato approvato o respinto
+        $chk = $pdo->prepare(
+            "SELECT Stato FROM BILANCIO
+             WHERE id = ? AND Ragione_sociale_azienda = ?"
+        );
+        $chk->execute([$id_bil, $rag_soc]);
+        $bilancio = $chk->fetch(PDO::FETCH_ASSOC);
+
+        if (!$bilancio) {
+            $errore = "Bilancio non trovato.";
+        } elseif (in_array(strtolower($bilancio['Stato']), ['approvato', 'respinto'])) {
+            $errore = "Non puoi assegnare un revisore a un bilancio già chiuso.";
+        } else {
             $stmt = $pdo->prepare("CALL sp_AssociaRevisore(?, ?, ?)");
             $stmt->execute([$rev, $id_bil, $rag_soc]);
             $messaggio = "Revisore '$rev' associato al bilancio #$id_bil ($rag_soc).";
 
-           // in PHP/actions/associa_revisore.php, dopo il logEvento esistente
             require_once "../db_mongo.php";
             logEvento('ASSIGN_REVISORE', "Revisore '$rev' assegnato al bilancio #$id_bil ($rag_soc)", 0, $id_bil);
             logEvento('CREATE_REVISIONE', "Revisione avviata sul bilancio #$id_bil ($rag_soc)", 0, $id_bil);
+        }
 
-        } catch (PDOException $e) {
-            if ($e->errorInfo[1] == 1062) {
-                $errore = "Errore: il revisore è già assegnato a questo bilancio.";
-            } else {
-                $errore = "Errore DB: " . $e->getMessage();
+    } catch (PDOException $e) {
+        if ($e->errorInfo[1] == 1062) {
+            $errore = "Errore: il revisore è già assegnato a questo bilancio.";
+        } else {
+            $errore = "Errore DB: " . $e->getMessage();
             }
         }
     }
