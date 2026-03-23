@@ -25,19 +25,30 @@ if (isset($_POST["aggiungi_competenza"])) {
         $errore = "Il nome della competenza è obbligatorio.";
     } elseif ($livello === null || $livello < 0 || $livello > 5) {
         $errore = "Il livello deve essere tra 0 e 5.";
-    } else {
-        try {
+} else {
+    try {
+        // Controllo duplicato PRIMA della SP, per messaggio chiaro
+        $chk = $pdo->prepare(
+            "SELECT 1 FROM DICHIARA_COMPETENZA_REVISORE
+             WHERE Username_revisore = ? AND Nome_competenza = ?"
+        );
+        $chk->execute([$username, $nome_comp]);
+
+        if ($chk->fetch()) {
+            $errore = "Hai già dichiarato questa competenza.";
+        } else {
             $stmt = $pdo->prepare("CALL sp_InserisciCompetenzaRevisore(?, ?, ?)");
             $stmt->execute([$username, $nome_comp, $livello]);
             $messaggio = "Competenza '$nome_comp' (livello $livello) aggiunta.";
 
             require_once "../db_mongo.php";
             logEvento('ADD_COMPETENZA', "Competenza '$nome_comp' (livello $livello) aggiunta da $username", 0, 0);
-
-        } catch (PDOException $e) {
-            $errore = "Errore DB: " . $e->getMessage();
         }
+
+    } catch (PDOException $e) {
+        $errore = "Errore DB: " . $e->getMessage();
     }
+}
 }
 
 // Lettura competenze del revisore loggato
