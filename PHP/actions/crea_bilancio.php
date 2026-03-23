@@ -23,21 +23,32 @@ if (isset($_POST["crea_bilancio"])) {
     $id_bil  = (int)$_POST["id_bilancio"];
 
     if ($rag_soc === "" || $id_bil <= 0) {
-        $errore = "Ragione sociale e ID bilancio sono obbligatori.";
-    } else {
-        try {
+    $errore = "Ragione sociale e ID bilancio sono obbligatori.";
+} else {
+    try {
+        // 1. Check preventivo duplicato id_bilancio per quella azienda
+        $chk = $pdo->prepare(
+            "SELECT 1 FROM BILANCIO
+             WHERE id = ? AND Ragione_sociale_azienda = ?"
+        );
+        $chk->execute([$id_bil, $rag_soc]);
+
+        if ($chk->fetch()) {
+            $errore = "Un bilancio con questo ID esiste già per questa azienda.";
+        } else {
             $stmt = $pdo->prepare("CALL sp_CreaBilancioEsercizio(?, ?)");
             $stmt->execute([$id_bil, $rag_soc]);
             $messaggio = "Bilancio #$id_bil creato per '$rag_soc'.";
 
             require_once "../db_mongo.php";
             logEvento('CREATE_BILANCIO', "Bilancio #$id_bil creato per '$rag_soc' da $username", 0, $id_bil);
+        }
 
-        } catch (PDOException $e) {
-            if ($e->errorInfo[1] == 1062) {
-                $errore = "Errore: un bilancio con questo ID esiste già per questa azienda.";
-            } else {
-                $errore = "Errore DB: " . $e->getMessage();
+    } catch (PDOException $e) {
+        if ($e->errorInfo[1] == 1062) {
+            $errore = "Errore: un bilancio con questo ID esiste già per questa azienda.";
+        } else {
+            $errore = "Errore DB: " . $e->getMessage();
             }
         }
     }
@@ -51,17 +62,32 @@ if (isset($_POST["associa_voce"])) {
     $valore    = (int)$_POST["valore"];
 
     if ($rag_soc === "" || $id_bil <= 0 || $nome_voce === "") {
-        $errore = "Tutti i campi sono obbligatori.";
-    } else {
-        try {
+    $errore = "Tutti i campi sono obbligatori.";
+} else {
+    try {
+        // 2. Verifica che il bilancio appartenga a un'azienda del responsabile loggato
+        $chk = $pdo->prepare(
+            "SELECT 1 FROM BILANCIO b
+             JOIN AZIENDA a ON b.Ragione_sociale_azienda = a.Ragione_sociale
+             WHERE b.id = ?
+               AND b.Ragione_sociale_azienda = ?
+               AND a.Username_Responsabile_Aziendale = ?"
+        );
+        $chk->execute([$id_bil, $rag_soc, $username]);
+
+        if (!$chk->fetch()) {
+            $errore = "Bilancio non trovato o non di tua competenza.";
+        } else {
             $stmt = $pdo->prepare("CALL sp_PopolaBilancioEsercizio(?, ?, ?, ?)");
             $stmt->execute([$id_bil, $nome_voce, $rag_soc, $valore]);
             $messaggio = "Voce '$nome_voce' (valore: $valore) associata al bilancio #$id_bil.";
-        } catch (PDOException $e) {
-            if ($e->errorInfo[1] == 1062) {
-                $errore = "Errore: questa voce è già associata al bilancio.";
-            } else {
-                $errore = "Errore DB: " . $e->getMessage();
+        }
+
+    } catch (PDOException $e) {
+        if ($e->errorInfo[1] == 1062) {
+            $errore = "Errore: questa voce è già associata al bilancio.";
+        } else {
+            $errore = "Errore DB: " . $e->getMessage();
             }
         }
     }
