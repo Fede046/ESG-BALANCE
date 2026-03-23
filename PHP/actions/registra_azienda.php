@@ -25,25 +25,34 @@ if (isset($_POST["registra_azienda"])) {
     $n_dip           = (int)($_POST["n_dip"] ?? 0);
     $logo            = trim($_POST["logo"]) ?: null;
 
-    if ($ragione_sociale === "" || $nome === "" || $piva === "") {
-        $errore = "Ragione sociale, nome e partita IVA sono obbligatori.";
-    } else {
-        try {
-            $stmt = $pdo->prepare("CALL sp_RegistraAzienda(?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$ragione_sociale, $nome, $piva, $settore, $n_dip, $logo, $username]);
-            $messaggio = "Azienda '$ragione_sociale' registrata.";
+if ($ragione_sociale === "" || $nome === "" || $piva === "") {
+    $errore = "Ragione sociale, nome e partita IVA sono obbligatori.";
 
-            require_once "../db_mongo.php";
-            logEvento('CREATE_COMPANY', "Azienda registrata: " . $ragione_sociale . " da " . $username, 0, 0);
+// 1. Validazione formato Partita IVA: esattamente 11 cifre numeriche
+} elseif (!preg_match('/^\d{11}$/', $piva)) {
+    $errore = "La P.IVA deve contenere esattamente 11 cifre numeriche.";
 
-        } catch (PDOException $e) {
-            if ($e->errorInfo[1] == 1062) {
-                $errore = "Errore: una azienda con questa ragione sociale esiste già.";
-            } else {
-                $errore = "Errore DB: " . $e->getMessage();
-            }
+// 2. Numero dipendenti non negativo
+} elseif ($n_dip < 0) {
+    $errore = "Il numero di dipendenti non può essere negativo.";
+
+} else {
+    try {
+        $stmt = $pdo->prepare("CALL sp_RegistraAzienda(?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$ragione_sociale, $nome, $piva, $settore, $n_dip, $logo, $username]);
+        $messaggio = "Azienda '$ragione_sociale' registrata.";
+
+        require_once "../db_mongo.php";
+        logEvento('CREATE_COMPANY', "Azienda registrata: " . $ragione_sociale . " da " . $username, 0, 0);
+
+    } catch (PDOException $e) {
+        if ($e->errorInfo[1] == 1062) {
+            $errore = "Errore: una azienda con questa ragione sociale esiste già.";
+        } else {
+            $errore = "Errore DB: " . $e->getMessage();
         }
     }
+}
 }
 
 // Lettura aziende del responsabile loggato
