@@ -18,36 +18,74 @@ if (isset($_POST["register"])) {
 function registraUtente() {
     try {
         $pdo   = getDB();
-        $ruolo = $_POST["ruolo"] ?? '';
+        $usr   = trim($_POST['usr']         ?? '');
+        $psw   = $_POST['psw']              ?? '';
+        $psw_confirm = $_POST['psw_confirm'] ?? '';
+        $CF    = trim($_POST['CF']          ?? '');
+        $luogo = trim($_POST['luogo']       ?? '');
+        $data  = $_POST['data']             ?? '';
+        $ruolo = $_POST['ruolo']            ?? '';
+        $emails = $_POST['emails']          ?? [];
+
+        // 1. Lunghezza minima password
+        if (strlen($psw) < 8) {
+            return "La password deve essere di almeno 8 caratteri.";
+        }
+
+        // 2. Conferma password
+        if ($psw !== $psw_confirm) {
+            return "Le password non coincidono.";
+        }
+
+        // 3. Ruolo valido
+        if (!in_array($ruolo, ['revisore', 'responsabile'])) {
+            return "Seleziona un ruolo valido.";
+        }
+
+        // 4. Codice Fiscale formato
+        if (!preg_match('/^[A-Z0-9]{16}$/i', $CF)) {
+            return "Codice Fiscale non valido (16 caratteri alfanumerici).";
+        }
+
+        // 5. Data di nascita: non nel futuro e almeno 18 anni
+        if (!empty($data)) {
+            $dataNascita = new DateTime($data);
+            $oggi        = new DateTime();
+            $eta         = $oggi->diff($dataNascita)->y;
+            if ($dataNascita > $oggi) {
+                return "Data di nascita non valida (non può essere nel futuro).";
+            }
+            if ($eta < 18) {
+                return "Devi avere almeno 18 anni per registrarti.";
+            }
+        }
+
+        // 6. Validazione email
+        foreach ($emails as $email) {
+            $email = trim($email);
+            if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return "L'indirizzo email '$email' non è valido.";
+            }
+        }
+
+        // Hash MD5 con salt 'jdd'
+        $psw_hash = md5($psw . "jdd");
         $extra = ($ruolo === 'responsabile') ? (trim($_POST['cv'] ?? '')) : '';
 
-        // Hash MD5 con salt 'jdd' prima di salvare nel DB
-        $psw_hash = md5($_POST['psw'] . "jdd");
-
         $stmt = $pdo->prepare("CALL sp_Registrazione(?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([
-            $_POST['usr'],
-            $_POST['CF']    ?? null,
-            $psw_hash,
-            $_POST['luogo'] ?? null,
-            $_POST['data']  ?? null,
-            $ruolo,
-            $extra
-        ]);
+        $stmt->execute([$usr, $CF, $psw_hash, $luogo, $data, $ruolo, $extra]);
 
-        // Inserimento email (una o più)
-        $emails = $_POST['emails'] ?? [];
         foreach ($emails as $email) {
             $email = trim($email);
             if ($email !== '') {
                 $pdo->prepare(
                     "INSERT INTO EMAIL (Username_Utente, Indirizzo) VALUES (?, ?)"
-                )->execute([$_POST['usr'], $email]);
+                )->execute([$usr, $email]);
             }
         }
 
         require_once "db_mongo.php";
-        logEvento('USER_REGISTER', "Nuovo utente registrato: " . $_POST['usr'] . " (ruolo: " . $ruolo . ")", 0, 0);
+        logEvento('USER_REGISTER', "Nuovo utente registrato: $usr (ruolo: $ruolo)", 0, 0);
 
         return "ok";
 
@@ -78,6 +116,10 @@ function registraUtente() {
             <div class="input-group">
                 <label>Password:</label>
                 <input type="password" name="psw" placeholder="••••••••" required>
+            </div>
+            <div class="input-group">
+                <label>Ripeti Password:</label>
+                <input type="password" name="psw_confirm" placeholder="••••••••" required>
             </div>
             <div class="input-group">
                 <label>Codice Fiscale:</label>
