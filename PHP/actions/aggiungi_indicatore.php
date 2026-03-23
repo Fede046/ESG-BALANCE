@@ -26,15 +26,27 @@ if (isset($_POST["aggiungi_indicatore"])) {
     $ambito    = trim($_POST["ambito"]    ?? "") ?: null;
     $frequenza = ($_POST["frequenza"] ?? "") !== "" ? (int)$_POST["frequenza"] : null;
 
-    if ($nome === "") {
-        $errore = "Il nome dell'indicatore è obbligatorio.";
-    } elseif ($rilevanza !== null && ($rilevanza < 0 || $rilevanza > 10)) {
-        $errore = "La rilevanza deve essere tra 0 e 10.";
-    } elseif ($tipo === "ambientale" && $cod_norm === null) {
-        $errore = "Il codice normativa è obbligatorio per indicatori ambientali.";
-    } elseif ($tipo === "sociale" && ($ambito === null || $frequenza === null)) {
-        $errore = "Ambito e frequenza sono obbligatori per indicatori sociali.";
-    } else {
+if ($nome === "") {
+    $errore = "Il nome dell'indicatore è obbligatorio.";
+
+// 1. Rilevanza: verificare che sia numerica prima del cast, per evitare conversione silenziosa di "abc" → 0
+} elseif ($_POST["rilevanza"] !== "" && !is_numeric($_POST["rilevanza"])) {
+    $errore = "La rilevanza deve essere un numero intero.";
+
+} elseif ($rilevanza !== null && ($rilevanza < 0 || $rilevanza > 10)) {
+    $errore = "La rilevanza deve essere tra 0 e 10.";
+
+} elseif ($tipo === "ambientale" && $cod_norm === null) {
+    $errore = "Il codice normativa è obbligatorio per indicatori ambientali.";
+
+} elseif ($tipo === "sociale" && ($ambito === null || $frequenza === null)) {
+    $errore = "Ambito e frequenza sono obbligatori per indicatori sociali.";
+
+// 2. Frequenza per indicatori sociali: deve essere > 0
+} elseif ($tipo === "sociale" && $frequenza !== null && $frequenza <= 0) {
+    $errore = "La frequenza deve essere maggiore di 0 giorni.";
+
+} else {
         try {
             $stmt = $pdo->prepare("CALL sp_PopolaIndicatoreESG(?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([
