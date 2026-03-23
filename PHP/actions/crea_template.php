@@ -23,8 +23,13 @@ if (isset($_POST["aggiungi_voce"])) {
     $descrizione = trim($_POST["descrizione"]) ?: null;
 
     if ($nome_voce === "") {
-        $errore = "Il nome della voce è obbligatorio.";
-    } else {
+    $errore = "Il nome della voce è obbligatorio.";
+
+// 1. Lunghezza minima: almeno 2 caratteri
+} elseif (strlen($nome_voce) < 2) {
+    $errore = "Il nome della voce deve avere almeno 2 caratteri.";
+
+} else {
         try {
             $stmt = $pdo->prepare("CALL sp_CreaVoceTemplate(?, ?, ?)");
             $stmt->execute([$nome_voce, $descrizione, $username]);
