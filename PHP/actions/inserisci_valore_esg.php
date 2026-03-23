@@ -25,40 +25,60 @@ if (isset($_POST["inserisci_valore"])) {
     $valore    = trim($_POST["valore"]);
     $fonte     = trim($_POST["fonte"]) ?: null;
 
-    if ($id_bil <= 0 || $rag_soc === "" || $nome_voce === "" || $nome_esg === "" || $valore === "") {
+        if ($id_bil <= 0 || $rag_soc === "" || $nome_voce === "" || $nome_esg === "" || $valore === "") {
         $errore = "Tutti i campi obbligatori devono essere compilati.";
+
+    // 1. Validazione numerica del valore
+    } elseif (!is_numeric($valore)) {
+        $errore = "Il valore deve essere un numero.";
+
     } else {
-        // Verifica che il bilancio appartenga a un'azienda del responsabile loggato
-        $stmt = $pdo->prepare(
-            "SELECT COUNT(*) FROM BILANCIO b
-             JOIN AZIENDA a ON b.Ragione_sociale_azienda = a.Ragione_sociale
-             WHERE b.id = ? AND b.Ragione_sociale_azienda = ?
-               AND a.Username_Responsabile_Aziendale = ?"
+        // 2. Controlla stato bilancio: non modificabile se chiuso
+        $chk_stato = $pdo->prepare(
+            "SELECT Stato FROM BILANCIO
+             WHERE id = ? AND Ragione_sociale_azienda = ?"
         );
-        $stmt->execute([$id_bil, $rag_soc, $username]);
-        if ($stmt->fetchColumn() == 0) {
-            $errore = "Bilancio non trovato o non di tua competenza.";
+        $chk_stato->execute([$id_bil, $rag_soc]);
+        $bilancio = $chk_stato->fetch(PDO::FETCH_ASSOC);
+
+        if (!$bilancio) {
+            $errore = "Bilancio non trovato.";
+
+        } elseif (in_array(strtolower($bilancio['Stato']), ['approvato', 'respinto'])) {
+            $errore = "Non puoi modificare un bilancio già chiuso.";
+
         } else {
-            // Verifica che la voce sia associata a quel bilancio
-            $stmt2 = $pdo->prepare(
-                "SELECT COUNT(*) FROM ASSOCIA_BILANCIO_VOCE
-                 WHERE Nome_voce = ? AND id_bilancio = ? AND Ragione_sociale_bilancio = ?"
+            // Verifica che il bilancio appartenga a un'azienda del responsabile loggato
+            $stmt = $pdo->prepare(
+                "SELECT COUNT(*) FROM BILANCIO b
+                 JOIN AZIENDA a ON b.Ragione_sociale_azienda = a.Ragione_sociale
+                 WHERE b.id = ? AND b.Ragione_sociale_azienda = ?
+                   AND a.Username_Responsabile_Aziendale = ?"
             );
-            $stmt2->execute([$nome_voce, $id_bil, $rag_soc]);
-            if ($stmt2->fetchColumn() == 0) {
-                $errore = "La voce selezionata non è associata a questo bilancio.";
+            $stmt->execute([$id_bil, $rag_soc, $username]);
+            if ($stmt->fetchColumn() == 0) {
+                $errore = "Bilancio non trovato o non di tua competenza.";
             } else {
-                try {
-                    // sp_InserisciValoreESG(p_nome_voce, p_nome_esg, p_fonte, p_valore)
-                    $stmt3 = $pdo->prepare("CALL sp_InserisciValoreESG(?, ?, ?, ?)");
-                    $stmt3->execute([$nome_voce, $nome_esg, $fonte, $valore]);
-                    $messaggio = "Valore ESG inserito per voce '$nome_voce' — indicatore '$nome_esg'.";
+                // Verifica che la voce sia associata a quel bilancio
+                $stmt2 = $pdo->prepare(
+                    "SELECT COUNT(*) FROM ASSOCIA_BILANCIO_VOCE
+                     WHERE Nome_voce = ? AND id_bilancio = ? AND Ragione_sociale_bilancio = ?"
+                );
+                $stmt2->execute([$nome_voce, $id_bil, $rag_soc]);
+                if ($stmt2->fetchColumn() == 0) {
+                    $errore = "La voce selezionata non è associata a questo bilancio.";
+                } else {
+                    try {
+                        $stmt3 = $pdo->prepare("CALL sp_InserisciValoreESG(?, ?, ?, ?)");
+                        $stmt3->execute([$nome_voce, $nome_esg, $fonte, $valore]);
+                        $messaggio = "Valore ESG inserito per voce '$nome_voce' — indicatore '$nome_esg'.";
 
-                    require_once "../db_mongo.php";
-                    logEvento('INSERT_ESG', "Valore ESG inserito: voce '$nome_voce', indicatore '$nome_esg' nel bilancio #$id_bil ($rag_soc) da $username", 0, $id_bil);
+                        require_once "../db_mongo.php";
+                        logEvento('INSERT_ESG', "Valore ESG inserito: voce '$nome_voce', indicatore '$nome_esg' nel bilancio #$id_bil ($rag_soc) da $username", 0, $id_bil);
 
-                } catch (PDOException $e) {
-                    $errore = "Errore DB: " . $e->getMessage();
+                    } catch (PDOException $e) {
+                        $errore = "Errore DB: " . $e->getMessage();
+                    }
                 }
             }
         }
