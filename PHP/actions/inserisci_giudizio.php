@@ -24,32 +24,57 @@ if (isset($_POST["inserisci_giudizio"])) {
     $rilievi = trim($_POST["rilievi"]) ?: null;
 
     if ($id_bil <= 0 || $rag_soc === "" || $esito === "") {
-        $errore = "ID bilancio, ragione sociale ed esito sono obbligatori.";
-    } else {
-        try {
-            // sp_InserisciGiudizioComplessivo(p_id_giudizio, p_esito, p_rilievi, p_username_revisore, p_id_bilancio, p_ragione_sociale)
-            // p_id_giudizio = NULL perché Id è AUTO_INCREMENT
-            $stmt = $pdo->prepare("CALL sp_InserisciGiudizioComplessivo(NULL, ?, ?, ?, ?, ?)");
-            $stmt->execute([$esito, $rilievi, $username, $id_bil, $rag_soc]);
-            $messaggio = "Giudizio inserito sul bilancio #$id_bil ($rag_soc).";
+    $errore = "ID bilancio, ragione sociale ed esito sono obbligatori.";
+} else {
+    try {
+        // 1. Leggi stato bilancio e controlla se è già chiuso
+        $chk = $pdo->prepare(
+            "SELECT Stato FROM BILANCIO
+             WHERE id = ? AND Ragione_sociale_azienda = ?"
+        );
+        $chk->execute([$id_bil, $rag_soc]);
+        $bilancio = $chk->fetch(PDO::FETCH_ASSOC);
 
-            require_once "../db_mongo.php";
-            logEvento('INSERT_GIUDIZIO', "Giudizio '$esito' inserito sul bilancio #$id_bil ($rag_soc) da $username", 0, $id_bil);
-            // Controlla se il trigger ha cambiato lo stato del bilancio
-            $stmt_stato = $pdo->prepare(
-                "SELECT Stato FROM BILANCIO WHERE id = ? AND Ragione_sociale_azienda = ?"
+        if (!$bilancio) {
+            $errore = "Bilancio non trovato.";
+
+        } elseif (in_array(strtolower($bilancio['Stato']), ['approvato', 'respinto'])) {
+            $errore = "Il bilancio è già chiuso, non puoi inserire un nuovo giudizio.";
+
+        } else {
+            // 2. Controlla se questo revisore ha già inserito un giudizio su questo bilancio
+            $chk2 = $pdo->prepare(
+                "SELECT 1 FROM GIUDIZIO
+                 WHERE Username = ? AND id_bilancio = ? AND Ragione_sociale_bilancio = ?"
             );
-            $stmt_stato->execute([$id_bil, $rag_soc]);
-            $stato_attuale = $stmt_stato->fetchColumn();
-            
-            if ($stato_attuale === 'approvato') {
-                logEvento('APPROVE_BILANCIO', "Bilancio #$id_bil ($rag_soc) approvato dopo tutti i giudizi", 0, $id_bil);
-            } elseif ($stato_attuale === 'respinto') {
-                logEvento('REJECT_BILANCIO', "Bilancio #$id_bil ($rag_soc) respinto dopo tutti i giudizi", 0, $id_bil);
-            }
+            $chk2->execute([$username, $id_bil, $rag_soc]);
 
-        } catch (PDOException $e) {
-            $errore = "Errore DB: " . $e->getMessage();
+            if ($chk2->fetch()) {
+                $errore = "Hai già inserito un giudizio per questo bilancio.";
+            } else {
+                $stmt = $pdo->prepare("CALL sp_InserisciGiudizioComplessivo(NULL, ?, ?, ?, ?, ?)");
+                $stmt->execute([$esito, $rilievi, $username, $id_bil, $rag_soc]);
+                $messaggio = "Giudizio inserito sul bilancio #$id_bil ($rag_soc).";
+
+                require_once "../db_mongo.php";
+                logEvento('INSERT_GIUDIZIO', "Giudizio '$esito' inserito sul bilancio #$id_bil ($rag_soc) da $username", 0, $id_bil);
+
+                $stmt_stato = $pdo->prepare(
+                    "SELECT Stato FROM BILANCIO WHERE id = ? AND Ragione_sociale_azienda = ?"
+                );
+                $stmt_stato->execute([$id_bil, $rag_soc]);
+                $stato_attuale = $stmt_stato->fetchColumn();
+
+                if ($stato_attuale === 'approvato') {
+                    logEvento('APPROVE_BILANCIO', "Bilancio #$id_bil ($rag_soc) approvato dopo tutti i giudizi", 0, $id_bil);
+                } elseif ($stato_attuale === 'respinto') {
+                    logEvento('REJECT_BILANCIO', "Bilancio #$id_bil ($rag_soc) respinto dopo tutti i giudizi", 0, $id_bil);
+                }
+            }
+        }
+
+    } catch (PDOException $e) {
+        $errore = "Errore DB: " . $e->getMessage();
         }
     }
 }
