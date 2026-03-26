@@ -278,12 +278,12 @@ if ($id_sel > 0 && $rag_sel !== "") {
                 <?php else: ?>
                     <p class="empty-msg">Nessun valore ESG inserito per questo bilancio.</p>
                 <?php endif; ?>
-            </div>
+            
 
             <?php elseif (count($bilanci) > 0): ?>
                 <p class="empty-msg"><em>Clicca "Seleziona" su un bilancio per inserire i valori ESG.</em></p>
             <?php endif; ?>
-
+        </div>
     </div>
 </body>
 </html>
