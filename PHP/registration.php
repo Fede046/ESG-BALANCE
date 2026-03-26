@@ -55,9 +55,6 @@ function registraUtente() {
             if ($dataNascita > $oggi) {
                 return "Data di nascita non valida (non può essere nel futuro).";
             }
-            if ($eta < 18) {
-                return "Devi avere almeno 18 anni per registrarti.";
-            }
         }
 
         // 6. Validazione email
@@ -70,6 +67,12 @@ function registraUtente() {
 
         // Hash MD5 con salt 'jdd'
         $psw_hash = md5($psw . "jdd");
+        
+        // 6. Almeno una email obbligatoria
+        $emailsFiltrate = array_filter(array_map('trim', $emails));
+        if (empty($emailsFiltrate)) {
+        return "Inserisci almeno un indirizzo email.";
+        }
 
         // ✅ MODIFICA: Gestione upload CV per il responsabile
         $extra = '';
@@ -172,7 +175,7 @@ function registraUtente() {
             <div class="input-group">
                 <div id="container">
                     <div>
-                        <input type="email" name="emails[]" placeholder="mario.rossi@gmail.com">
+                        <input type="email" name="emails[]" placeholder="mario.rossi@gmail.com" required>
                         <button type="button" class="remove-btn">Remove</button>
                     </div>
                 </div>
