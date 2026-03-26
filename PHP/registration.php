@@ -139,7 +139,9 @@ function registraUtente() {
         <form action="registration.php" method="post" enctype="multipart/form-data">
             <div class="input-group">
                 <label>Username:</label>
-                <input type="text" name="usr" placeholder="Inserisci username" required>
+                <input type="text" name="usr" placeholder="Inserisci username" required
+                value="<?= htmlspecialchars($_POST['usr'] ?? '') ?>">
+
             </div>
             <div class="input-group">
                 <label>Password:</label>
@@ -151,11 +153,15 @@ function registraUtente() {
             </div>
             <div class="input-group">
                 <label>Codice Fiscale:</label>
-                <input type="text" name="CF" placeholder="Es: RSSMRA50R15H501Y" required>
+                <input type="text" name="CF" placeholder="Es: RSSMRA50R15H501Y" required
+                value="<?= htmlspecialchars($_POST['CF'] ?? '') ?>">
+
             </div>
             <div class="input-group">
                 <label>Luogo di Nascita:</label>
-                <input type="text" name="luogo" placeholder="Es: Bologna" required>
+                <input type="text" name="luogo" placeholder="Es: Bologna" required
+                value="<?= htmlspecialchars($_POST['luogo'] ?? '') ?>">
+
             </div>
             <div class="input-group">
                 <label>Data di Nascita:</label>
@@ -163,21 +169,34 @@ function registraUtente() {
             </div>
             <div class="input-group">
                 <label>Ruolo *</label>
-                <label><input type="radio" name="ruolo" value="revisore" required> Revisore ESG</label>
-                <label><input type="radio" name="ruolo" value="responsabile"> Responsabile Aziendale</label>
+                <label><input type="radio" name="ruolo" value="revisore" required
+                <?= (($_POST['ruolo'] ?? '') === 'revisore') ? 'checked' : '' ?>> Revisore ESG</label>
+                <label><input type="radio" name="ruolo" value="responsabile"
+                <?= (($_POST['ruolo'] ?? '') === 'responsabile') ? 'checked' : '' ?>> Responsabile Aziendale</label>
             </div>
             <div class="input-group">
                 <div id="cv_block" style="display:none">
                     <label>CV (PDF):</label>
-                    <input type="file" name="cv" accept=".pdf">
+                    <div id="cv_block" style="<?= (($_POST['ruolo'] ?? '') === 'responsabile') ? 'display:block' : 'display:none' ?>">
+
                 </div>
             </div>
             <div class="input-group">
                 <div id="container">
-                    <div>
-                        <input type="email" name="emails[]" placeholder="mario.rossi@gmail.com" required>
-                        <button type="button" class="remove-btn">Remove</button>
-                    </div>
+                    <?php
+                        $emails_post = $_POST['emails'] ?? [''];
+                        foreach ($emails_post as $i => $em):
+                    ?>
+                <div>
+                    <input type="email" name="emails[]"
+                    placeholder="mario.rossi@gmail.com"
+                    <?= $i === 0 ? 'required' : '' ?>
+                    value="<?= htmlspecialchars(trim($em)) ?>">
+                    <button type="button" class="remove-btn">Remove</button>
+                </div>
+    <?php endforeach; ?>
+</div>
+
                 </div>
                 <input type="button" id="addEmail" class="add-btn" value="Add Email">
             </div>
