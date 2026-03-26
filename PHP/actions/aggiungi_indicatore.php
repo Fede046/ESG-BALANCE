@@ -22,7 +22,24 @@ if (isset($_POST["aggiungi_indicatore"])) {
     if ($_POST["rilevanza"] === "" || $_POST["rilevanza"] === null) {
         $errore = "La rilevanza è obbligatoria (valore tra 0 e 10).";
     }
-    $immagine  = trim($_POST["immagine"]) ?: null;
+    $immagine = null;
+    if (isset($_FILES['immagine']) && $_FILES['immagine']['error'] === UPLOAD_ERR_OK) {
+    $ext        = strtolower(pathinfo($_FILES['immagine']['name'], PATHINFO_EXTENSION));
+    $allowedExt = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    if (!in_array($ext, $allowedExt)) {
+        $errore = "Formato immagine non supportato.";
+    } else {
+        $uploadDir = '../../uploads/indicatori/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+        $filename = uniqid('ind_') . '.' . $ext;
+        if (move_uploaded_file($_FILES['immagine']['tmp_name'], $uploadDir . $filename)) {
+            $immagine = 'uploads/indicatori/' . $filename;
+        } else {
+            $errore = "Errore nel salvataggio dell'immagine.";
+            }
+        }
+    }
+
     $tipo      = $_POST["tipo"] ?? "";
     $cod_norm  = trim($_POST["cod_norm"]  ?? "") ?: null;
     $ambito    = trim($_POST["ambito"]    ?? "") ?: null;
@@ -119,7 +136,7 @@ try {
         <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
         <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
-        <form action="aggiungi_indicatore.php" method="post">
+            <form action="aggiungi_indicatore.php" method="post" enctype="multipart/form-data">
             <div class="input-group2">
                 <label>Nome * (max 30 caratteri)</label>
                 <input type="text" name="nome_indicatore" maxlength="30" required>

@@ -83,7 +83,7 @@ try {
             </div>
             <div class="input-group2">
                 <label>Descrizione (opzionale)</label>
-                <input type="file" name="descrizione" >
+                <input type="text" name="descrizione" maxlength="255" placeholder="Descrizione della voce contabile...">
             </div>
             <input type="submit" name="aggiungi_voce" value="Aggiungi Voce" class="add-btn">
         </form>
