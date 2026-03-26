@@ -226,7 +226,7 @@ DELIMITER //
 CREATE PROCEDURE sp_RegistraAzienda(
     IN p_ragione_sociale VARCHAR(30),
     IN p_nome VARCHAR(30),
-    IN p_p_iva INT,
+    IN p_p_iva VARCHAR(11),
     IN p_settore VARCHAR(30),
     IN p_n_dip INT,
     IN p_logo VARCHAR(30),

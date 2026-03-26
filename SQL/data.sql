@@ -110,10 +110,10 @@ CREATE TABLE VOCE (
 CREATE TABLE AZIENDA (
     Ragione_sociale VARCHAR(30) PRIMARY KEY,
     Nome VARCHAR(30),
-    p_IVA INT,
+    p_IVA INT VARCHAR(11),
     Settore VARCHAR(30),
     n_dip INT,
-    logo VARCHAR(30),
+    logo VARCHAR(255),
     nr_bilanci INT,
     Username_Responsabile_Aziendale VARCHAR(30) NOT NULL,
     FOREIGN KEY (Username_Responsabile_Aziendale) REFERENCES RESPONSABILE_AZIENDALE(Username)
