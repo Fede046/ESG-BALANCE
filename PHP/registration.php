@@ -177,10 +177,11 @@ function registraUtente() {
             <div class="input-group">
                 <div id="cv_block" style="display:none">
                     <label>CV (PDF):</label>
-                    <div id="cv_block" style="<?= (($_POST['ruolo'] ?? '') === 'responsabile') ? 'display:block' : 'display:none' ?>">
-
+                    <input type="file" name="cv" accept=".pdf">
                 </div>
             </div>
+
+
             <div class="input-group">
                 <div id="container">
                     <?php
