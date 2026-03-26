@@ -1,4 +1,4 @@
--- Active: 1771837160674@@127.0.0.1@3308@test
+
 
 -- NOTA: per campi testuali (Descrizione, CV, Immagine, ecc.) si intende un path, non un elenco di parole.
 
