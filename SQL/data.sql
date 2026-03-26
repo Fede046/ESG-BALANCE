@@ -10,10 +10,10 @@ USE TEST;
 -- 1. UTENTE  (nessuna dipendenza)
 CREATE TABLE UTENTE (
     Username VARCHAR(30) PRIMARY KEY,
-    CodiceFiscale VARCHAR(30),
+    CodiceFiscale VARCHAR(30) NOT NULL,
     Password VARCHAR(255) NOT NULL, 
-    Luogo VARCHAR(30),
-    Data VARCHAR(30)
+    Luogo VARCHAR(30) NOT NULL,
+    Data VARCHAR(30) NOT NULL
 );
 
 
@@ -37,15 +37,15 @@ CREATE TABLE AMMINISTRATORE (
 
 CREATE TABLE REVISORE_ESG (
     Username VARCHAR(30) PRIMARY KEY,
-    IndiceAffidabilita INT,
-    NumRevisioni INT,
+    IndiceAffidabilita INT NOT NULL,
+    NumRevisioni INT NOT NULL,
     FOREIGN KEY (Username) REFERENCES UTENTE(Username),
     CONSTRAINT CHK_Affidabilita CHECK (IndiceAffidabilita >= 1 AND IndiceAffidabilita <= 10)
 );
 
 CREATE TABLE RESPONSABILE_AZIENDALE (
-    Username VARCHAR(30) NOT NULL PRIMARY KEY,
-    CV VARCHAR(500),          -- path al file CV
+    Username VARCHAR(30) PRIMARY KEY,
+    CV VARCHAR(500) NOT NULL,          -- path al file CV
     FOREIGN KEY (Username) REFERENCES UTENTE(Username)
 );
 
@@ -63,7 +63,7 @@ CREATE TABLE COMPETENZA (
 CREATE TABLE DICHIARA_COMPETENZA_REVISORE (
     Nome_competenza VARCHAR(30) NOT NULL,
     Username_revisore VARCHAR(30) NOT NULL,
-    Livello INT,
+    Livello INT NOT NULL,
     PRIMARY KEY (Username_revisore, Nome_competenza),
     FOREIGN KEY (Username_revisore, Nome_competenza) REFERENCES COMPETENZA(Username, Nome),
     FOREIGN KEY (Username_revisore) REFERENCES REVISORE_ESG(Username),
@@ -75,8 +75,8 @@ CREATE TABLE DICHIARA_COMPETENZA_REVISORE (
 CREATE TABLE INDICATORE_ESG (
     Nome VARCHAR(30) PRIMARY KEY,
     Username_Amministratore VARCHAR(30) NOT NULL,
-    Immagine VARCHAR(500),   -- path all'immagine
-    Rilevanza INT,
+    Immagine VARCHAR(500) NOT NULL,   -- path all'immagine
+    Rilevanza INT NOT NULL,
     FOREIGN KEY (Username_Amministratore) REFERENCES AMMINISTRATORE(Username),
     CONSTRAINT CHK_Rilevanza CHECK (Rilevanza >= 0 AND Rilevanza <= 10)
 );
@@ -85,14 +85,14 @@ CREATE TABLE INDICATORE_ESG (
 -- 7. Sottotipi di INDICATORE_ESG  (dipendono da INDICATORE_ESG)
 CREATE TABLE ESG_AMBIENTALE (
     NomeEsg VARCHAR(30) PRIMARY KEY,
-    cod_norm_rilevamento VARCHAR(30),
+    cod_norm_rilevamento VARCHAR(30) NOT NULL,
     FOREIGN KEY (NomeEsg) REFERENCES INDICATORE_ESG(Nome)
 );
 
 CREATE TABLE ESG_INDICATORE_SOCIALE (
     NomeEsg VARCHAR(30) PRIMARY KEY,
-    Ambito VARCHAR(30),
-    Frequenza_rilevazione INT,          -- espresso in numero di giorni
+    Ambito VARCHAR(30) NOT NULL,
+    Frequenza_rilevazione INT NOT NULL,          -- espresso in numero di giorni
     FOREIGN KEY (NomeEsg) REFERENCES INDICATORE_ESG(Nome)
 );
 
@@ -100,7 +100,7 @@ CREATE TABLE ESG_INDICATORE_SOCIALE (
 -- 8. VOCE  (dipende da amministratore)
 CREATE TABLE VOCE (
     Nome VARCHAR(30) PRIMARY KEY,
-    Descrizione VARCHAR(500),          -- path alla descrizione
+    Descrizione VARCHAR(500) NOT NULL,          -- path alla descrizione
     Username_Amministratore VARCHAR(30) NOT NULL,
     FOREIGN KEY (Username_Amministratore) REFERENCES AMMINISTRATORE(Username)
 );
@@ -109,12 +109,12 @@ CREATE TABLE VOCE (
 -- 9. AZIENDA  (dipende da RESPONSABILE_AZIENDALE)
 CREATE TABLE AZIENDA (
     Ragione_sociale VARCHAR(30) PRIMARY KEY,
-    Nome VARCHAR(30),
-    p_IVA VARCHAR(11),
-    Settore VARCHAR(30),
-    n_dip INT,
-    logo VARCHAR(255),
-    nr_bilanci INT,
+    Nome VARCHAR(30) NOT NULL,
+    p_IVA VARCHAR(11) NOT NULL,
+    Settore VARCHAR(30) NOT NULL,
+    n_dip INT NOT NULL,
+    logo VARCHAR(255) NOT NULL,
+    nr_bilanci INT NOT NULL,
     Username_Responsabile_Aziendale VARCHAR(30) NOT NULL,
     FOREIGN KEY (Username_Responsabile_Aziendale) REFERENCES RESPONSABILE_AZIENDALE(Username)
 );
@@ -124,13 +124,13 @@ CREATE TABLE AZIENDA (
 CREATE TABLE BILANCIO (
     id INT NOT NULL,
     Ragione_sociale_azienda VARCHAR(30) NOT NULL,
-    Data_creazione DATETIME,
+    Data_creazione DATETIME NOT NULL,
     Stato ENUM(
         'bozza',
         'in revisione',
         'approvato',
         'respinto'
-    ),
+    ) NOT NULL,
     PRIMARY KEY (id, Ragione_sociale_azienda),
     FOREIGN KEY (Ragione_sociale_azienda) REFERENCES AZIENDA(Ragione_sociale)
 );
@@ -143,8 +143,8 @@ CREATE TABLE GIUDIZIO (
         'approvazione',
         'approvazione con rilievi',
         'respingimento'
-    ),
-    Data DATETIME,
+    ) NOT NULL,
+    Data DATETIME NOT NULL,
     Rilievi VARCHAR(500),
     Username VARCHAR(30) NOT NULL,
     id_bilancio INT NOT NULL,
@@ -180,8 +180,8 @@ CREATE TABLE ASSOCIA_BILANCIO_VOCE (
 -- 14. NOTA
 CREATE TABLE NOTA (
     ID INT PRIMARY KEY AUTO_INCREMENT,
-    Data DATETIME,
-    Testo VARCHAR(500),
+    Data DATETIME NOT NULL,
+    Testo VARCHAR(500) NOT NULL,
     Username_Revisore_ESG VARCHAR(30) NOT NULL,
     NomeVoce VARCHAR(30) NOT NULL,
     id_bilancio INT NOT NULL,
@@ -195,9 +195,9 @@ CREATE TABLE NOTA (
 CREATE TABLE COLLEGA_ESG_VOCE (
     NomeVoce VARCHAR(30) NOT NULL,
     NomeEsg VARCHAR(30) NOT NULL,
-    Fonte VARCHAR(30),
-    Valore DECIMAL(10, 2),
-    Data DATETIME,
+    Fonte VARCHAR(30) NOT NULL,
+    Valore DECIMAL(10, 2) NOOT NULL,
+    Data DATETIME NOT NULL,
     PRIMARY KEY (NomeVoce, NomeEsg),
     FOREIGN KEY (NomeVoce) REFERENCES VOCE(Nome),
     FOREIGN KEY (NomeEsg) REFERENCES INDICATORE_ESG(Nome)
