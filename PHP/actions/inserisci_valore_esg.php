@@ -23,10 +23,13 @@ if (isset($_POST["inserisci_valore"])) {
     $nome_voce = trim($_POST["nome_voce"]);
     $nome_esg  = trim($_POST["nome_esg"]);
     $valore    = trim($_POST["valore"]);
-    $fonte     = trim($_POST["fonte"]) ?: null;
+    $fonte          = trim($_POST["fonte"] ?? '');
+    $data_rilev     = trim($_POST["data_rilevazione"] ?? '');
 
-        if ($id_bil <= 0 || $rag_soc === "" || $nome_voce === "" || $nome_esg === "" || $valore === "") {
+
+    if ($id_bil <= 0 || $rag_soc === "" || $nome_voce === "" || $nome_esg === "" || $valore === "" || $fonte === "" || $data_rilev === "") {
         $errore = "Tutti i campi obbligatori devono essere compilati.";
+    
 
     // 1. Validazione numerica del valore
     } elseif (!is_numeric($valore)) {
@@ -69,8 +72,9 @@ if (isset($_POST["inserisci_valore"])) {
                     $errore = "La voce selezionata non è associata a questo bilancio.";
                 } else {
                     try {
-                        $stmt3 = $pdo->prepare("CALL sp_InserisciValoreESG(?, ?, ?, ?)");
-                        $stmt3->execute([$nome_voce, $nome_esg, $fonte, $valore]);
+                        $stmt3 = $pdo->prepare("CALL sp_InserisciValoreESG(?, ?, ?, ?, ?)");
+                        $stmt3->execute([$nome_voce, $nome_esg, $fonte, $valore, $data_rilev]);
+
                         $messaggio = "Valore ESG inserito per voce '$nome_voce' — indicatore '$nome_esg'.";
 
                         require_once "../db_mongo.php";
@@ -243,8 +247,14 @@ if ($id_sel > 0 && $rag_sel !== "") {
                         <input type="number" step="0.01" name="valore" required>
                     </div>
                     <div class="input-group2">
-                        <label>Fonte (opzionale, max 30 caratteri)</label>
-                        <input type="text" name="fonte" maxlength="30">
+                        <label>Fonte * (max 30 caratteri)</label>
+                        <input type="text" name="fonte" maxlength="30" required>
+                    <div class="input-group2">
+                        <label>Data di rilevazione *</label>
+                        <input type="date" name="data_rilevazione" required>
+                    </div>
+
+
                     </div>
                     <input type="submit" name="inserisci_valore" value="Inserisci Valore" class="add-btn">
                 </form>

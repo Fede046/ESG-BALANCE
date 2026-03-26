@@ -19,7 +19,9 @@ $errore    = "";
 
 if (isset($_POST["aggiungi_indicatore"])) {
     $nome      = trim($_POST["nome_indicatore"]);
-    $rilevanza = ($_POST["rilevanza"] !== "") ? (int)$_POST["rilevanza"] : null;
+    if ($_POST["rilevanza"] === "" || $_POST["rilevanza"] === null) {
+        $errore = "La rilevanza è obbligatoria (valore tra 0 e 10).";
+    }
     $immagine  = trim($_POST["immagine"]) ?: null;
     $tipo      = $_POST["tipo"] ?? "";
     $cod_norm  = trim($_POST["cod_norm"]  ?? "") ?: null;
@@ -123,8 +125,9 @@ try {
                 <input type="text" name="nome_indicatore" maxlength="30" required>
             </div>
             <div class="input-group2">
-                <label>Rilevanza (0–10, opzionale)</label>
-                <input type="number" name="rilevanza" min="0" max="10">
+            <label>Rilevanza (0–10)</label>
+            <input type="number" name="rilevanza" min="0" max="10" required>
+
             </div>
             <div class="input-group2">
                 <label>Immagine (opzionale)</label>

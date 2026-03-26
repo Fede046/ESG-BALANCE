@@ -309,12 +309,13 @@ CREATE PROCEDURE sp_InserisciValoreESG(
     IN p_nome_esg VARCHAR(30),
     IN p_fonte VARCHAR(30),
     IN p_valore DECIMAL(10,2)
+    IN p_data        DATE
 )
 BEGIN
     -- Inserisce il valore dell'indicatore per la specifica voce.
     -- La data viene registrata automaticamente.
     INSERT INTO COLLEGA_ESG_VOCE (NomeVoce, NomeEsg, Fonte, Valore, Data)
-    VALUES (p_nome_voce, p_nome_esg, p_fonte, p_valore, NOW())
+    VALUES (p_nome_voce, p_nome_esg, p_fonte, p_valore, p_data)
     ON DUPLICATE KEY UPDATE 
         Valore = p_valore, 
         Fonte = p_fonte, 
