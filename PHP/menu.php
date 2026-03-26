@@ -58,7 +58,7 @@ $voci_menu = [
                 <input type="submit" name="logout" value="Logout" class="btn-logout">
             </form>
         </div>
-        <p>Benvenuto <strong><?= htmlspecialchars($username) ?></strong> — ruolo: <strong><?= htmlspecialchars($ruolo) ?></strong></p>
+        <p>Benvenuto <strong><?= htmlspecialchars($username) ?></strong><br>  Ruolo: <strong><?= htmlspecialchars($ruolo) ?></strong></p>
 
         <ul>
             <?php foreach ($voci_menu[$ruolo] as $voce): ?>

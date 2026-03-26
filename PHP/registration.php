@@ -203,12 +203,12 @@ function registraUtente() {
             <br>
             <input type="submit" name="register" value="Register" class="btn-login">
         </form>
-
+        <?php if ($message !== '' && $message !== 'ok'): ?>
+            <p class="error-msg"><?= htmlspecialchars($message) ?></p>
+        <?php endif; ?>
         <a href="home.php" class="btn-home">Home</a>
     </div>
 
-    <?php if ($message !== '' && $message !== 'ok'): ?>
-        <p class="error-msg"><?= htmlspecialchars($message) ?></p>
-    <?php endif; ?>
+    
 </body>
 </html>
