@@ -174,6 +174,7 @@ function registraUtente() {
                 <label><input type="radio" name="ruolo" value="responsabile"
                 <?= (($_POST['ruolo'] ?? '') === 'responsabile') ? 'checked' : '' ?>> Responsabile Aziendale</label>
             </div>
+
             <div class="input-group">
                 <div id="cv_block" style="display:none">
                     <label>CV (PDF):</label>
@@ -185,22 +186,21 @@ function registraUtente() {
             <div class="input-group">
                 <div id="container">
                     <?php
-                        $emails_post = $_POST['emails'] ?? [''];
-                        foreach ($emails_post as $i => $em):
+                    $emails_post = $_POST['emails'] ?? [''];
+                    foreach ($emails_post as $i => $em):
                     ?>
                 <div>
                     <input type="email" name="emails[]"
-                    placeholder="mario.rossi@gmail.com"
-                    <?= $i === 0 ? 'required' : '' ?>
-                    value="<?= htmlspecialchars(trim($em)) ?>">
+                   placeholder="mario.rossi@gmail.com"
+                   <?= $i === 0 ? 'required' : '' ?>
+                   value="<?= htmlspecialchars(trim($em)) ?>">
                     <button type="button" class="remove-btn">Remove</button>
                 </div>
-    <?php endforeach; ?>
-</div>
-
+                <?php endforeach; ?>
                 </div>
                 <input type="button" id="addEmail" class="add-btn" value="Add Email">
-            </div>
+                </div>
+
 
             <script>
                 document.querySelectorAll('input[name="ruolo"]').forEach(function(radio) {
