@@ -319,7 +319,7 @@ BEGIN
     ON DUPLICATE KEY UPDATE 
         Valore = p_valore, 
         Fonte = p_fonte, 
-        Data = NOW();
+        Data = p_data;
 END //
 DELIMITER ;
 
