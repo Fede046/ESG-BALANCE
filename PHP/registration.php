@@ -70,7 +70,32 @@ function registraUtente() {
 
         // Hash MD5 con salt 'jdd'
         $psw_hash = md5($psw . "jdd");
-        $extra = ($ruolo === 'responsabile') ? (trim($_POST['cv'] ?? '')) : '';
+
+        // ✅ MODIFICA: Gestione upload CV per il responsabile
+        $extra = '';
+        if ($ruolo === 'responsabile') {
+            if (isset($_FILES['cv']) && $_FILES['cv']['error'] === UPLOAD_ERR_OK) {
+                $finfo = new finfo(FILEINFO_MIME_TYPE);
+                $mime  = $finfo->file($_FILES['cv']['tmp_name']);
+
+                if ($mime !== 'application/pdf') {
+                    return "Il CV deve essere un file PDF valido.";
+                }
+
+                $uploadDir = '../uploads/cv/';
+                if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+
+                $filename = uniqid('cv_' . $usr . '_') . '.pdf';
+                $destPath = $uploadDir . $filename;
+
+                if (move_uploaded_file($_FILES['cv']['tmp_name'], $destPath)) {
+                    $extra = 'uploads/cv/' . $filename;
+                } else {
+                    return "Errore nel salvataggio del CV.";
+                }
+            }
+            // CV opzionale: se non caricato $extra rimane ''
+        }
 
         $stmt = $pdo->prepare("CALL sp_Registrazione(?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([$usr, $CF, $psw_hash, $luogo, $data, $ruolo, $extra]);
@@ -103,12 +128,12 @@ function registraUtente() {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registrazione – ESG Balance</title>
-        <link rel="stylesheet" href="../STYLE/style.css">
-
+    <link rel="stylesheet" href="../STYLE/style.css">
 </head>
 <body>
     <div class="card">
-        <form action="registration.php" method="post">
+        <!-- ✅ MODIFICA: aggiunto enctype per abilitare upload file -->
+        <form action="registration.php" method="post" enctype="multipart/form-data">
             <div class="input-group">
                 <label>Username:</label>
                 <input type="text" name="usr" placeholder="Inserisci username" required>
@@ -136,7 +161,7 @@ function registraUtente() {
             <div class="input-group">
                 <label>Ruolo *</label>
                 <label><input type="radio" name="ruolo" value="revisore" required> Revisore ESG</label>
-                <label><input type="radio" name="ruolo" value="responsabile" > Responsabile Aziendale</label>
+                <label><input type="radio" name="ruolo" value="responsabile"> Responsabile Aziendale</label>
             </div>
             <div class="input-group">
                 <div id="cv_block" style="display:none">
@@ -180,7 +205,7 @@ function registraUtente() {
         </form>
 
         <a href="home.php" class="btn-home">Home</a>
-</div>
+    </div>
 
     <?php if ($message !== '' && $message !== 'ok'): ?>
         <p class="error-msg"><?= htmlspecialchars($message) ?></p>

@@ -23,36 +23,57 @@ if (isset($_POST["registra_azienda"])) {
     $piva            = trim($_POST["piva"]);
     $settore         = trim($_POST["settore"]) ?: null;
     $n_dip           = (int)($_POST["n_dip"] ?? 0);
-    $logo            = trim($_POST["logo"]) ?: null;
+    $logo            = null;
 
-if ($ragione_sociale === "" || $nome === "" || $piva === "") {
-    $errore = "Ragione sociale, nome e partita IVA sono obbligatori.";
+    // Prima valida i campi testuali
+    if ($ragione_sociale === "" || $nome === "" || $piva === "") {
+        $errore = "Ragione sociale, nome e partita IVA sono obbligatori.";
+    } elseif (!preg_match('/^\d{11}$/', $piva)) {
+        $errore = "La P.IVA deve contenere esattamente 11 cifre numeriche.";
+    } elseif ($n_dip < 0) {
+        $errore = "Il numero di dipendenti non può essere negativo.";
+    } else {
+        // Solo se i campi sono validi, gestisci l'upload
+        if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
+            $ext        = strtolower(pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION));
+            $allowedExt = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
-// 1. Validazione formato Partita IVA: esattamente 11 cifre numeriche
-} elseif (!preg_match('/^\d{11}$/', $piva)) {
-    $errore = "La P.IVA deve contenere esattamente 11 cifre numeriche.";
+            if (!in_array($ext, $allowedExt)) {
+                $errore = "Formato immagine non supportato.";
+            } else {
+                $uploadDir = '../../uploads/loghi/';
+                if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
 
-// 2. Numero dipendenti non negativo
-} elseif ($n_dip < 0) {
-    $errore = "Il numero di dipendenti non può essere negativo.";
+                $filename = uniqid('logo_') . '.' . $ext;
+                $destPath = $uploadDir . $filename;
 
-} else {
-    try {
-        $stmt = $pdo->prepare("CALL sp_RegistraAzienda(?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$ragione_sociale, $nome, $piva, $settore, $n_dip, $logo, $username]);
-        $messaggio = "Azienda '$ragione_sociale' registrata.";
+                if (move_uploaded_file($_FILES['logo']['tmp_name'], $destPath)) {
+                    $logo = 'uploads/loghi/' . $filename;
+                } else {
+                    $errore = "Errore nel salvataggio del logo.";
+                }
+            }
+        }
 
-        require_once "../db_mongo.php";
-        logEvento('CREATE_COMPANY', "Azienda registrata: " . $ragione_sociale . " da " . $username, 0, 0);
+        // Procedi al DB solo se non ci sono errori di upload
+        if ($errore === "") {
+            try {
+                $stmt = $pdo->prepare("CALL sp_RegistraAzienda(?, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$ragione_sociale, $nome, $piva, $settore, $n_dip, $logo, $username]);
+                $messaggio = "Azienda '$ragione_sociale' registrata.";
 
-    } catch (PDOException $e) {
-        if ($e->errorInfo[1] == 1062) {
-            $errore = "Errore: una azienda con questa ragione sociale esiste già.";
-        } else {
-            $errore = "Errore DB: " . $e->getMessage();
+                require_once "../db_mongo.php";
+                logEvento('CREATE_COMPANY', "Azienda registrata: " . $ragione_sociale . " da " . $username, 0, 0);
+
+            } catch (PDOException $e) {
+                if ($e->errorInfo[1] == 1062) {
+                    $errore = "Errore: una azienda con questa ragione sociale esiste già.";
+                } else {
+                    $errore = "Errore DB: " . $e->getMessage();
+                }
+            }
         }
     }
-}
 }
 
 // Lettura aziende del responsabile loggato
@@ -87,31 +108,31 @@ try {
         <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
         <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
-        <form action="registra_azienda.php" method="post">
+        <form action="registra_azienda.php" method="post" enctype="multipart/form-data">
             <div class="input-group2">
                 <label>Ragione Sociale * (max 30 caratteri)</label>
                 <input type="text" name="ragione_sociale" maxlength="30" required>
-                 </div>
+            </div>
             <div class="input-group2">
                 <label>Nome * (max 30 caratteri)</label>
                 <input type="text" name="nome" maxlength="30" required>
-                 </div>
+            </div>
             <div class="input-group2">
                 <label>Partita IVA *</label>
                 <input type="text" name="piva" pattern="[0-9]+" inputmode="numeric" required>
-                 </div>
+            </div>
             <div class="input-group2">
                 <label>Settore (max 30 caratteri)</label>
                 <input type="text" name="settore" maxlength="30">
-                 </div>
+            </div>
             <div class="input-group2">
                 <label>Numero dipendenti</label>
                 <input type="number" name="n_dip" min="0" value="0">
-                 </div>
+            </div>
             <div class="input-group2">
-                <label>Logo (path al file, opzionale, max 30 caratteri)</label>
-                <input type="text" name="logo" maxlength="30">
-                 </div>
+                <label>Logo Azienda (immagine, opzionale)</label>
+                <input type="file" name="logo" accept="image/*">
+            </div>
 
             <input type="submit" name="registra_azienda" value="Registra Azienda" class="add-btn">
         </form>
@@ -137,16 +158,8 @@ try {
                                 <td><?= htmlspecialchars($r["Nome"]) ?></td>
                                 <td><code class="id-badge"><?= htmlspecialchars($r["p_IVA"]) ?></code></td>
                                 <td><?= htmlspecialchars($r["Settore"] ?? "—") ?></td>
-                                <td>
-                                    <span class="badge" >
-                                        <?= htmlspecialchars($r["n_dip"]) ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge">
-                                        <?= htmlspecialchars($r["nr_bilanci"]) ?>
-                                    </span>
-                                </td>
+                                <td><span class="badge"><?= htmlspecialchars($r["n_dip"]) ?></span></td>
+                                <td><span class="badge"><?= htmlspecialchars($r["nr_bilanci"]) ?></span></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
