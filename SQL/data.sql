@@ -110,7 +110,7 @@ CREATE TABLE VOCE (
 CREATE TABLE AZIENDA (
     Ragione_sociale VARCHAR(30) PRIMARY KEY,
     Nome VARCHAR(30),
-    p_IVA INT VARCHAR(11),
+    p_IVA VARCHAR(11),
     Settore VARCHAR(30),
     n_dip INT,
     logo VARCHAR(255),
