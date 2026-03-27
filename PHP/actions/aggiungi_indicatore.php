@@ -19,53 +19,56 @@ $errore    = "";
 
 if (isset($_POST["aggiungi_indicatore"])) {
     $nome      = trim($_POST["nome_indicatore"]);
-    if ($_POST["rilevanza"] === "" || $_POST["rilevanza"] === null) {
-        $errore = "La rilevanza è obbligatoria (valore tra 0 e 10).";
-    }
-    $immagine = null;
+    $immagine  = '/img/default.png';
+
     if (isset($_FILES['immagine']) && $_FILES['immagine']['error'] === UPLOAD_ERR_OK) {
-    $ext        = strtolower(pathinfo($_FILES['immagine']['name'], PATHINFO_EXTENSION));
-    $allowedExt = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-    if (!in_array($ext, $allowedExt)) {
-        $errore = "Formato immagine non supportato.";
-    } else {
-        $uploadDir = '../../uploads/indicatori/';
-        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-        $filename = uniqid('ind_') . '.' . $ext;
-        if (move_uploaded_file($_FILES['immagine']['tmp_name'], $uploadDir . $filename)) {
-            $immagine = 'uploads/indicatori/' . $filename;
+        $ext        = strtolower(pathinfo($_FILES['immagine']['name'], PATHINFO_EXTENSION));
+        $allowedExt = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        if (!in_array($ext, $allowedExt)) {
+            $errore = "Formato immagine non supportato.";
         } else {
-            $errore = "Errore nel salvataggio dell'immagine.";
+            $uploadDir = '../../uploads/indicatori/';
+            if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+            $filename = uniqid('ind_') . '.' . $ext;
+            if (move_uploaded_file($_FILES['immagine']['tmp_name'], $uploadDir . $filename)) {
+                $immagine = 'uploads/indicatori/' . $filename;
+            } else {
+                $errore = "Errore nel salvataggio dell'immagine.";
             }
         }
     }
+
+    $rilevanza = ($_POST["rilevanza"] !== "" && is_numeric($_POST["rilevanza"]))
+                 ? (int)$_POST["rilevanza"]
+                 : null;
 
     $tipo      = $_POST["tipo"] ?? "";
     $cod_norm  = trim($_POST["cod_norm"]  ?? "") ?: null;
     $ambito    = trim($_POST["ambito"]    ?? "") ?: null;
     $frequenza = ($_POST["frequenza"] ?? "") !== "" ? (int)$_POST["frequenza"] : null;
 
-if ($nome === "") {
-    $errore = "Il nome dell'indicatore è obbligatorio.";
+    if ($nome === "") {
+        $errore = "Il nome dell'indicatore è obbligatorio.";
 
-// 1. Rilevanza: verificare che sia numerica prima del cast, per evitare conversione silenziosa di "abc" → 0
-} elseif ($_POST["rilevanza"] !== "" && !is_numeric($_POST["rilevanza"])) {
-    $errore = "La rilevanza deve essere un numero intero.";
+    } elseif ($rilevanza === null) {
+        $errore = "La rilevanza è obbligatoria (valore tra 0 e 10).";
 
-} elseif ($rilevanza !== null && ($rilevanza < 0 || $rilevanza > 10)) {
-    $errore = "La rilevanza deve essere tra 0 e 10.";
+    } elseif (!is_numeric($_POST["rilevanza"])) {
+        $errore = "La rilevanza deve essere un numero intero.";
 
-} elseif ($tipo === "ambientale" && $cod_norm === null) {
-    $errore = "Il codice normativa è obbligatorio per indicatori ambientali.";
+    } elseif ($rilevanza < 0 || $rilevanza > 10) {
+        $errore = "La rilevanza deve essere tra 0 e 10.";
 
-} elseif ($tipo === "sociale" && ($ambito === null || $frequenza === null)) {
-    $errore = "Ambito e frequenza sono obbligatori per indicatori sociali.";
+    } elseif ($tipo === "ambientale" && $cod_norm === null) {
+        $errore = "Il codice normativa è obbligatorio per indicatori ambientali.";
 
-// 2. Frequenza per indicatori sociali: deve essere > 0
-} elseif ($tipo === "sociale" && $frequenza !== null && $frequenza <= 0) {
-    $errore = "La frequenza deve essere maggiore di 0 giorni.";
+    } elseif ($tipo === "sociale" && ($ambito === null || $frequenza === null)) {
+        $errore = "Ambito e frequenza sono obbligatori per indicatori sociali.";
 
-} else {
+    } elseif ($tipo === "sociale" && $frequenza !== null && $frequenza <= 0) {
+        $errore = "La frequenza deve essere maggiore di 0 giorni.";
+
+    } else {
         try {
             $stmt = $pdo->prepare("CALL sp_PopolaIndicatoreESG(?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([
@@ -136,15 +139,14 @@ try {
         <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
         <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
 
-            <form action="aggiungi_indicatore.php" method="post" enctype="multipart/form-data">
+        <form action="aggiungi_indicatore.php" method="post" enctype="multipart/form-data">
             <div class="input-group2">
                 <label>Nome * (max 30 caratteri)</label>
                 <input type="text" name="nome_indicatore" maxlength="30" required>
             </div>
             <div class="input-group2">
-            <label>Rilevanza (0–10)</label>
-            <input type="number" name="rilevanza" min="0" max="10" required>
-
+                <label>Rilevanza (0–10)</label>
+                <input type="number" name="rilevanza" min="0" max="10" required>
             </div>
             <div class="input-group2">
                 <label>Immagine (opzionale)</label>
@@ -202,8 +204,7 @@ try {
         <?php else: ?>
             <p class="empty-msg">Nessun indicatore presente nel sistema.</p>
         <?php endif; ?>
-    
+
     </div>
-    
 </body>
 </html>
