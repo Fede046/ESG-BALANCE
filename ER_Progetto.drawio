@@ -94,7 +94,7 @@
             <mxPoint x="665.1428571428571" y="498" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="GS0kotYRfuHAjTRDo3CP-20" parent="1" style="whiteSpace=wrap;html=1;align=center;" value="Respinsabile_Aziendale" vertex="1">
+        <mxCell id="GS0kotYRfuHAjTRDo3CP-20" parent="1" style="whiteSpace=wrap;html=1;align=center;" value="Responsabile_Aziendale" vertex="1">
           <mxGeometry height="40" width="140" x="560" y="438" as="geometry" />
         </mxCell>
         <mxCell id="GS0kotYRfuHAjTRDo3CP-21" edge="1" parent="1" source="GS0kotYRfuHAjTRDo3CP-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;" target="GS0kotYRfuHAjTRDo3CP-25">
@@ -593,6 +593,22 @@
         </mxCell>
         <mxCell id="dANH0sbStBM6PneXOafI-7" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="(1,1)" vertex="1">
           <mxGeometry height="30" width="60" x="788" y="158" as="geometry" />
+        </mxCell>
+        <mxCell id="eMLscfK3yrfLTFSDd12s-2" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;html=1;rounded=0;startArrow=oval;startFill=1;endArrow=oval;endFill=1;curved=1;" value="">
+          <mxGeometry relative="1" width="100" as="geometry">
+            <Array as="points">
+              <mxPoint x="900" y="850" />
+            </Array>
+            <mxPoint x="880" y="850" as="sourcePoint" />
+            <mxPoint x="900" y="820" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eMLscfK3yrfLTFSDd12s-3" edge="1" parent="1" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=0;endArrow=oval;endFill=1;startArrow=oval;startFill=1;" value="">
+          <mxGeometry relative="1" width="100" as="geometry">
+            <Array as="points" />
+            <mxPoint x="770" y="830" as="sourcePoint" />
+            <mxPoint x="770" y="810" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
       </root>
     </mxGraphModel>
