@@ -113,35 +113,25 @@ INSERT INTO VOCE (Nome, Descrizione, Username_Amministratore) VALUES
 -- 9. AZIENDA
 -- ─────────────────────────────────────────────
 INSERT INTO AZIENDA (Ragione_sociale, Nome, p_IVA, Settore, n_dip, logo, nr_bilanci, Username_Responsabile_Aziendale) VALUES
-('GreenTech SRL', 'GreenTech', 12345678, 'Tecnologia',  150, '/logo/gt.png', 3, 'anna.neri'),
-('EcoFarm SPA',   'EcoFarm',   87654321, 'Agricoltura',  80, '/logo/ef.png', 2, 'paolo.gialli'),
-('BluEnergy SRL', 'BluEnergy', 11223344, 'Energia',     200, '/logo/be.png', 3, 'sara.blu');
+('GreenTech SRL', 'GreenTech', '12345678901', 'Tecnologia',  150, '/logo/gt.png', 3, 'anna.neri'),
+('EcoFarm SPA',   'EcoFarm',   '87654321012', 'Agricoltura',  80, '/logo/ef.png', 2, 'paolo.gialli'),
+('BluEnergy SRL', 'BluEnergy', '11223344556', 'Energia',     200, '/logo/be.png', 3, 'sara.blu');
 
 -- ─────────────────────────────────────────────
--- 10. BILANCIO
+-- 10. BILANCIO  (tutti 'bozza' alla creazione)
 -- ─────────────────────────────────────────────
 INSERT INTO BILANCIO (id, Ragione_sociale_azienda, Data_creazione, Stato) VALUES
 (1, 'GreenTech SRL', '2022-03-31 00:00:00', 'bozza'),
 (2, 'GreenTech SRL', '2023-03-31 00:00:00', 'bozza'),
-(3, 'GreenTech SRL', '2024-03-31 00:00:00', 'in revisione'),
-(4, 'EcoFarm SPA',   '2023-04-30 00:00:00', 'approvato'),
-(5, 'EcoFarm SPA',   '2024-04-30 00:00:00', 'in revisione'),
-(6, 'BluEnergy SRL', '2022-06-30 00:00:00', 'approvato'),
-(7, 'BluEnergy SRL', '2023-06-30 00:00:00', 'approvato'),
+(3, 'GreenTech SRL', '2024-03-31 00:00:00', 'bozza'),
+(4, 'EcoFarm SPA',   '2023-04-30 00:00:00', 'bozza'),
+(5, 'EcoFarm SPA',   '2024-04-30 00:00:00', 'bozza'),
+(6, 'BluEnergy SRL', '2022-06-30 00:00:00', 'bozza'),
+(7, 'BluEnergy SRL', '2023-06-30 00:00:00', 'bozza'),
 (8, 'BluEnergy SRL', '2024-06-30 00:00:00', 'bozza');
 
 -- ─────────────────────────────────────────────
--- 11. GIUDIZIO
--- ─────────────────────────────────────────────
-INSERT INTO GIUDIZIO (Id, Esito, Data, Rilievi, Username, id_bilancio, Ragione_sociale_bilancio) VALUES
-(1, 'approvazione',             '2022-05-01 00:00:00', '/rilievi/r1.pdf', 'giulia.bianchi', 1, 'GreenTech SRL'),
-(2, 'approvazione',             '2023-05-01 00:00:00', '/rilievi/r2.pdf', 'giulia.bianchi', 2, 'GreenTech SRL'),
-(3, 'approvazione con rilievi', '2023-06-15 00:00:00', '/rilievi/r3.pdf', 'luca.verdi',     4, 'EcoFarm SPA'),
-(4, 'respingimento',            '2022-08-01 00:00:00', '/rilievi/r4.pdf', 'giulia.bianchi', 6, 'BluEnergy SRL'),
-(5, 'approvazione con rilievi', '2023-08-01 00:00:00', '/rilievi/r5.pdf', 'luca.verdi',     7, 'BluEnergy SRL');
-
--- ─────────────────────────────────────────────
--- 12. VALUTA_REVISORE_BILANCIO
+-- 11. VALUTA_REVISORE_BILANCIO
 -- ─────────────────────────────────────────────
 INSERT INTO VALUTA_REVISORE_BILANCIO (Username_Revisore_ESG, id_bilancio, Ragione_sociale_bilancio) VALUES
 ('giulia.bianchi', 1, 'GreenTech SRL'),
@@ -152,6 +142,16 @@ INSERT INTO VALUTA_REVISORE_BILANCIO (Username_Revisore_ESG, id_bilancio, Ragion
 ('giulia.bianchi', 6, 'BluEnergy SRL'),
 ('luca.verdi',     7, 'BluEnergy SRL'),
 ('luca.verdi',     8, 'BluEnergy SRL');
+
+-- ─────────────────────────────────────────────
+-- 12. GIUDIZIO
+-- ─────────────────────────────────────────────
+INSERT INTO GIUDIZIO (Id, Esito, Data, Rilievi, Username, id_bilancio, Ragione_sociale_bilancio) VALUES
+(1, 'approvazione',             '2022-05-01 00:00:00', '/rilievi/r1.pdf', 'giulia.bianchi', 1, 'GreenTech SRL'),
+(2, 'approvazione',             '2023-05-01 00:00:00', '/rilievi/r2.pdf', 'giulia.bianchi', 2, 'GreenTech SRL'),
+(3, 'approvazione con rilievi', '2023-06-15 00:00:00', '/rilievi/r3.pdf', 'luca.verdi',     4, 'EcoFarm SPA'),
+(4, 'respingimento',            '2022-08-01 00:00:00', '/rilievi/r4.pdf', 'giulia.bianchi', 6, 'BluEnergy SRL'),
+(5, 'approvazione con rilievi', '2023-08-01 00:00:00', '/rilievi/r5.pdf', 'luca.verdi',     7, 'BluEnergy SRL');
 
 -- ─────────────────────────────────────────────
 -- 13. ASSOCIA_BILANCIO_VOCE
@@ -168,29 +168,31 @@ INSERT INTO ASSOCIA_BILANCIO_VOCE (Nome_voce, id_bilancio, Ragione_sociale_bilan
 ('EBITDA',            4, 'EcoFarm SPA',   150000),
 ('Debiti finanziari', 4, 'EcoFarm SPA',    80000),
 ('Ricavi',            5, 'EcoFarm SPA',   420000),
-('Costi operativi',   5, 'EcoFarm SPA',   210000),
-('Ricavi',            6, 'BluEnergy SRL', 900000),
-('Patrimonio netto',  6, 'BluEnergy SRL', 450000),
+('Costi operativi',   5, 'EcoFarm SPA',   200000),
+('Ricavi',            6, 'BluEnergy SRL', 800000),
+('Costi operativi',   6, 'BluEnergy SRL', 500000),
 ('EBITDA',            6, 'BluEnergy SRL', 300000),
-('Ricavi',            7, 'BluEnergy SRL', 950000),
-('Costi operativi',   7, 'BluEnergy SRL', 500000),
-('Debiti finanziari', 8, 'BluEnergy SRL', 120000);
+('Ricavi',            7, 'BluEnergy SRL', 850000),
+('Patrimonio netto',  7, 'BluEnergy SRL', 400000),
+('Ricavi',            8, 'BluEnergy SRL', 900000),
+('Debiti finanziari', 8, 'BluEnergy SRL', 150000);
 
 -- ─────────────────────────────────────────────
 -- 14. NOTA
 -- ─────────────────────────────────────────────
-INSERT INTO NOTA (ID, Data, Testo, Username_Revisore_ESG, NomeVoce, id_bilancio, Ragione_sociale_bilancio) VALUES
-(1, '2024-01-10 10:00:00', '/note/nota1.txt', 'giulia.bianchi', 'Ricavi',            1, 'GreenTech SRL'),
-(2, '2024-02-15 11:30:00', '/note/nota2.txt', 'giulia.bianchi', 'Costi operativi',   1, 'GreenTech SRL'),
-(3, '2024-03-20 09:15:00', '/note/nota3.txt', 'luca.verdi',     'EBITDA',            4, 'EcoFarm SPA'),
-(4, '2024-04-05 14:00:00', '/note/nota4.txt', 'luca.verdi',     'Debiti finanziari', 4, 'EcoFarm SPA');
+INSERT INTO NOTA (Data, Testo, Username_Revisore_ESG, NomeVoce, id_bilancio, Ragione_sociale_bilancio) VALUES
+('2022-04-15 10:00:00', 'Ricavi in linea con le aspettative.',         'giulia.bianchi', 'Ricavi',            1, 'GreenTech SRL'),
+('2022-04-15 10:05:00', 'Costi operativi leggermente elevati.',        'giulia.bianchi', 'Costi operativi',   1, 'GreenTech SRL'),
+('2023-05-10 09:00:00', 'Crescita ricavi confermata rispetto al 2022.','giulia.bianchi', 'Ricavi',            2, 'GreenTech SRL'),
+('2023-06-01 11:00:00', 'EBITDA positivo, buon segnale.',              'luca.verdi',     'EBITDA',            4, 'EcoFarm SPA'),
+('2022-07-20 14:00:00', 'Costi troppo elevati rispetto ai ricavi.',    'giulia.bianchi', 'Costi operativi',   6, 'BluEnergy SRL');
 
 -- ─────────────────────────────────────────────
 -- 15. COLLEGA_ESG_VOCE
 -- ─────────────────────────────────────────────
 INSERT INTO COLLEGA_ESG_VOCE (NomeVoce, NomeEsg, Fonte, Valore, Data) VALUES
-('Ricavi',            'Emissioni CO2',    'GRI',  1250.50, '2024-01-01 00:00:00'),
-('Costi operativi',   'Consumo idrico',   'SASB',  340.00, '2024-01-01 00:00:00'),
-('EBITDA',            'Parita di genere', 'GRI',    65.30, '2024-01-01 00:00:00'),
-('Patrimonio netto',  'Diversita CdA',    'GRI',    48.00, '2024-01-01 00:00:00'),
-('Debiti finanziari', 'Sicurezza lavoro', 'OSHA',    2.10, '2024-01-01 00:00:00');
+('Ricavi',          'Emissioni CO2',    'GRI-305',  12.50, '2022-03-31 00:00:00'),
+('Costi operativi', 'Consumo idrico',   'ISO-14046', 8.30, '2022-03-31 00:00:00'),
+('EBITDA',          'Parita di genere', 'GRI-405',   6.00, '2023-04-30 00:00:00'),
+('Ricavi',          'Sicurezza lavoro', 'GRI-403',   9.10, '2022-06-30 00:00:00'),
+('Patrimonio netto','Diversita CdA',    'GRI-405',   7.50, '2023-06-30 00:00:00');
