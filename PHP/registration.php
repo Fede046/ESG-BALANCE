@@ -74,7 +74,7 @@ function registraUtente() {
         return "Inserisci almeno un indirizzo email.";
         }
 
-        // ✅ MODIFICA: Gestione upload CV per il responsabile
+        // Gestione upload CV per il responsabile
         $extra = '';
         if ($ruolo === 'responsabile') {
             if (isset($_FILES['cv']) && $_FILES['cv']['error'] === UPLOAD_ERR_OK) {
