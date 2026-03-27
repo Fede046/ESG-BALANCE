@@ -67,15 +67,16 @@ function registraUtente() {
 
         // Hash MD5 con salt 'jdd'
         $psw_hash = md5($psw . "jdd");
-        
-        // 6. Almeno una email obbligatoria
+
+        // 7. Almeno una email obbligatoria
         $emailsFiltrate = array_filter(array_map('trim', $emails));
         if (empty($emailsFiltrate)) {
-        return "Inserisci almeno un indirizzo email.";
+            return "Inserisci almeno un indirizzo email.";
         }
 
         // Gestione upload CV per il responsabile
-        $extra = '';
+        // Placeholder di default: indica che nessun CV è stato caricato
+        $extra = 'uploads/cv/default.pdf';
         if ($ruolo === 'responsabile') {
             if (isset($_FILES['cv']) && $_FILES['cv']['error'] === UPLOAD_ERR_OK) {
                 $finfo = new finfo(FILEINFO_MIME_TYPE);
@@ -92,12 +93,12 @@ function registraUtente() {
                 $destPath = $uploadDir . $filename;
 
                 if (move_uploaded_file($_FILES['cv']['tmp_name'], $destPath)) {
-                    $extra = 'uploads/cv/' . $filename;
+                    $extra = 'uploads/cv/' . $filename; // sovrascrive il placeholder
                 } else {
                     return "Errore nel salvataggio del CV.";
                 }
             }
-            // CV opzionale: se non caricato $extra rimane ''
+            // CV opzionale: se non caricato $extra rimane 'uploads/cv/default.pdf'
         }
 
         $stmt = $pdo->prepare("CALL sp_Registrazione(?, ?, ?, ?, ?, ?, ?)");
@@ -135,13 +136,11 @@ function registraUtente() {
 </head>
 <body>
     <div class="card">
-        <!-- ✅ MODIFICA: aggiunto enctype per abilitare upload file -->
         <form action="registration.php" method="post" enctype="multipart/form-data">
             <div class="input-group">
                 <label>Username:</label>
                 <input type="text" name="usr" placeholder="Inserisci username" required
                 value="<?= htmlspecialchars($_POST['usr'] ?? '') ?>">
-
             </div>
             <div class="input-group">
                 <label>Password:</label>
@@ -155,13 +154,11 @@ function registraUtente() {
                 <label>Codice Fiscale:</label>
                 <input type="text" name="CF" placeholder="Es: RSSMRA50R15H501Y" required
                 value="<?= htmlspecialchars($_POST['CF'] ?? '') ?>">
-
             </div>
             <div class="input-group">
                 <label>Luogo di Nascita:</label>
                 <input type="text" name="luogo" placeholder="Es: Bologna" required
                 value="<?= htmlspecialchars($_POST['luogo'] ?? '') ?>">
-
             </div>
             <div class="input-group">
                 <label>Data di Nascita:</label>
@@ -182,7 +179,6 @@ function registraUtente() {
                 </div>
             </div>
 
-
             <div class="input-group">
                 <div id="container">
                     <?php
@@ -199,8 +195,7 @@ function registraUtente() {
                 <?php endforeach; ?>
                 </div>
                 <input type="button" id="addEmail" class="add-btn" value="Add Email">
-                </div>
-
+            </div>
 
             <script>
                 document.querySelectorAll('input[name="ruolo"]').forEach(function(radio) {
@@ -231,7 +226,5 @@ function registraUtente() {
         <?php endif; ?>
         <a href="home.php" class="btn-home">Home</a>
     </div>
-
-    
 </body>
 </html>
