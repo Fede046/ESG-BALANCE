@@ -23,58 +23,60 @@ if (isset($_POST["inserisci_nota"])) {
     $nome_voce = trim($_POST["nome_voce"]);
     $testo     = trim($_POST["testo"]);
 
-    if ($id_bil <= 0 || $rag_soc === "" || $nome_voce === "" || $testo === "") {
-        $errore = "Tutti i campi sono obbligatori.";
-        } else {
-        // 1. Limite lunghezza testo nota lato PHP
-        if (strlen($testo) > 500) {
-            $errore = "Il testo non può superare 500 caratteri.";
+    if ($id_bil <= 0 || $rag_soc === "") {
+        $errore = "Bilancio non valido.";
+    } elseif ($nome_voce === "") {
+        $errore = "La voce contabile è obbligatoria.";
+    } elseif ($testo === "") {
+        $errore = "Il testo della nota è obbligatorio.";
+    } elseif (strlen($testo) < 5) {
+        $errore = "Il testo della nota deve avere almeno 5 caratteri.";
+    } elseif (strlen($testo) > 500) {
+        $errore = "Il testo non può superare 500 caratteri.";
+    } else {
+        // Controlla stato bilancio: non modificabile se chiuso
+        $chk_stato = $pdo->prepare(
+            "SELECT Stato FROM BILANCIO
+             WHERE id = ? AND Ragione_sociale_azienda = ?"
+        );
+        $chk_stato->execute([$id_bil, $rag_soc]);
+        $bilancio = $chk_stato->fetch(PDO::FETCH_ASSOC);
+
+        if (!$bilancio) {
+            $errore = "Bilancio non trovato.";
+
+        } elseif (in_array(strtolower($bilancio['Stato']), ['approvato', 'respinto'])) {
+            $errore = "Non puoi aggiungere note a un bilancio già chiuso.";
 
         } else {
-            // 2. Controlla stato bilancio: non modificabile se chiuso
-            $chk_stato = $pdo->prepare(
-                "SELECT Stato FROM BILANCIO
-                 WHERE id = ? AND Ragione_sociale_azienda = ?"
+            // Verifica che il revisore sia assegnato a quel bilancio
+            $stmt = $pdo->prepare(
+                "SELECT COUNT(*) FROM VALUTA_REVISORE_BILANCIO
+                 WHERE Username_Revisore_ESG = ? AND id_bilancio = ? AND Ragione_sociale_bilancio = ?"
             );
-            $chk_stato->execute([$id_bil, $rag_soc]);
-            $bilancio = $chk_stato->fetch(PDO::FETCH_ASSOC);
-
-            if (!$bilancio) {
-                $errore = "Bilancio non trovato.";
-
-            } elseif (in_array(strtolower($bilancio['Stato']), ['approvato', 'respinto'])) {
-                $errore = "Non puoi aggiungere note a un bilancio già chiuso.";
-
+            $stmt->execute([$username, $id_bil, $rag_soc]);
+            if ($stmt->fetchColumn() == 0) {
+                $errore = "Non sei assegnato a questo bilancio.";
             } else {
-                // Verifica che il revisore sia assegnato a quel bilancio
-                $stmt = $pdo->prepare(
-                    "SELECT COUNT(*) FROM VALUTA_REVISORE_BILANCIO
-                     WHERE Username_Revisore_ESG = ? AND id_bilancio = ? AND Ragione_sociale_bilancio = ?"
+                // Verifica che la voce appartenga al bilancio
+                $stmt2 = $pdo->prepare(
+                    "SELECT COUNT(*) FROM ASSOCIA_BILANCIO_VOCE
+                     WHERE Nome_voce = ? AND id_bilancio = ? AND Ragione_sociale_bilancio = ?"
                 );
-                $stmt->execute([$username, $id_bil, $rag_soc]);
-                if ($stmt->fetchColumn() == 0) {
-                    $errore = "Non sei assegnato a questo bilancio.";
+                $stmt2->execute([$nome_voce, $id_bil, $rag_soc]);
+                if ($stmt2->fetchColumn() == 0) {
+                    $errore = "La voce selezionata non appartiene a questo bilancio.";
                 } else {
-                    // Verifica che la voce appartenga al bilancio
-                    $stmt2 = $pdo->prepare(
-                        "SELECT COUNT(*) FROM ASSOCIA_BILANCIO_VOCE
-                         WHERE Nome_voce = ? AND id_bilancio = ? AND Ragione_sociale_bilancio = ?"
-                    );
-                    $stmt2->execute([$nome_voce, $id_bil, $rag_soc]);
-                    if ($stmt2->fetchColumn() == 0) {
-                        $errore = "La voce selezionata non appartiene a questo bilancio.";
-                    } else {
-                        try {
-                            $stmt3 = $pdo->prepare("CALL sp_InserisciNotaVoce(?, ?, ?, ?, ?)");
-                            $stmt3->execute([$testo, $nome_voce, $username, $id_bil, $rag_soc]);
-                            $messaggio = "Nota inserita sulla voce '$nome_voce' del bilancio #$id_bil.";
+                    try {
+                        $stmt3 = $pdo->prepare("CALL sp_InserisciNotaVoce(?, ?, ?, ?, ?)");
+                        $stmt3->execute([$testo, $nome_voce, $username, $id_bil, $rag_soc]);
+                        $messaggio = "Nota inserita sulla voce '$nome_voce' del bilancio #$id_bil.";
 
-                            require_once "../db_mongo.php";
-                            logEvento('INSERT_NOTA', "Nota inserita sulla voce '$nome_voce' del bilancio #$id_bil ($rag_soc) da $username", 0, $id_bil);
+                        require_once "../db_mongo.php";
+                        logEvento('INSERT_NOTA', "Nota inserita sulla voce '$nome_voce' del bilancio #$id_bil ($rag_soc) da $username", 0, $id_bil);
 
-                        } catch (PDOException $e) {
-                            $errore = "Errore DB: " . $e->getMessage();
-                        }
+                    } catch (PDOException $e) {
+                        $errore = "Errore DB: " . $e->getMessage();
                     }
                 }
             }
@@ -100,7 +102,7 @@ try {
 }
 
 // Bilancio selezionato via GET
-$id_sel  = isset($_GET["id_bilancio"])     ? (int)$_GET["id_bilancio"]              : 0;
+$id_sel  = isset($_GET["id_bilancio"])     ? (int)$_GET["id_bilancio"]     : 0;
 $rag_sel = isset($_GET["ragione_sociale"]) ? trim($_GET["ragione_sociale"]) : "";
 
 // Voci del bilancio selezionato
@@ -149,7 +151,6 @@ try {
             <h1>Inserisci Nota su Voce di Bilancio</h1>
             <a href="../menu.php" class="btn-logout">← Torna al menu</a>
         </div>
-    
 
         <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
         <?php if ($errore):    ?><p><?= htmlspecialchars($errore) ?></p><?php endif; ?>
@@ -177,7 +178,7 @@ try {
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="inserisci_nota.php?id_bilancio=<?= urlencode($r["id"]) ?>&ragione_sociale=<?= urlencode($r["Ragione_sociale_azienda"]) ?>" 
+                                    <a href="inserisci_nota.php?id_bilancio=<?= urlencode($r["id"]) ?>&ragione_sociale=<?= urlencode($r["Ragione_sociale_azienda"]) ?>"
                                     class="btn-action-small">
                                         Seleziona
                                     </a>
@@ -208,8 +209,8 @@ try {
                     </select>
                 </div>
                 <div class="input-group2">
-                    <label>Testo nota *</label>
-                    <textarea name="testo" rows="4" cols="50" required></textarea><br>
+                    <label>Testo nota * (max 500 caratteri)</label>
+                    <textarea name="testo" rows="4" cols="50" maxlength="500" required></textarea>
                 </div>
                 <input type="submit" name="inserisci_nota" value="Inserisci Nota" class="add-btn">
             </form>
@@ -247,5 +248,6 @@ try {
             <?php endif; ?>
         </div>
 
+    </div>
 </body>
 </html>

@@ -23,15 +23,29 @@ if (isset($_POST["registra_azienda"])) {
     $piva            = trim($_POST["piva"]);
     $settore         = trim($_POST["settore"]) ?: null;
     $n_dip           = (int)($_POST["n_dip"] ?? 0);
-    $logo            = '/logo/default.png';
+    $logo            = 'uploads/loghi/default.png'; // ← placeholder coerente
 
-    // Prima valida i campi testuali
-    if ($ragione_sociale === "" || $nome === "" || $piva === "") {
-        $errore = "Ragione sociale, nome e partita IVA sono obbligatori.";
+    // Validazione campi testuali
+    if ($ragione_sociale === "") {
+        $errore = "La ragione sociale è obbligatoria.";
+    } elseif (strlen($ragione_sociale) < 2) {
+        $errore = "La ragione sociale deve avere almeno 2 caratteri.";
+    } elseif ($nome === "") {
+        $errore = "Il nome è obbligatorio.";
+    } elseif (strlen($nome) < 2) {
+        $errore = "Il nome deve avere almeno 2 caratteri.";
+    } elseif ($piva === "") {
+        $errore = "La Partita IVA è obbligatoria.";
     } elseif (!preg_match('/^\d{11}$/', $piva)) {
         $errore = "La P.IVA deve contenere esattamente 11 cifre numeriche.";
+    } elseif ($settore === null) {
+        $errore = "Il settore è obbligatorio.";
+    } elseif (strlen($settore) < 2) {
+        $errore = "Il settore deve avere almeno 2 caratteri.";
     } elseif ($n_dip < 0) {
         $errore = "Il numero di dipendenti non può essere negativo.";
+    } elseif (!isset($_FILES['logo']) || $_FILES['logo']['error'] === UPLOAD_ERR_NO_FILE) {
+        $errore = "Il logo aziendale è obbligatorio.";
     } else {
         // Solo se i campi sono validi, gestisci l'upload
         if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
@@ -39,7 +53,7 @@ if (isset($_POST["registra_azienda"])) {
             $allowedExt = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
             if (!in_array($ext, $allowedExt)) {
-                $errore = "Formato immagine non supportato.";
+                $errore = "Formato immagine non supportato (jpg, jpeg, png, gif, webp).";
             } else {
                 $uploadDir = '../../uploads/loghi/';
                 if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
@@ -48,14 +62,14 @@ if (isset($_POST["registra_azienda"])) {
                 $destPath = $uploadDir . $filename;
 
                 if (move_uploaded_file($_FILES['logo']['tmp_name'], $destPath)) {
-                    $logo = 'uploads/loghi/' . $filename;
+                    $logo = 'uploads/loghi/' . $filename; // ← sovrascrive il placeholder
                 } else {
                     $errore = "Errore nel salvataggio del logo.";
                 }
             }
         }
 
-        // Procedi al DB solo se non ci sono errori di upload
+        // Procedi al DB solo se non ci sono errori
         if ($errore === "") {
             try {
                 $stmt = $pdo->prepare("CALL sp_RegistraAzienda(?, ?, ?, ?, ?, ?, ?)");
@@ -111,27 +125,31 @@ try {
         <form action="registra_azienda.php" method="post" enctype="multipart/form-data">
             <div class="input-group2">
                 <label>Ragione Sociale * (max 30 caratteri)</label>
-                <input type="text" name="ragione_sociale" maxlength="30" required>
+                <input type="text" name="ragione_sociale" maxlength="30" required
+                value="<?= htmlspecialchars($_POST['ragione_sociale'] ?? '') ?>">
             </div>
             <div class="input-group2">
                 <label>Nome * (max 30 caratteri)</label>
-                <input type="text" name="nome" maxlength="30" required>
+                <input type="text" name="nome" maxlength="30" required
+                value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>">
             </div>
             <div class="input-group2">
                 <label>Partita IVA *</label>
-                <input type="text" name="piva" pattern="[0-9]+" inputmode="numeric" required>
+                <input type="text" name="piva" pattern="[0-9]+" inputmode="numeric" required
+                value="<?= htmlspecialchars($_POST['piva'] ?? '') ?>">
             </div>
             <div class="input-group2">
-                <label>Settore (max 30 caratteri)</label>
-                <input type="text" name="settore" maxlength="30">
+                <label>Settore * (max 30 caratteri)</label>
+                <input type="text" name="settore" maxlength="30" required
+                value="<?= htmlspecialchars($_POST['settore'] ?? '') ?>">
             </div>
             <div class="input-group2">
-                <label>Numero dipendenti</label>
-                <input type="number" name="n_dip" min="0" value="0">
+                <label>Numero dipendenti *</label>
+                <input type="number" name="n_dip" min="0" value="<?= htmlspecialchars($_POST['n_dip'] ?? '0') ?>" required>
             </div>
             <div class="input-group2">
-                <label>Logo Azienda (immagine, opzionale)</label>
-                <input type="file" name="logo" accept="image/*">
+                <label>Logo Azienda * (immagine)</label>
+                <input type="file" name="logo" accept="image/*" required>
             </div>
 
             <input type="submit" name="registra_azienda" value="Registra Azienda" class="add-btn">

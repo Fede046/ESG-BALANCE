@@ -23,59 +23,67 @@ if (isset($_POST["inserisci_giudizio"])) {
     $esito   = trim($_POST["esito"]);
     $rilievi = trim($_POST["rilievi"]) ?: null;
 
-    if ($id_bil <= 0 || $rag_soc === "" || $esito === "") {
-    $errore = "ID bilancio, ragione sociale ed esito sono obbligatori.";
-} else {
-    try {
-        // 1. Leggi stato bilancio e controlla se è già chiuso
-        $chk = $pdo->prepare(
-            "SELECT Stato FROM BILANCIO
-             WHERE id = ? AND Ragione_sociale_azienda = ?"
-        );
-        $chk->execute([$id_bil, $rag_soc]);
-        $bilancio = $chk->fetch(PDO::FETCH_ASSOC);
-
-        if (!$bilancio) {
-            $errore = "Bilancio non trovato.";
-
-        } elseif (in_array(strtolower($bilancio['Stato']), ['approvato', 'respinto'])) {
-            $errore = "Il bilancio è già chiuso, non puoi inserire un nuovo giudizio.";
-
-        } else {
-            // 2. Controlla se questo revisore ha già inserito un giudizio su questo bilancio
-            $chk2 = $pdo->prepare(
-                "SELECT 1 FROM GIUDIZIO
-                 WHERE Username = ? AND id_bilancio = ? AND Ragione_sociale_bilancio = ?"
+    if ($id_bil <= 0 || $rag_soc === "") {
+        $errore = "Bilancio non valido.";
+    } elseif ($esito === "") {
+        $errore = "L'esito è obbligatorio.";
+    } elseif (!in_array($esito, ['approvazione', 'approvazione con rilievi', 'respingimento'])) {
+        $errore = "Esito non valido.";
+    } elseif ($rilievi !== null && strlen($rilievi) < 5) {
+        $errore = "I rilievi devono avere almeno 5 caratteri.";
+    } elseif ($rilievi !== null && strlen($rilievi) > 500) {
+        $errore = "I rilievi non possono superare 500 caratteri.";
+    } else {
+        try {
+            // 1. Leggi stato bilancio e controlla se è già chiuso
+            $chk = $pdo->prepare(
+                "SELECT Stato FROM BILANCIO
+                 WHERE id = ? AND Ragione_sociale_azienda = ?"
             );
-            $chk2->execute([$username, $id_bil, $rag_soc]);
+            $chk->execute([$id_bil, $rag_soc]);
+            $bilancio = $chk->fetch(PDO::FETCH_ASSOC);
 
-            if ($chk2->fetch()) {
-                $errore = "Hai già inserito un giudizio per questo bilancio.";
+            if (!$bilancio) {
+                $errore = "Bilancio non trovato.";
+
+            } elseif (in_array(strtolower($bilancio['Stato']), ['approvato', 'respinto'])) {
+                $errore = "Il bilancio è già chiuso, non puoi inserire un nuovo giudizio.";
+
             } else {
+                // 2. Controlla se questo revisore ha già inserito un giudizio su questo bilancio
+                $chk2 = $pdo->prepare(
+                    "SELECT 1 FROM GIUDIZIO
+                     WHERE Username = ? AND id_bilancio = ? AND Ragione_sociale_bilancio = ?"
+                );
+                $chk2->execute([$username, $id_bil, $rag_soc]);
+
+                if ($chk2->fetch()) {
+                    $errore = "Hai già inserito un giudizio per questo bilancio.";
+                } else {
                     $stmt = $pdo->prepare("CALL sp_InserisciGiudizioComplessivo(?, ?, ?, ?, ?)");
                     $stmt->execute([$esito, $rilievi, $username, $id_bil, $rag_soc]);
 
-                $messaggio = "Giudizio inserito sul bilancio #$id_bil ($rag_soc).";
+                    $messaggio = "Giudizio inserito sul bilancio #$id_bil ($rag_soc).";
 
-                require_once "../db_mongo.php";
-                logEvento('INSERT_GIUDIZIO', "Giudizio '$esito' inserito sul bilancio #$id_bil ($rag_soc) da $username", 0, $id_bil);
+                    require_once "../db_mongo.php";
+                    logEvento('INSERT_GIUDIZIO', "Giudizio '$esito' inserito sul bilancio #$id_bil ($rag_soc) da $username", 0, $id_bil);
 
-                $stmt_stato = $pdo->prepare(
-                    "SELECT Stato FROM BILANCIO WHERE id = ? AND Ragione_sociale_azienda = ?"
-                );
-                $stmt_stato->execute([$id_bil, $rag_soc]);
-                $stato_attuale = $stmt_stato->fetchColumn();
+                    $stmt_stato = $pdo->prepare(
+                        "SELECT Stato FROM BILANCIO WHERE id = ? AND Ragione_sociale_azienda = ?"
+                    );
+                    $stmt_stato->execute([$id_bil, $rag_soc]);
+                    $stato_attuale = $stmt_stato->fetchColumn();
 
-                if ($stato_attuale === 'approvato') {
-                    logEvento('APPROVE_BILANCIO', "Bilancio #$id_bil ($rag_soc) approvato dopo tutti i giudizi", 0, $id_bil);
-                } elseif ($stato_attuale === 'respinto') {
-                    logEvento('REJECT_BILANCIO', "Bilancio #$id_bil ($rag_soc) respinto dopo tutti i giudizi", 0, $id_bil);
+                    if ($stato_attuale === 'approvato') {
+                        logEvento('APPROVE_BILANCIO', "Bilancio #$id_bil ($rag_soc) approvato dopo tutti i giudizi", 0, $id_bil);
+                    } elseif ($stato_attuale === 'respinto') {
+                        logEvento('REJECT_BILANCIO', "Bilancio #$id_bil ($rag_soc) respinto dopo tutti i giudizi", 0, $id_bil);
+                    }
                 }
             }
-        }
 
-    } catch (PDOException $e) {
-        $errore = "Errore DB: " . $e->getMessage();
+        } catch (PDOException $e) {
+            $errore = "Errore DB: " . $e->getMessage();
         }
     }
 }
@@ -153,8 +161,8 @@ try {
                 </select>
             </div>
             <div class="input-group2">
-                <label>Rilievi (opzionale)</label>
-                <textarea name="rilievi" rows="4" cols="50"></textarea>
+                <label>Rilievi (opzionale, max 500 caratteri)</label>
+                <textarea name="rilievi" rows="4" cols="50" maxlength="500"></textarea>
             </div>
             <input type="submit" name="inserisci_giudizio" value="Inserisci Giudizio" class="add-btn">
         </form>
@@ -216,10 +224,9 @@ try {
                                 <td><code class="id-badge">#<?= htmlspecialchars($r["id_bilancio"]) ?></code></td>
                                 <td><strong><?= htmlspecialchars($r["Ragione_sociale_bilancio"]) ?></strong></td>
                                 <td>
-                                <span class="status-pill <?= (strtolower($r['Esito']) == 'approvazione') ? 'stato-success' : (strtolower($r['Esito']) == 'approvazione con rilievi' ? 'stato-warning' : 'stato-danger') ?>">
-                                    <?= htmlspecialchars($r["Esito"]) ?>
-                                </span>
-
+                                    <span class="status-pill <?= (strtolower($r['Esito']) == 'approvazione') ? 'stato-success' : (strtolower($r['Esito']) == 'approvazione con rilievi' ? 'stato-warning' : 'stato-danger') ?>">
+                                        <?= htmlspecialchars($r["Esito"]) ?>
+                                    </span>
                                 </td>
                                 <td><?= htmlspecialchars($r["Rilievi"] ?? "—") ?></td>
                             </tr>

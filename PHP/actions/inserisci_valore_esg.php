@@ -18,25 +18,34 @@ $messaggio = "";
 $errore    = "";
 
 if (isset($_POST["inserisci_valore"])) {
-    $id_bil    = (int)$_POST["id_bilancio"];
-    $rag_soc   = trim($_POST["ragione_sociale"]);
-    $nome_voce = trim($_POST["nome_voce"]);
-    $nome_esg  = trim($_POST["nome_esg"]);
-    $valore    = trim($_POST["valore"]);
-    $fonte          = trim($_POST["fonte"] ?? '');
-    $data_rilev     = trim($_POST["data_rilevazione"] ?? '');
+    $id_bil     = (int)$_POST["id_bilancio"];
+    $rag_soc    = trim($_POST["ragione_sociale"]);
+    $nome_voce  = trim($_POST["nome_voce"]);
+    $nome_esg   = trim($_POST["nome_esg"]);
+    $valore     = trim($_POST["valore"]);
+    $fonte      = trim($_POST["fonte"] ?? '');
+    $data_rilev = trim($_POST["data_rilevazione"] ?? '');
 
-
-    if ($id_bil <= 0 || $rag_soc === "" || $nome_voce === "" || $nome_esg === "" || $valore === "" || $fonte === "" || $data_rilev === "") {
-        $errore = "Tutti i campi obbligatori devono essere compilati.";
-    
-
-    // 1. Validazione numerica del valore
+    if ($id_bil <= 0 || $rag_soc === "") {
+        $errore = "Bilancio non valido.";
+    } elseif ($nome_voce === "") {
+        $errore = "La voce contabile è obbligatoria.";
+    } elseif ($nome_esg === "") {
+        $errore = "L'indicatore ESG è obbligatorio.";
+    } elseif ($valore === "") {
+        $errore = "Il valore è obbligatorio.";
     } elseif (!is_numeric($valore)) {
         $errore = "Il valore deve essere un numero.";
-
+    } elseif ($fonte === "") {
+        $errore = "La fonte è obbligatoria.";
+    } elseif (strlen($fonte) < 2) {
+        $errore = "La fonte deve avere almeno 2 caratteri.";
+    } elseif ($data_rilev === "") {
+        $errore = "La data di rilevazione è obbligatoria.";
+    } elseif (strtotime($data_rilev) > time()) {
+        $errore = "La data di rilevazione non può essere futura.";
     } else {
-        // 2. Controlla stato bilancio: non modificabile se chiuso
+        // Controlla stato bilancio: non modificabile se chiuso
         $chk_stato = $pdo->prepare(
             "SELECT Stato FROM BILANCIO
              WHERE id = ? AND Ragione_sociale_azienda = ?"
@@ -75,10 +84,10 @@ if (isset($_POST["inserisci_valore"])) {
                         $stmt3 = $pdo->prepare("CALL sp_InserisciValoreESG(?, ?, ?, ?, ?)");
                         $stmt3->execute([$nome_voce, $nome_esg, $fonte, $valore, $data_rilev]);
 
-                        $messaggio = "Valore ESG inserito per voce '$nome_voce' — indicatore '$nome_esg'.";
+                        $messaggio = "Valore ESG per voce '$nome_voce' — indicatore '$nome_esg' salvato (inserito o aggiornato).";
 
                         require_once "../db_mongo.php";
-                        logEvento('INSERT_ESG', "Valore ESG inserito: voce '$nome_voce', indicatore '$nome_esg' nel bilancio #$id_bil ($rag_soc) da $username", 0, $id_bil);
+                        logEvento('INSERT_ESG', "Valore ESG inserito/aggiornato: voce '$nome_voce', indicatore '$nome_esg' nel bilancio #$id_bil ($rag_soc) da $username", 0, $id_bil);
 
                     } catch (PDOException $e) {
                         $errore = "Errore DB: " . $e->getMessage();
@@ -197,7 +206,7 @@ if ($id_sel > 0 && $rag_sel !== "") {
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="inserisci_valore_esg.php?id_bilancio=<?= urlencode($r["id"]) ?>&ragione_sociale=<?= urlencode($r["Ragione_sociale_azienda"]) ?>" 
+                                    <a href="inserisci_valore_esg.php?id_bilancio=<?= urlencode($r["id"]) ?>&ragione_sociale=<?= urlencode($r["Ragione_sociale_azienda"]) ?>"
                                     class="btn-action-small">
                                         Seleziona
                                     </a>
@@ -249,18 +258,17 @@ if ($id_sel > 0 && $rag_sel !== "") {
                     <div class="input-group2">
                         <label>Fonte * (max 30 caratteri)</label>
                         <input type="text" name="fonte" maxlength="30" required>
+                    </div>
                     <div class="input-group2">
                         <label>Data di rilevazione *</label>
-                        <input type="date" name="data_rilevazione" required>
-                    </div>
-
-
+                        <input type="date" name="data_rilevazione"
+                               max="<?= date('Y-m-d') ?>" required>
                     </div>
                     <input type="submit" name="inserisci_valore" value="Inserisci Valore" class="add-btn">
                 </form>
             <?php endif; ?>
 
-           <div class="table-container">
+            <div class="table-container">
                 <?php if ($valori): ?>
                     <h2>Valori ESG già inseriti per questo bilancio (<?= count($valori) ?>)</h2>
                     <table class="modern-table">
@@ -288,12 +296,11 @@ if ($id_sel > 0 && $rag_sel !== "") {
                 <?php else: ?>
                     <p class="empty-msg">Nessun valore ESG inserito per questo bilancio.</p>
                 <?php endif; ?>
-            
+            </div>
 
-            <?php elseif (count($bilanci) > 0): ?>
-                <p class="empty-msg"><em>Clicca "Seleziona" su un bilancio per inserire i valori ESG.</em></p>
-            <?php endif; ?>
-        </div>
+        <?php elseif (count($bilanci) > 0): ?>
+            <p class="empty-msg"><em>Clicca "Seleziona" su un bilancio per inserire i valori ESG.</em></p>
+        <?php endif; ?>
     </div>
 </body>
 </html>

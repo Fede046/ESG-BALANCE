@@ -152,7 +152,7 @@ try {
         <h2>Nuovo Bilancio</h2>
         <form action="crea_bilancio.php" method="post">
             <div class="input-group2">
-                <label>Ragione Sociale Azienda *</label>
+                <label>Ragione Sociale Azienda</label>
                 <select name="ragione_sociale" required>
                     <option value="">-- seleziona azienda --</option>
                     <?php foreach ($aziende as $a): ?>
@@ -163,7 +163,7 @@ try {
                 </select>
             </div>
             <div class="input-group2">
-                <label>ID Bilancio *</label>
+                <label>ID Bilancio</label>
                 <input type="number" name="id_bilancio" min="1" required>
             </div>
             <input type="submit" name="crea_bilancio" value="Crea Bilancio" class="add-btn">
@@ -172,7 +172,7 @@ try {
         <h2>Associa Voce al Bilancio</h2>
         <form action="crea_bilancio.php" method="post">
             <div class="input-group2">
-                <label>Ragione Sociale Azienda *</label>
+                <label>Ragione Sociale Azienda</label>
                 <select name="ragione_sociale_voce" required>
                     <option value="">-- seleziona azienda --</option>
                     <?php foreach ($aziende as $a): ?>
@@ -183,11 +183,11 @@ try {
                 </select>
             </div>
         <div class="input-group2">
-            <label>ID Bilancio *</label>
+            <label>ID Bilancio</label>
             <input type="number" name="id_bilancio_voce" min="1" required>
         </div>
         <div class="input-group2">
-            <label>Voce Contabile *</label>
+            <label>Voce Contabile</label>
             <select name="nome_voce" required>
                 <option value="">-- seleziona voce --</option>
                 <?php foreach ($voci as $v): ?>
@@ -198,7 +198,7 @@ try {
             </select>
         </div>
         <div class="input-group2">
-            <label>Valore *</label>
+            <label>Valore</label>
             <input type="number" name="valore" required>
         </div>
             <input type="submit" name="associa_voce" value="Associa Voce" class="add-btn">

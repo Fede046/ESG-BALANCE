@@ -85,11 +85,11 @@ try {
 
         <form action="aggiungi_competenze.php" method="post">
             <div class="input-group2">
-                <label>Nome competenza * (max 30 caratteri)</label>
+                <label>Nome competenza(max 30 caratteri)</label>
                 <input type="text" name="nome_competenza" maxlength="30" required>
             </div>
             <div class="input-group2">
-                <label>Livello * (0–5)</label>
+                <label>Livello(0–5)</label>
                 <input type="number" name="livello" min="0" max="5" required>
             </div>
             <input type="submit" name="aggiungi_competenza" value="Aggiungi Competenza" class="add-btn">
