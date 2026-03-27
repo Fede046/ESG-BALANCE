@@ -1,14 +1,12 @@
 <?php
-//avvia la sessione
 session_start();
 require_once "../db.php";
 
-//controllo sul login se effettuato
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
-//controllo sul ruolo 
+
 if ($_SESSION["Ruolo"] !== "responsabile") {
     header("Location: ../menu.php");
     exit();
@@ -25,7 +23,7 @@ if (isset($_POST["registra_azienda"])) {
     $piva            = trim($_POST["piva"]);
     $settore         = trim($_POST["settore"]) ?: null;
     $n_dip           = (int)($_POST["n_dip"] ?? 0);
-    $logo            = null;
+    $logo            = '/logo/default.png';
 
     // Prima valida i campi testuali
     if ($ragione_sociale === "" || $nome === "" || $piva === "") {
@@ -60,7 +58,6 @@ if (isset($_POST["registra_azienda"])) {
         // Procedi al DB solo se non ci sono errori di upload
         if ($errore === "") {
             try {
-                //connessione al db e chiamata dello stored procedure
                 $stmt = $pdo->prepare("CALL sp_RegistraAzienda(?, ?, ?, ?, ?, ?, ?)");
                 $stmt->execute([$ragione_sociale, $nome, $piva, $settore, $n_dip, $logo, $username]);
                 $messaggio = "Azienda '$ragione_sociale' registrata.";
