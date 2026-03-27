@@ -1,80 +1,74 @@
-<?php 
-session_start()
+<?php
+session_start();
+require_once "db.php";
+
+$errore = "";
+
+if (isset($_POST["login"])) {
+    if (!empty($_POST["usr"]) && !empty($_POST["psw"])) {
+        try {
+            $pdo = getDB();
+            // Hash MD5 con salt 'jdd' prima di confrontare col DB
+            $psw_hash = md5($_POST["psw"] . "jdd");
+
+            $stmt = $pdo->prepare("CALL sp_Login(?, ?)");
+            $stmt->execute([$_POST["usr"], $psw_hash]);
+            $riga = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if ($riga) {
+    $_SESSION["Username"] = $riga["Username"];
+    $_SESSION["Ruolo"]    = $riga["Ruolo"];
+
+    require_once "db_mongo.php";
+    logEvento(
+        'USER_LOGIN',
+        "Login effettuato: " . $riga["Username"] . " (ruolo: " . $riga["Ruolo"] . ")",
+        0, 0
+    );
+
+    header("Location: menu.php");
+    exit();
+} else {
+                $errore = "Username o password errati.";
+            }
+        } catch (PDOException $e) {
+            $errore = "Errore connessione: " . $e->getMessage();
+        }
+    } else {
+        $errore = "Inserisci username e password.";
+    }
+}
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Login – ESG Balance</title>
+    <link rel="stylesheet" href="../STYLE/style.css">
+
 </head>
 <body>
-    <form action="login.php" method="post">
-        <h3>Username:</h3>
-        <input type="text" name='usr'>
-        <h3>Password:</h3>
-        <input type="text" name='psw'>
-        <br>
-        <input type="submit" name='login' value="Login">
+    <div class="card">
+        <form action="login.php" method="post">
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" name="usr" placeholder="Inserisci username" required>
+            </div>
+            
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" name="psw" placeholder="••••••••" required>
+            </div>
 
+            <input type="submit" name="login" value="Accedi" class="btn-login">
+        </form>
 
-    </form>
+        <?php if ($errore): ?>
+            <p class="error-msg"><?= htmlspecialchars($errore) ?></p>
+        <?php endif; ?>
 
-    <a href="home.html"><button>Home</button></a>
-
+        <a href="home.php" class="btn-home">Home</a>
+    </div>
 </body>
 </html>
-<?php   
-    if(isset($_POST["login"])){
-        if(!empty($_POST["usr"])&&!empty($_POST["psw"])){
-
-            if(control()){
-                $_SESSION["Username"] = $_POST["usr"];
-                //andiamo nell'altro file php
-                header("Location: profile.php");
-            }
-            
-
-        }
-    }
-    
-    function control(){
-        try{
-            $pdo = new PDO(
-            "mysql:host=127.0.0.1;port=3308;dbname=TEST",
-            "root",
-            "root"
-            );
-            $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
-            $pdo->exec('SET NAMES "utf8"');
-            
-            
-            $sql = "SELECT Password FROM UTENTE WHERE Username = '" . $_POST["usr"] . "';";            
-            
-            $result = $pdo->query($sql);
-
-            //Preso da chat al posto di fare  il ciclo for
-            // 2. APRI IL PACCHETTO: Estrai la riga come array associativo
-            $riga = $result->fetch(PDO::FETCH_ASSOC);
-
-            //Aggiungere psw criptata
-            if(!empty($riga)){
-                if($riga["Password"]==$_POST['psw']){
-                    
-                    echo "Login  corretto!";
-                    return true;
-                }else{
-                    echo "Password  errata";
-                }
-            }else{
-                echo "Username inesistente";
-            }
-            return false;
-
-            }catch(PDOException $e){
-                echo "Errore Connessione: {$e->getMessage()}";
-                exit();
-            }
-    }
-
-?>
