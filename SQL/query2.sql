@@ -186,8 +186,7 @@ DELIMITER ;
 -- Inserimento del giudizio complessivo
 DELIMITER //
 CREATE PROCEDURE sp_InserisciGiudizioComplessivo(
-    IN p_id_giudizio INT,
-    IN p_esito VARCHAR(30), -- Valori ammessi dall'ENUM: 'approvazione', 'approvazione con rilievi', 'respingimento'
+    IN p_esito VARCHAR(30),
     IN p_rilievi VARCHAR(500),
     IN p_username_revisore VARCHAR(30),
     IN p_id_bilancio INT,
@@ -196,24 +195,9 @@ CREATE PROCEDURE sp_InserisciGiudizioComplessivo(
 BEGIN
     -- Inserisce il giudizio finale del revisore per quel determinato bilancio.
     -- La data del giudizio viene registrata automaticamente al momento dell'inserimento tramite NOW().
-    INSERT INTO GIUDIZIO (
-        Id, 
-        Esito, 
-        Data, 
-        Rilievi, 
-        Username, 
-        id_bilancio, 
-        Ragione_sociale_bilancio
-    )
-    VALUES (
-        p_id_giudizio, 
-        p_esito, 
-        NOW(), 
-        p_rilievi, 
-        p_username_revisore, 
-        p_id_bilancio, 
-        p_ragione_sociale
-    );
+    INSERT INTO GIUDIZIO (Esito, Data, Rilievi, Username, id_bilancio, Ragione_sociale_bilancio)
+    
+    VALUES (p_esito, NOW(), p_rilievi, p_username_revisore, p_id_bilancio, p_ragione_sociale);
 END //
 DELIMITER ;
 
@@ -308,7 +292,7 @@ CREATE PROCEDURE sp_InserisciValoreESG(
     IN p_nome_voce VARCHAR(30),
     IN p_nome_esg VARCHAR(30),
     IN p_fonte VARCHAR(30),
-    IN p_valore DECIMAL(10,2)
+    IN p_valore DECIMAL(10,2),
     IN p_data        DATE
 )
 BEGIN
@@ -380,7 +364,6 @@ ORDER BY Totale_Indicatori_ESG DESC;
 DELIMITER //
 
 -- TRIGGER 1: Imposta 'in revisione' quando viene associato un revisore
--- FIX: valore ENUM corretto (minuscolo) + filtro su Ragione_sociale_bilancio per PK composta
 CREATE TRIGGER trg_inizio_revisione
 AFTER INSERT ON VALUTA_REVISORE_BILANCIO
 FOR EACH ROW
@@ -392,7 +375,6 @@ BEGIN
 END //
 
 -- TRIGGER 2: Calcola lo stato finale ('approvato'/'respinto') al termine di tutti i giudizi
--- FIX: valori ENUM corretti (minuscolo) + tutti i filtri usano anche Ragione_sociale per PK composta
 CREATE TRIGGER trg_conclusione_revisione
 AFTER INSERT ON GIUDIZIO
 FOR EACH ROW
