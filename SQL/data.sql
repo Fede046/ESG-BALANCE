@@ -138,7 +138,7 @@ CREATE TABLE BILANCIO (
 
 -- 11. GIUDIZIO  (dipende da REVISORE_ESG e BILANCIO)
 CREATE TABLE GIUDIZIO (
-    Id INT PRIMARY KEY AUTO_INCREMENT,
+    Id INT AUTO_INCREMENT,
     Esito ENUM(
         'approvazione',
         'approvazione con rilievi',
@@ -149,9 +149,11 @@ CREATE TABLE GIUDIZIO (
     Username VARCHAR(30) NOT NULL,
     id_bilancio INT NOT NULL,
     Ragione_sociale_bilancio VARCHAR(30) NOT NULL,
+    PRIMARY KEY (Id, id_bilancio, Ragione_sociale_bilancio, Username),
     FOREIGN KEY (id_bilancio, Ragione_sociale_bilancio) REFERENCES BILANCIO(id, Ragione_sociale_azienda),
     FOREIGN KEY (Username) REFERENCES REVISORE_ESG(Username)
 );
+
 
 
 -- 12. VALUTA_REVISORE_BILANCIO (dipende da REVISORE_ESG e BILANCIO)

@@ -44,7 +44,6 @@ BEGIN
                WHEN A.Username IS NOT NULL THEN 'amministratore'
                WHEN R.Username IS NOT NULL THEN 'revisore'
                WHEN RA.Username IS NOT NULL THEN 'responsabile'
-               ELSE 'user'
            END AS Ruolo
     FROM UTENTE U
     LEFT JOIN AMMINISTRATORE A ON U.Username = A.Username
