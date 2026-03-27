@@ -113,21 +113,21 @@ INSERT INTO VOCE (Nome, Descrizione, Username_Amministratore) VALUES
 -- 9. AZIENDA
 -- ─────────────────────────────────────────────
 INSERT INTO AZIENDA (Ragione_sociale, Nome, p_IVA, Settore, n_dip, logo, nr_bilanci, Username_Responsabile_Aziendale) VALUES
-('GreenTech SRL', 'GreenTech', 12345678, 'Tecnologia',  150, '/logo/gt.png', 3, 'anna.neri'),
-('EcoFarm SPA',   'EcoFarm',   87654321, 'Agricoltura',  80, '/logo/ef.png', 2, 'paolo.gialli'),
-('BluEnergy SRL', 'BluEnergy', 11223344, 'Energia',     200, '/logo/be.png', 3, 'sara.blu');
+('GreenTech SRL', 'GreenTech', 12345678901, 'Tecnologia',  150, '/logo/gt.png', 3, 'anna.neri'),
+('EcoFarm SPA',   'EcoFarm',   87654321012, 'Agricoltura',  80, '/logo/ef.png', 2, 'paolo.gialli'),
+('BluEnergy SRL', 'BluEnergy', 11223344556, 'Energia',     200, '/logo/be.png', 3, 'sara.blu');
 
 -- ─────────────────────────────────────────────
--- 10. BILANCIO
+-- 10. BILANCIO  (tutti 'bozza' alla creazione)
 -- ─────────────────────────────────────────────
 INSERT INTO BILANCIO (id, Ragione_sociale_azienda, Data_creazione, Stato) VALUES
 (1, 'GreenTech SRL', '2022-03-31 00:00:00', 'bozza'),
 (2, 'GreenTech SRL', '2023-03-31 00:00:00', 'bozza'),
-(3, 'GreenTech SRL', '2024-03-31 00:00:00', 'in revisione'),
-(4, 'EcoFarm SPA',   '2023-04-30 00:00:00', 'approvato'),
-(5, 'EcoFarm SPA',   '2024-04-30 00:00:00', 'in revisione'),
-(6, 'BluEnergy SRL', '2022-06-30 00:00:00', 'approvato'),
-(7, 'BluEnergy SRL', '2023-06-30 00:00:00', 'approvato'),
+(3, 'GreenTech SRL', '2024-03-31 00:00:00', 'bozza'),
+(4, 'EcoFarm SPA',   '2023-04-30 00:00:00', 'bozza'),
+(5, 'EcoFarm SPA',   '2024-04-30 00:00:00', 'bozza'),
+(6, 'BluEnergy SRL', '2022-06-30 00:00:00', 'bozza'),
+(7, 'BluEnergy SRL', '2023-06-30 00:00:00', 'bozza'),
 (8, 'BluEnergy SRL', '2024-06-30 00:00:00', 'bozza');
 
 -- ─────────────────────────────────────────────

@@ -23,7 +23,7 @@ if (isset($_POST["registra_azienda"])) {
     $piva            = trim($_POST["piva"]);
     $settore         = trim($_POST["settore"]) ?: null;
     $n_dip           = (int)($_POST["n_dip"] ?? 0);
-    $logo            = null;
+    $logo            = '/logo/default.png';
 
     // Prima valida i campi testuali
     if ($ragione_sociale === "" || $nome === "" || $piva === "") {

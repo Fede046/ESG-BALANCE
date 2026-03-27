@@ -52,8 +52,9 @@ if (isset($_POST["inserisci_giudizio"])) {
             if ($chk2->fetch()) {
                 $errore = "Hai già inserito un giudizio per questo bilancio.";
             } else {
-                $stmt = $pdo->prepare("CALL sp_InserisciGiudizioComplessivo(NULL, ?, ?, ?, ?, ?)");
-                $stmt->execute([$esito, $rilievi, $username, $id_bil, $rag_soc]);
+                    $stmt = $pdo->prepare("CALL sp_InserisciGiudizioComplessivo(?, ?, ?, ?, ?)");
+                    $stmt->execute([$esito, $rilievi, $username, $id_bil, $rag_soc]);
+
                 $messaggio = "Giudizio inserito sul bilancio #$id_bil ($rag_soc).";
 
                 require_once "../db_mongo.php";
@@ -215,9 +216,10 @@ try {
                                 <td><code class="id-badge">#<?= htmlspecialchars($r["id_bilancio"]) ?></code></td>
                                 <td><strong><?= htmlspecialchars($r["Ragione_sociale_bilancio"]) ?></strong></td>
                                 <td>
-                                    <span class="status-pill <?= (strtolower($r['Esito']) == 'positivo') ? 'stato-success' : 'stato-warning' ?>">
-                                        <?= htmlspecialchars($r["Esito"]) ?>
-                                    </span>
+                                <span class="status-pill <?= (strtolower($r['Esito']) == 'approvazione') ? 'stato-success' : (strtolower($r['Esito']) == 'approvazione con rilievi' ? 'stato-warning' : 'stato-danger') ?>">
+                                    <?= htmlspecialchars($r["Esito"]) ?>
+                                </span>
+
                                 </td>
                                 <td><?= htmlspecialchars($r["Rilievi"] ?? "—") ?></td>
                             </tr>
