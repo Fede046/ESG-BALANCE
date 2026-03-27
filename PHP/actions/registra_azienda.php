@@ -44,7 +44,7 @@ if (isset($_POST["registra_azienda"])) {
                 $uploadDir = '../../uploads/loghi/';
                 if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
 
-                $filename = uniqid('logo_') . '.' . $ext;
+                $filename = 'logo_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $ragione_sociale) . '.' . $ext;
                 $destPath = $uploadDir . $filename;
 
                 if (move_uploaded_file($_FILES['logo']['tmp_name'], $destPath)) {

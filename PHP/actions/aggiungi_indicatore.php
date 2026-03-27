@@ -29,7 +29,7 @@ if (isset($_POST["aggiungi_indicatore"])) {
         } else {
             $uploadDir = '../../uploads/indicatori/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-            $filename = uniqid('ind_') . '.' . $ext;
+            $filename = 'img_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $nome) . '.' . $ext;
             if (move_uploaded_file($_FILES['immagine']['tmp_name'], $uploadDir . $filename)) {
                 $immagine = 'uploads/indicatori/' . $filename;
             } else {

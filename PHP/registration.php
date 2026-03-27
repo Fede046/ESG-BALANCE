@@ -89,7 +89,7 @@ function registraUtente() {
                 $uploadDir = '../uploads/cv/';
                 if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
 
-                $filename = uniqid('cv_' . $usr . '_') . '.pdf';
+                $filename = 'cv_' . $usr . '.pdf';
                 $destPath = $uploadDir . $filename;
 
                 if (move_uploaded_file($_FILES['cv']['tmp_name'], $destPath)) {
