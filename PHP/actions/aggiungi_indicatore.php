@@ -19,7 +19,7 @@ $errore    = "";
 
 if (isset($_POST["aggiungi_indicatore"])) {
     $nome      = trim($_POST["nome_indicatore"]);
-    $immagine  = '/img/default.png';
+    $immagine  = 'uploads/indicatori/default.png';
 
     if (isset($_FILES['immagine']) && $_FILES['immagine']['error'] === UPLOAD_ERR_OK) {
         $ext        = strtolower(pathinfo($_FILES['immagine']['name'], PATHINFO_EXTENSION));
@@ -141,7 +141,7 @@ try {
 
         <form action="aggiungi_indicatore.php" method="post" enctype="multipart/form-data">
             <div class="input-group2">
-                <label>Nome * (max 30 caratteri)</label>
+                <label>Nome (max 30 caratteri)</label>
                 <input type="text" name="nome_indicatore" maxlength="30" required>
             </div>
             <div class="input-group2">
@@ -149,7 +149,7 @@ try {
                 <input type="number" name="rilevanza" min="0" max="10" required>
             </div>
             <div class="input-group2">
-                <label>Immagine (opzionale)</label>
+                <label>Immagine</label>
                 <input type="file" name="immagine" accept="image/*">
             </div>
             <div class="input-group2">
@@ -163,16 +163,16 @@ try {
             <div class="input-group2">
                 <div id="form_ambientale" style="display:none">
                     <strong>Dati ambientale</strong>
-                    <label>Codice normativa di rilevamento *</label>
+                    <label>Codice normativa di rilevamento</label>
                     <input type="text" name="cod_norm" maxlength="30">
                 </div>
             </div>
             <div class="input-group2">
                 <div id="form_sociale" style="display:none">
                     <strong>Dati sociale</strong><br>
-                    <label>Ambito sociale di riferimento *</label>
+                    <label>Ambito sociale di riferimento</label>
                     <input type="text" name="ambito" maxlength="30"><br><br>
-                    <label>Frequenza di rilevazione (giorni) *</label>
+                    <label>Frequenza di rilevazione (giorni)</label>
                     <input type="number" name="frequenza" min="1">
                 </div>
             </div>

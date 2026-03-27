@@ -28,6 +28,9 @@ if (isset($_POST["aggiungi_voce"])) {
 // 1. Lunghezza minima: almeno 2 caratteri
 } elseif (strlen($nome_voce) < 2) {
     $errore = "Il nome della voce deve avere almeno 2 caratteri.";
+// 2. Descrizione Oblligatoria
+} elseif (empty($descrizione)) {
+    $errore = "La descrizione è obbligatoria.";
 
 } else {
         try {
@@ -78,12 +81,12 @@ try {
         <h2>Aggiungi Voce Contabile</h2>
         <form action="crea_template.php" method="post">
             <div class="input-group2">
-                <label>Nome voce * (max 30 caratteri)</label>
+                <label>Nome voce (max 30 caratteri)</label>
                 <input type="text" name="nome_voce" maxlength="30" required>
             </div>
             <div class="input-group2">
-                <label>Descrizione (opzionale)</label>
-                <input type="text" name="descrizione" maxlength="255" placeholder="Descrizione della voce contabile...">
+                <label>Descrizione</label>
+                <input type="text" name="descrizione" maxlength="255" placeholder="Descrizione della voce contabile..." required>
             </div>
             <input type="submit" name="aggiungi_voce" value="Aggiungi Voce" class="add-btn">
         </form>
