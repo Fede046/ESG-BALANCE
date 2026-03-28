@@ -1,4 +1,4 @@
-# 🛠️ Guida di Installazione — ESG-BALANCE
+# Guida di Installazione — ESG-BALANCE
 
 Questa guida descrive il processo completo per configurare l'ambiente di sviluppo locale per il progetto **ESG-BALANCE**, sia su **Windows (MAMP)** che su **macOS (MAMP)**.
 
@@ -18,7 +18,7 @@ Questa guida descrive il processo completo per configurare l'ambiente di svilupp
 
 ---
 
-## 🪟 Windows
+## Windows
 
 ### 1. Installa MAMP
 
@@ -131,7 +131,7 @@ composer update
 
 ---
 
-## 🍎 macOS
+## macOS
 
 ### 1. Installa MAMP
 
@@ -226,7 +226,7 @@ composer install
 
 ---
 
-## 🧭 Configurazione MongoDB Compass
+## Configurazione MongoDB Compass
 
 ### 1. Crea una nuova connessione
 
@@ -263,7 +263,7 @@ Dovresti vedere i database di sistema (`admin`, `config`, `local`).
 
 ---
 
-## ✅ Verifica finale
+## Verifica finale
 
 1. Apri nel browser: http://localhost/ESG-BALANCE/PHP/login.php
 
@@ -282,11 +282,11 @@ Dovresti vedere i database di sistema (`admin`, `config`, `local`).
 }
 ```
 
-✅ Se il documento è presente, l'ambiente è configurato correttamente.
+Se il documento è presente, l'ambiente è configurato correttamente.
 
 ---
 
-## ❓ Problemi comuni
+## Problemi comuni
 
 | Problema | Soluzione |
 |---|---|

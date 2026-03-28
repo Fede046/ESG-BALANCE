@@ -1,4 +1,10 @@
 <?php
+
+/**
+ * Restituisce una connessione PDO al database MySQL.
+ * Incluso da tutti i file PHP del progetto; senza di esso nessuna
+ * operazione sulla base dati è possibile.
+ */
 function getDB(): PDO {
     try {
         $pdo = new PDO(
@@ -12,7 +18,12 @@ function getDB(): PDO {
         die("Errore connessione DB: " . $e->getMessage());
     }
 }
-
+/**
+ * Determina il ruolo dell'utente cercando il suo username nelle tre tabelle
+ * di specializzazione (AMMINISTRATORE, REVISORE_ESG, RESPONSABILE_AZIENDALE).
+ * Usato in login.php per salvare $_SESSION["Ruolo"].
+ * La consegna prevede che ogni utente appartenga a uno e un solo ruolo.
+ */
 function getRuolo(PDO $pdo, string $username): ?string {
     foreach ([
         "amministratore" => "AMMINISTRATORE",
