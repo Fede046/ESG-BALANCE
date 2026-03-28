@@ -2,11 +2,15 @@
 session_start();
 require_once "../db.php";
 
+// Protezione pagina: utente non autenticato viene rimandato al login.
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
 
+// Accesso riservato esclusivamente agli amministratori.
+// La consegna prevede che la lista degli indicatori ESG sia popolata
+// solo dagli utenti amministratori.
 if ($_SESSION["Ruolo"] !== "amministratore") {
     header("Location: ../menu.php");
     exit();
@@ -18,17 +22,25 @@ $messaggio = "";
 $errore    = "";
 
 if (isset($_POST["aggiungi_indicatore"])) {
-    $nome      = trim($_POST["nome_indicatore"]);
-    $immagine  = 'uploads/indicatori/default.png';
+    $nome     = trim($_POST["nome_indicatore"]);
+
+    // Immagine opzionale: se non caricata viene usata quella di default.
+    // La consegna prevede un'immagine rappresentativa per ogni indicatore.
+    $immagine = 'uploads/indicatori/default.png';
 
     if (isset($_FILES['immagine']) && $_FILES['immagine']['error'] === UPLOAD_ERR_OK) {
         $ext        = strtolower(pathinfo($_FILES['immagine']['name'], PATHINFO_EXTENSION));
         $allowedExt = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+        // Whitelist delle estensioni consentite per evitare upload di file pericolosi
         if (!in_array($ext, $allowedExt)) {
             $errore = "Formato immagine non supportato.";
         } else {
             $uploadDir = '../../uploads/indicatori/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+
+            // Nome file basato sul nome dell'indicatore, sanificato per evitare
+            // caratteri speciali nel path del filesystem
             $filename = 'img_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $nome) . '.' . $ext;
             if (move_uploaded_file($_FILES['immagine']['tmp_name'], $uploadDir . $filename)) {
                 $immagine = 'uploads/indicatori/' . $filename;
@@ -50,19 +62,21 @@ if (isset($_POST["aggiungi_indicatore"])) {
     if ($nome === "") {
         $errore = "Il nome dell'indicatore è obbligatorio.";
 
-    } elseif ($rilevanza === null) {
+    } elseif ($rilevanza === null || !is_numeric($_POST["rilevanza"])) {
+        // Rilevanza tra 0 e 10 come richiesto dalla consegna
         $errore = "La rilevanza è obbligatoria (valore tra 0 e 10).";
-
-    } elseif (!is_numeric($_POST["rilevanza"])) {
-        $errore = "La rilevanza deve essere un numero intero.";
 
     } elseif ($rilevanza < 0 || $rilevanza > 10) {
         $errore = "La rilevanza deve essere tra 0 e 10.";
 
     } elseif ($tipo === "ambientale" && $cod_norm === null) {
+        // Gli indicatori ambientali hanno un campo "codice normativa di rilevamento"
+        // obbligatorio come specificato nella consegna
         $errore = "Il codice normativa è obbligatorio per indicatori ambientali.";
 
     } elseif ($tipo === "sociale" && ($ambito === null || $frequenza === null)) {
+        // Gli indicatori sociali richiedono ambito sociale e frequenza di rilevazione,
+        // entrambi campi aggiuntivi previsti dalla consegna
         $errore = "Ambito e frequenza sono obbligatori per indicatori sociali.";
 
     } elseif ($tipo === "sociale" && $frequenza !== null && $frequenza <= 0) {
@@ -70,16 +84,13 @@ if (isset($_POST["aggiungi_indicatore"])) {
 
     } else {
         try {
+            // sp_PopolaIndicatoreESG gestisce l'inserimento in INDICATORE_ESG e,
+            // in base al tipo, anche in ESG_AMBIENTALE o ESG_INDICATORE_SOCIALE.
+            // La consegna prevede che possano esistere indicatori senza categoria (tipo null = generico).
             $stmt = $pdo->prepare("CALL sp_PopolaIndicatoreESG(?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([
-                $nome,
-                $username,
-                $immagine,
-                $rilevanza,
-                $tipo ?: null,
-                $cod_norm,
-                $ambito,
-                $frequenza
+                $nome, $username, $immagine, $rilevanza,
+                $tipo ?: null, $cod_norm, $ambito, $frequenza
             ]);
             $messaggio = "Indicatore '$nome' aggiunto" . ($tipo ? " (tipo: $tipo)" : " (generico)") . ".";
 
@@ -87,6 +98,7 @@ if (isset($_POST["aggiungi_indicatore"])) {
             logEvento('CREATE_INDICATORE', "Indicatore ESG creato: '$nome' (tipo: " . ($tipo ?: 'generico') . ") da $username", 0, 0);
 
         } catch (PDOException $e) {
+            // Codice 1062 = duplicate entry: il nome dell'indicatore deve essere univoco
             if ($e->errorInfo[1] == 1062) {
                 $errore = "Errore: un indicatore con questo nome esiste già.";
             } else {
@@ -96,7 +108,9 @@ if (isset($_POST["aggiungi_indicatore"])) {
     }
 }
 
-// Lettura indicatori esistenti con tipo
+// Carica tutti gli indicatori esistenti con il loro tipo, determinato tramite
+// LEFT JOIN sulle tabelle di specializzazione ESG_AMBIENTALE e ESG_INDICATORE_SOCIALE.
+// Gli indicatori senza riga in nessuna delle due tabelle vengono classificati come 'generico'.
 $indicatori = [];
 try {
     $indicatori = $pdo->query(
@@ -115,6 +129,7 @@ try {
     $errore = "Errore lettura: " . $e->getMessage();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="it">
 <head>

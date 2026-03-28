@@ -2,11 +2,15 @@
 session_start();
 require_once "../db.php";
 
+// Protezione pagina: utente non autenticato viene rimandato al login.
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
 
+// Accesso riservato esclusivamente ai responsabili aziendali.
+// La consegna prevede che il responsabile inserisca i valori degli indicatori
+// ESG per ciascuna voce contabile del bilancio, prima che venga avviata la revisione.
 if ($_SESSION["Ruolo"] !== "responsabile") {
     header("Location: ../menu.php");
     exit();
@@ -32,20 +36,17 @@ if (isset($_POST["inserisci_valore"])) {
         $errore = "La voce contabile è obbligatoria.";
     } elseif ($nome_esg === "") {
         $errore = "L'indicatore ESG è obbligatorio.";
-    } elseif ($valore === "") {
-        $errore = "Il valore è obbligatorio.";
-    } elseif (!is_numeric($valore)) {
+    } elseif ($valore === "" || !is_numeric($valore)) {
         $errore = "Il valore deve essere un numero.";
-    } elseif ($fonte === "") {
-        $errore = "La fonte è obbligatoria.";
-    } elseif (strlen($fonte) < 2) {
-        $errore = "La fonte deve avere almeno 2 caratteri.";
-    } elseif ($data_rilev === "") {
-        $errore = "La data di rilevazione è obbligatoria.";
-    } elseif (strtotime($data_rilev) > time()) {
-        $errore = "La data di rilevazione non può essere futura.";
+    } elseif ($fonte === "" || strlen($fonte) < 2) {
+        $errore = "La fonte è obbligatoria (almeno 2 caratteri).";
+
+    // Data di rilevazione non può essere futura: il dato ESG deve essere già osservato
+    } elseif ($data_rilev === "" || strtotime($data_rilev) > time()) {
+        $errore = "La data di rilevazione è obbligatoria e non può essere futura.";
     } else {
-        // Controlla stato bilancio: non modificabile se chiuso
+        // Controllo preventivo sullo stato del bilancio: non si possono inserire
+        // valori ESG su un bilancio già chiuso (approvato o respinto).
         $chk_stato = $pdo->prepare(
             "SELECT Stato FROM BILANCIO
              WHERE id = ? AND Ragione_sociale_azienda = ?"
@@ -55,12 +56,12 @@ if (isset($_POST["inserisci_valore"])) {
 
         if (!$bilancio) {
             $errore = "Bilancio non trovato.";
-
         } elseif (in_array(strtolower($bilancio['Stato']), ['approvato', 'respinto'])) {
             $errore = "Non puoi modificare un bilancio già chiuso.";
-
         } else {
-            // Verifica che il bilancio appartenga a un'azienda del responsabile loggato
+            // Controllo di ownership: il responsabile può modificare solo i bilanci
+            // delle proprie aziende. La JOIN con AZIENDA impedisce accessi non autorizzati
+            // passando ID arbitrari nel form.
             $stmt = $pdo->prepare(
                 "SELECT COUNT(*) FROM BILANCIO b
                  JOIN AZIENDA a ON b.Ragione_sociale_azienda = a.Ragione_sociale
@@ -71,7 +72,8 @@ if (isset($_POST["inserisci_valore"])) {
             if ($stmt->fetchColumn() == 0) {
                 $errore = "Bilancio non trovato o non di tua competenza.";
             } else {
-                // Verifica che la voce sia associata a quel bilancio
+                // Verifica che la voce selezionata sia effettivamente associata al bilancio
+                // in ASSOCIA_BILANCIO_VOCE, prima di tentare l'inserimento del valore ESG.
                 $stmt2 = $pdo->prepare(
                     "SELECT COUNT(*) FROM ASSOCIA_BILANCIO_VOCE
                      WHERE Nome_voce = ? AND id_bilancio = ? AND Ragione_sociale_bilancio = ?"
@@ -81,9 +83,11 @@ if (isset($_POST["inserisci_valore"])) {
                     $errore = "La voce selezionata non è associata a questo bilancio.";
                 } else {
                     try {
+                        // sp_InserisciValoreESG esegue un INSERT OR UPDATE (UPSERT) su
+                        // COLLEGA_ESG_VOCE: se il collegamento voce-indicatore esiste già,
+                        // aggiorna il valore e la fonte; altrimenti lo crea.
                         $stmt3 = $pdo->prepare("CALL sp_InserisciValoreESG(?, ?, ?, ?, ?)");
                         $stmt3->execute([$nome_voce, $nome_esg, $fonte, $valore, $data_rilev]);
-
                         $messaggio = "Valore ESG per voce '$nome_voce' — indicatore '$nome_esg' salvato (inserito o aggiornato).";
 
                         require_once "../db_mongo.php";
@@ -98,7 +102,7 @@ if (isset($_POST["inserisci_valore"])) {
     }
 }
 
-// Bilanci delle aziende del responsabile loggato
+// Carica solo i bilanci delle aziende del responsabile loggato tramite JOIN con AZIENDA
 $bilanci = [];
 try {
     $stmt = $pdo->prepare(
@@ -114,11 +118,11 @@ try {
     $errore = "Errore lettura bilanci: " . $e->getMessage();
 }
 
-// Bilancio selezionato via GET
+// Bilancio selezionato via GET dal click su "Seleziona" nella tabella superiore
 $id_sel  = isset($_GET["id_bilancio"])     ? (int)$_GET["id_bilancio"]     : 0;
 $rag_sel = isset($_GET["ragione_sociale"]) ? trim($_GET["ragione_sociale"]) : "";
 
-// Voci del bilancio selezionato
+// Carica le voci del bilancio selezionato per popolare il select del form
 $voci = [];
 if ($id_sel > 0 && $rag_sel !== "") {
     try {
@@ -135,7 +139,7 @@ if ($id_sel > 0 && $rag_sel !== "") {
     }
 }
 
-// Indicatori ESG disponibili
+// Carica tutti gli indicatori ESG disponibili per il select del form
 $indicatori = [];
 try {
     $indicatori = $pdo->query(
@@ -145,7 +149,8 @@ try {
     $errore = "Errore lettura INDICATORE_ESG: " . $e->getMessage();
 }
 
-// Valori ESG già inseriti per il bilancio selezionato
+// Carica i valori ESG già inseriti per il bilancio selezionato tramite JOIN su
+// ASSOCIA_BILANCIO_VOCE, per mostrare solo i valori delle voci di quel bilancio.
 $valori = [];
 if ($id_sel > 0 && $rag_sel !== "") {
     try {
@@ -165,6 +170,7 @@ if ($id_sel > 0 && $rag_sel !== "") {
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="it">
 <head>

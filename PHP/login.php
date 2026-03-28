@@ -8,27 +8,34 @@ if (isset($_POST["login"])) {
     if (!empty($_POST["usr"]) && !empty($_POST["psw"])) {
         try {
             $pdo = getDB();
-            // Hash MD5 con salt 'jdd' prima di confrontare col DB
+
+            // La password viene hashata con MD5 + salt 'jdd' prima del confronto,
+            // coerente con la stored procedure sp_Login e la registrazione.
             $psw_hash = md5($_POST["psw"] . "jdd");
 
+            // sp_Login verifica username + password e restituisce la riga utente
+            // con il ruolo già risolto (AMMINISTRATORE, REVISORE_ESG, RESPONSABILE).
             $stmt = $pdo->prepare("CALL sp_Login(?, ?)");
             $stmt->execute([$_POST["usr"], $psw_hash]);
             $riga = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if ($riga) {
-    $_SESSION["Username"] = $riga["Username"];
-    $_SESSION["Ruolo"]    = $riga["Ruolo"];
+            if ($riga) {
+                // Ruolo salvato in sessione: usato da ogni pagina per il controllo
+                // degli accessi (es. if $_SESSION["Ruolo"] !== "revisore" → redirect).
+                $_SESSION["Username"] = $riga["Username"];
+                $_SESSION["Ruolo"]    = $riga["Ruolo"];
 
-    require_once "db_mongo.php";
-    logEvento(
-        'USER_LOGIN',
-        "Login effettuato: " . $riga["Username"] . " (ruolo: " . $riga["Ruolo"] . ")",
-        0, 0
-    );
+                require_once "db_mongo.php";
+                logEvento(
+                    'USER_LOGIN',
+                    "Login effettuato: " . $riga["Username"] . " (ruolo: " . $riga["Ruolo"] . ")",
+                    0, 0
+                );
 
-    header("Location: menu.php");
-    exit();
-} else {
+                header("Location: menu.php");
+                exit();
+            } else {
+                // Messaggio volutamente generico: non rivela se è username o password a essere errati.
                 $errore = "Username o password errati.";
             }
         } catch (PDOException $e) {

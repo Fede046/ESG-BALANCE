@@ -2,11 +2,16 @@
 session_start();
 require_once "../db.php";
 
+// Protezione pagina: utente non autenticato viene rimandato al login.
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
 
+// Accesso riservato esclusivamente agli amministratori.
+// La consegna prevede che il template del bilancio possa essere creato
+// solo dagli utenti amministratori; qualsiasi altro ruolo viene rimandato
+// al proprio menu senza messaggi di errore espliciti.
 if ($_SESSION["Ruolo"] !== "amministratore") {
     header("Location: ../menu.php");
     exit();
@@ -17,23 +22,26 @@ $pdo       = getDB();
 $messaggio = "";
 $errore    = "";
 
-// Aggiungi voce al template tramite SP
 if (isset($_POST["aggiungi_voce"])) {
     $nome_voce   = trim($_POST["nome_voce"]);
     $descrizione = trim($_POST["descrizione"]) ?: null;
 
     if ($nome_voce === "") {
-    $errore = "Il nome della voce è obbligatorio.";
+        $errore = "Il nome della voce è obbligatorio.";
 
-// 1. Lunghezza minima: almeno 2 caratteri
-} elseif (strlen($nome_voce) < 2) {
-    $errore = "Il nome della voce deve avere almeno 2 caratteri.";
-// 2. Descrizione Oblligatoria
-} elseif (empty($descrizione)) {
-    $errore = "La descrizione è obbligatoria.";
+    // Lunghezza minima per evitare nomi troppo generici o accidentali
+    } elseif (strlen($nome_voce) < 2) {
+        $errore = "Il nome della voce deve avere almeno 2 caratteri.";
 
-} else {
+    // La descrizione è obbligatoria: la consegna prevede che ogni voce contabile
+    // del template sia accompagnata da una descrizione testuale.
+    } elseif (empty($descrizione)) {
+        $errore = "La descrizione è obbligatoria.";
+
+    } else {
         try {
+            // sp_CreaVoceTemplate inserisce la voce in VOCE e la collega al template
+            // condiviso tra tutte le aziende della piattaforma.
             $stmt = $pdo->prepare("CALL sp_CreaVoceTemplate(?, ?, ?)");
             $stmt->execute([$nome_voce, $descrizione, $username]);
             $messaggio = "Voce '$nome_voce' aggiunta al template.";
@@ -42,6 +50,8 @@ if (isset($_POST["aggiungi_voce"])) {
             logEvento('ADD_VOCE', "Voce template aggiunta: '$nome_voce' da $username", 0, 0);
 
         } catch (PDOException $e) {
+            // Codice 1062 = duplicate entry: il nome della voce deve essere univoco
+            // come richiesto dalla consegna (es. "Ricavi vendite", "Ammortamenti").
             if ($e->errorInfo[1] == 1062) {
                 $errore = "Errore: una voce con questo nome esiste già.";
             } else {
@@ -51,7 +61,9 @@ if (isset($_POST["aggiungi_voce"])) {
     }
 }
 
-// Lettura voci esistenti
+// Carica tutte le voci contabili già presenti nel template per mostrarle
+// nella tabella riepilogativa. Il template è condiviso tra tutte le aziende,
+// quindi questa lista riflette lo stato globale della piattaforma.
 $voci = [];
 try {
     $voci = $pdo->query(
@@ -61,6 +73,7 @@ try {
     $errore = "Errore lettura VOCE: " . $e->getMessage();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="it">
 <head>

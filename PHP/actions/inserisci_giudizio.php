@@ -2,11 +2,15 @@
 session_start();
 require_once "../db.php";
 
+// Protezione pagina: utente non autenticato viene rimandato al login.
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
 
+// Accesso riservato esclusivamente ai revisori ESG.
+// La consegna prevede che ogni revisore assegnato a un bilancio esprima
+// un giudizio complessivo: approvazione, approvazione con rilievi o respingimento.
 if ($_SESSION["Ruolo"] !== "revisore") {
     header("Location: ../menu.php");
     exit();
@@ -27,6 +31,9 @@ if (isset($_POST["inserisci_giudizio"])) {
         $errore = "Bilancio non valido.";
     } elseif ($esito === "") {
         $errore = "L'esito è obbligatorio.";
+
+    // Whitelist esiti: i tre valori corrispondono agli ENUM definiti nella
+    // tabella GIUDIZIO dello schema relazionale della consegna.
     } elseif (!in_array($esito, ['approvazione', 'approvazione con rilievi', 'respingimento'])) {
         $errore = "Esito non valido.";
     } elseif ($rilievi !== null && strlen($rilievi) < 5) {
@@ -35,7 +42,8 @@ if (isset($_POST["inserisci_giudizio"])) {
         $errore = "I rilievi non possono superare 500 caratteri.";
     } else {
         try {
-            // 1. Leggi stato bilancio e controlla se è già chiuso
+            // Controllo preventivo sullo stato del bilancio: non si può esprimere
+            // un giudizio su un bilancio già chiuso (approvato o respinto).
             $chk = $pdo->prepare(
                 "SELECT Stato FROM BILANCIO
                  WHERE id = ? AND Ragione_sociale_azienda = ?"
@@ -45,12 +53,11 @@ if (isset($_POST["inserisci_giudizio"])) {
 
             if (!$bilancio) {
                 $errore = "Bilancio non trovato.";
-
             } elseif (in_array(strtolower($bilancio['Stato']), ['approvato', 'respinto'])) {
                 $errore = "Il bilancio è già chiuso, non puoi inserire un nuovo giudizio.";
-
             } else {
-                // 2. Controlla se questo revisore ha già inserito un giudizio su questo bilancio
+                // Controllo unicità giudizio: ogni revisore può esprimere al massimo
+                // un giudizio per bilancio, come previsto dalla chiave primaria di GIUDIZIO.
                 $chk2 = $pdo->prepare(
                     "SELECT 1 FROM GIUDIZIO
                      WHERE Username = ? AND id_bilancio = ? AND Ragione_sociale_bilancio = ?"
@@ -60,14 +67,18 @@ if (isset($_POST["inserisci_giudizio"])) {
                 if ($chk2->fetch()) {
                     $errore = "Hai già inserito un giudizio per questo bilancio.";
                 } else {
+                    // sp_InserisciGiudizioComplessivo inserisce il giudizio e, tramite
+                    // trigger, aggiorna lo stato del bilancio se tutti i revisori assegnati
+                    // hanno espresso il proprio giudizio (logica di consenso della consegna).
                     $stmt = $pdo->prepare("CALL sp_InserisciGiudizioComplessivo(?, ?, ?, ?, ?)");
                     $stmt->execute([$esito, $rilievi, $username, $id_bil, $rag_soc]);
-
                     $messaggio = "Giudizio inserito sul bilancio #$id_bil ($rag_soc).";
 
                     require_once "../db_mongo.php";
                     logEvento('INSERT_GIUDIZIO', "Giudizio '$esito' inserito sul bilancio #$id_bil ($rag_soc) da $username", 0, $id_bil);
 
+                    // Rileva l'eventuale cambio di stato prodotto dal trigger
+                    // per loggare l'evento di chiusura del bilancio su MongoDB.
                     $stmt_stato = $pdo->prepare(
                         "SELECT Stato FROM BILANCIO WHERE id = ? AND Ragione_sociale_azienda = ?"
                     );
@@ -88,7 +99,8 @@ if (isset($_POST["inserisci_giudizio"])) {
     }
 }
 
-// Bilanci assegnati al revisore loggato
+// Carica solo i bilanci assegnati al revisore loggato tramite JOIN su
+// VALUTA_REVISORE_BILANCIO, che registra le assegnazioni fatte dall'amministratore.
 $bilanci = [];
 try {
     $stmt = $pdo->prepare(
@@ -105,7 +117,7 @@ try {
     $errore = "Errore lettura bilanci: " . $e->getMessage();
 }
 
-// Giudizi già inseriti dal revisore loggato
+// Carica i giudizi già espressi dal revisore loggato per la tabella riepilogativa
 $giudizi = [];
 try {
     $stmt = $pdo->prepare(
@@ -120,6 +132,7 @@ try {
     $errore = "Errore lettura giudizi: " . $e->getMessage();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="it">
 <head>

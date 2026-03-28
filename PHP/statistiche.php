@@ -1,16 +1,18 @@
 <?php
 session_start();
 require_once "db.php";
-//controlla che il login sia andato a buon fine
+
+// Protezione pagina: anche le statistiche richiedono autenticazione
 if (!isset($_SESSION["Username"])) {
     header("Location: login.php");
     exit();
 }
-//connessione al db
+
 $pdo    = getDB();
 $errore = "";
 
-// Stat 1 — numero aziende (VIEW)- si aspetta un singolo valore di return
+// Stat 1 — N° aziende registrate in piattaforma (consegna: statistica visibile a tutti)
+// Legge dalla VIEW VISTA_NUMERO_AZIENDE, restituisce un singolo valore intero.
 $num_aziende = 0;
 try {
     $num_aziende = $pdo->query("SELECT Numero_Aziende FROM VISTA_NUMERO_AZIENDE")->fetchColumn();
@@ -18,7 +20,8 @@ try {
     $errore = "Errore stat 1: " . $e->getMessage();
 }
 
-// Stat 2 — numero revisori (VIEW) - si aspetta un singolo valore di return
+// Stat 2 — N° revisori ESG registrati (consegna: statistica visibile a tutti)
+// Legge dalla VIEW VISTA_NUMERO_REVISORI, restituisce un singolo valore intero.
 $num_revisori = 0;
 try {
     $num_revisori = $pdo->query("SELECT Numero_Revisori FROM VISTA_NUMERO_REVISORI")->fetchColumn();
@@ -26,7 +29,8 @@ try {
     $errore = "Errore stat 2: " . $e->getMessage();
 }
 
-// Stat 3 — azienda con affidabilità più alta (VIEW) - si aspetta una riga di risultati di return
+// Stat 3 — Azienda con affidabilità più alta (consegna: % bilanci con esito "approvazione")
+// Legge dalla VIEW VISTA_AZIENDA_TOP_AFFIDABILITA, restituisce una singola riga.
 $azienda_top = null;
 try {
     $azienda_top = $pdo->query("SELECT Azienda, PercentualeAffidabilita FROM VISTA_AZIENDA_TOP_AFFIDABILITA")->fetch(PDO::FETCH_ASSOC);
@@ -34,7 +38,8 @@ try {
     $errore = "Errore stat 3: " . $e->getMessage();
 }
 
-// Stat 4 — classifica bilanci per indicatori ESG (VIEW) - si aspetta una lista come return
+// Stat 4 — Classifica bilanci per numero di indicatori ESG collegati alle voci contabili
+// Legge dalla VIEW VISTA_CLASSIFICA_BILANCI, restituisce lista ordinata per Totale_Indicatori_ESG DESC.
 $classifica = [];
 try {
     $classifica = $pdo->query("SELECT ID_Bilancio, Azienda, Totale_Indicatori_ESG FROM VISTA_CLASSIFICA_BILANCI")->fetchAll(PDO::FETCH_ASSOC);
@@ -42,6 +47,7 @@ try {
     $errore = "Errore stat 4: " . $e->getMessage();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="it">
 <head>

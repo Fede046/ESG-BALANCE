@@ -2,11 +2,15 @@
 session_start();
 require_once "../db.php";
 
+// Protezione pagina: utente non autenticato viene rimandato al login.
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
 
+// Accesso riservato esclusivamente agli amministratori.
+// La consegna prevede che l'associazione di un revisore ESG a un bilancio
+// sia un'operazione riservata solo agli amministratori di piattaforma.
 if ($_SESSION["Ruolo"] !== "amministratore") {
     header("Location: ../menu.php");
     exit();
@@ -16,49 +20,55 @@ $pdo       = getDB();
 $messaggio = "";
 $errore    = "";
 
-// Associa revisore a bilancio tramite SP
 if (isset($_POST["associa_revisore"])) {
     $id_bil  = (int)$_POST["id_bilancio"];
     $rag_soc = trim($_POST["ragione_sociale"]);
     $rev     = trim($_POST["username_revisore"]);
 
     if ($id_bil <= 0 || $rag_soc === "" || $rev === "") {
-    $errore = "Tutti i campi sono obbligatori.";
-} else {
-    try {
-        // 1. Controllo che il bilancio non sia già in stato approvato o respinto
-        $chk = $pdo->prepare(
-            "SELECT Stato FROM BILANCIO
-             WHERE id = ? AND Ragione_sociale_azienda = ?"
-        );
-        $chk->execute([$id_bil, $rag_soc]);
-        $bilancio = $chk->fetch(PDO::FETCH_ASSOC);
+        $errore = "Tutti i campi sono obbligatori.";
+    } else {
+        try {
+            // Controllo preventivo sullo stato del bilancio: non si può assegnare
+            // un revisore a un bilancio già chiuso (approvato o respinto).
+            // Senza questo controllo la SP procederebbe ugualmente, portando
+            // il bilancio in stato "in revisione" anche se già concluso.
+            $chk = $pdo->prepare(
+                "SELECT Stato FROM BILANCIO
+                 WHERE id = ? AND Ragione_sociale_azienda = ?"
+            );
+            $chk->execute([$id_bil, $rag_soc]);
+            $bilancio = $chk->fetch(PDO::FETCH_ASSOC);
 
-        if (!$bilancio) {
-            $errore = "Bilancio non trovato.";
-        } elseif (in_array(strtolower($bilancio['Stato']), ['approvato', 'respinto'])) {
-            $errore = "Non puoi assegnare un revisore a un bilancio già chiuso.";
-        } else {
-            $stmt = $pdo->prepare("CALL sp_AssociaRevisore(?, ?, ?)");
-            $stmt->execute([$rev, $id_bil, $rag_soc]);
-            $messaggio = "Revisore '$rev' associato al bilancio #$id_bil ($rag_soc).";
+            if (!$bilancio) {
+                $errore = "Bilancio non trovato.";
+            } elseif (in_array(strtolower($bilancio['Stato']), ['approvato', 'respinto'])) {
+                $errore = "Non puoi assegnare un revisore a un bilancio già chiuso.";
+            } else {
+                // sp_AssociaRevisore inserisce la riga in REVISIONE e attiva il trigger
+                // che porta automaticamente lo stato del bilancio a "in revisione",
+                // come richiesto dalla consegna.
+                $stmt = $pdo->prepare("CALL sp_AssociaRevisore(?, ?, ?)");
+                $stmt->execute([$rev, $id_bil, $rag_soc]);
+                $messaggio = "Revisore '$rev' associato al bilancio #$id_bil ($rag_soc).";
 
-            require_once "../db_mongo.php";
-            logEvento('ASSIGN_REVISORE', "Revisore '$rev' assegnato al bilancio #$id_bil ($rag_soc)", 0, $id_bil);
-            logEvento('CREATE_REVISIONE', "Revisione avviata sul bilancio #$id_bil ($rag_soc)", 0, $id_bil);
-        }
+                require_once "../db_mongo.php";
+                logEvento('ASSIGN_REVISORE', "Revisore '$rev' assegnato al bilancio #$id_bil ($rag_soc)", 0, $id_bil);
+                logEvento('CREATE_REVISIONE', "Revisione avviata sul bilancio #$id_bil ($rag_soc)", 0, $id_bil);
+            }
 
-    } catch (PDOException $e) {
-        if ($e->errorInfo[1] == 1062) {
-            $errore = "Errore: il revisore è già assegnato a questo bilancio.";
-        } else {
-            $errore = "Errore DB: " . $e->getMessage();
+        } catch (PDOException $e) {
+            // Codice 1062 = duplicate entry: il revisore è già assegnato a questo bilancio
+            if ($e->errorInfo[1] == 1062) {
+                $errore = "Errore: il revisore è già assegnato a questo bilancio.";
+            } else {
+                $errore = "Errore DB: " . $e->getMessage();
             }
         }
     }
 }
 
-// Lettura revisori disponibili
+// Carica tutti i revisori ESG registrati per popolare il select del form
 $revisori = [];
 try {
     $revisori = $pdo->query(
@@ -68,7 +78,8 @@ try {
     $errore = "Errore lettura REVISORE_ESG: " . $e->getMessage();
 }
 
-// Lettura ultimi 50 bilanci
+// Carica gli ultimi 50 bilanci per popolare il select e la tabella riepilogativa.
+// Il limite a 50 evita di sovraccaricare il form in caso di molti bilanci presenti.
 $bilanci = [];
 try {
     $bilanci = $pdo->query(
@@ -78,6 +89,7 @@ try {
     $errore = "Errore lettura BILANCIO: " . $e->getMessage();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="it">
 <head>

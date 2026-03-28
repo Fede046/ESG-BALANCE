@@ -15,49 +15,56 @@ if (isset($_POST["register"])) {
     }
 }
 
+/**
+ * Gestisce la registrazione di un nuovo utente (revisore o responsabile).
+ * La consegna prevede solo questi due ruoli auto-registrabili;
+ * gli amministratori non si registrano tramite questo form.
+ * Chiama sp_Registrazione per l'inserimento in UTENTE e nella tabella
+ * di specializzazione, poi inserisce le email separatamente.
+ * Restituisce "ok" in caso di successo, altrimenti il messaggio di errore.
+ */
 function registraUtente() {
     try {
         $pdo   = getDB();
-        $usr   = trim($_POST['usr']         ?? '');
-        $psw   = $_POST['psw']              ?? '';
+        $usr   = trim($_POST['usr']          ?? '');
+        $psw   = $_POST['psw']               ?? '';
         $psw_confirm = $_POST['psw_confirm'] ?? '';
-        $CF    = trim($_POST['CF']          ?? '');
-        $luogo = trim($_POST['luogo']       ?? '');
-        $data  = $_POST['data']             ?? '';
-        $ruolo = $_POST['ruolo']            ?? '';
-        $emails = $_POST['emails']          ?? [];
+        $CF    = trim($_POST['CF']           ?? '');
+        $luogo = trim($_POST['luogo']        ?? '');
+        $data  = $_POST['data']              ?? '';
+        $ruolo = $_POST['ruolo']             ?? '';
+        $emails = $_POST['emails']           ?? [];
 
-        // 1. Lunghezza minima password
+        // Lunghezza minima password
         if (strlen($psw) < 8) {
             return "La password deve essere di almeno 8 caratteri.";
         }
 
-        // 2. Conferma password
+        // Conferma password
         if ($psw !== $psw_confirm) {
             return "Le password non coincidono.";
         }
 
-        // 3. Ruolo valido
+        // Whitelist ruolo: blocca manomissioni del form
         if (!in_array($ruolo, ['revisore', 'responsabile'])) {
             return "Seleziona un ruolo valido.";
         }
 
-        // 4. Codice Fiscale formato
+        // Formato Codice Fiscale: 16 caratteri alfanumerici come da standard italiano
         if (!preg_match('/^[A-Z0-9]{16}$/i', $CF)) {
             return "Codice Fiscale non valido (16 caratteri alfanumerici).";
         }
 
-        // 5. Data di nascita: non nel futuro e almeno 18 anni
+        // Data di nascita non futura
         if (!empty($data)) {
             $dataNascita = new DateTime($data);
             $oggi        = new DateTime();
-            $eta         = $oggi->diff($dataNascita)->y;
             if ($dataNascita > $oggi) {
                 return "Data di nascita non valida (non può essere nel futuro).";
             }
         }
 
-        // 6. Validazione email
+        // Validazione formato email
         foreach ($emails as $email) {
             $email = trim($email);
             if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -65,17 +72,17 @@ function registraUtente() {
             }
         }
 
-        // Hash MD5 con salt 'jdd'
+        // Hash MD5 con salt 'jdd', coerente con login.php e sp_Login
         $psw_hash = md5($psw . "jdd");
 
-        // 7. Almeno una email obbligatoria
+        // Almeno una email obbligatoria (la consegna prevede uno o più recapiti email)
         $emailsFiltrate = array_filter(array_map('trim', $emails));
         if (empty($emailsFiltrate)) {
             return "Inserisci almeno un indirizzo email.";
         }
 
-        // Gestione upload CV per il responsabile
-        // Placeholder di default: indica che nessun CV è stato caricato
+        // Upload CV solo per i responsabili aziendali (campo previsto dalla consegna).
+        // Il placeholder 'default.pdf' viene usato se il CV non viene caricato (opzionale).
         $extra = 'uploads/cv/default.pdf';
         if ($ruolo === 'responsabile') {
             if (isset($_FILES['cv']) && $_FILES['cv']['error'] === UPLOAD_ERR_OK) {
@@ -89,21 +96,23 @@ function registraUtente() {
                 $uploadDir = '../uploads/cv/';
                 if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
 
+                // Nome file: cv_username.pdf
                 $filename = 'cv_' . $usr . '.pdf';
                 $destPath = $uploadDir . $filename;
 
                 if (move_uploaded_file($_FILES['cv']['tmp_name'], $destPath)) {
-                    $extra = 'uploads/cv/' . $filename; // sovrascrive il placeholder
+                    $extra = 'uploads/cv/' . $filename;
                 } else {
                     return "Errore nel salvataggio del CV.";
                 }
             }
-            // CV opzionale: se non caricato $extra rimane 'uploads/cv/default.pdf'
         }
 
         $stmt = $pdo->prepare("CALL sp_Registrazione(?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([$usr, $CF, $psw_hash, $luogo, $data, $ruolo, $extra]);
 
+        // Le email vengono inserite separatamente: la tabella EMAIL
+        // supporta più recapiti per utente come richiesto dalla consegna.
         foreach ($emails as $email) {
             $email = trim($email);
             if ($email !== '') {
@@ -119,6 +128,7 @@ function registraUtente() {
         return "ok";
 
     } catch (PDOException $e) {
+        // Codice 1062 = duplicate entry: username già esistente
         if ($e->errorInfo[1] == 1062) {
             return "Errore: lo username è già occupato. Scegline un altro.";
         }

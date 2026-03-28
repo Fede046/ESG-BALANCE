@@ -2,11 +2,15 @@
 session_start();
 require_once "../db.php";
 
+// Protezione pagina: utente non autenticato viene rimandato al login.
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
 
+// Accesso riservato esclusivamente ai revisori ESG.
+// La consegna prevede che il revisore possa annotare osservazioni su singole
+// voci contabili del bilancio assegnatogli, prima di esprimere il giudizio finale.
 if ($_SESSION["Ruolo"] !== "revisore") {
     header("Location: ../menu.php");
     exit();
@@ -27,14 +31,13 @@ if (isset($_POST["inserisci_nota"])) {
         $errore = "Bilancio non valido.";
     } elseif ($nome_voce === "") {
         $errore = "La voce contabile è obbligatoria.";
-    } elseif ($testo === "") {
-        $errore = "Il testo della nota è obbligatorio.";
-    } elseif (strlen($testo) < 5) {
+    } elseif ($testo === "" || strlen($testo) < 5) {
         $errore = "Il testo della nota deve avere almeno 5 caratteri.";
     } elseif (strlen($testo) > 500) {
         $errore = "Il testo non può superare 500 caratteri.";
     } else {
-        // Controlla stato bilancio: non modificabile se chiuso
+        // Controllo preventivo sullo stato del bilancio: non si possono aggiungere
+        // note a un bilancio già chiuso (approvato o respinto).
         $chk_stato = $pdo->prepare(
             "SELECT Stato FROM BILANCIO
              WHERE id = ? AND Ragione_sociale_azienda = ?"
@@ -44,12 +47,12 @@ if (isset($_POST["inserisci_nota"])) {
 
         if (!$bilancio) {
             $errore = "Bilancio non trovato.";
-
         } elseif (in_array(strtolower($bilancio['Stato']), ['approvato', 'respinto'])) {
             $errore = "Non puoi aggiungere note a un bilancio già chiuso.";
-
         } else {
-            // Verifica che il revisore sia assegnato a quel bilancio
+            // Controllo di ownership: il revisore può annotare solo i bilanci
+            // a lui assegnati tramite VALUTA_REVISORE_BILANCIO, impedendo
+            // accessi non autorizzati passando ID arbitrari nel form.
             $stmt = $pdo->prepare(
                 "SELECT COUNT(*) FROM VALUTA_REVISORE_BILANCIO
                  WHERE Username_Revisore_ESG = ? AND id_bilancio = ? AND Ragione_sociale_bilancio = ?"
@@ -58,7 +61,8 @@ if (isset($_POST["inserisci_nota"])) {
             if ($stmt->fetchColumn() == 0) {
                 $errore = "Non sei assegnato a questo bilancio.";
             } else {
-                // Verifica che la voce appartenga al bilancio
+                // Verifica che la voce selezionata appartenga effettivamente al bilancio:
+                // la voce deve essere presente in ASSOCIA_BILANCIO_VOCE per quel bilancio.
                 $stmt2 = $pdo->prepare(
                     "SELECT COUNT(*) FROM ASSOCIA_BILANCIO_VOCE
                      WHERE Nome_voce = ? AND id_bilancio = ? AND Ragione_sociale_bilancio = ?"
@@ -68,6 +72,8 @@ if (isset($_POST["inserisci_nota"])) {
                     $errore = "La voce selezionata non appartiene a questo bilancio.";
                 } else {
                     try {
+                        // sp_InserisciNotaVoce inserisce la nota nella tabella NOTA,
+                        // collegandola alla voce, al bilancio e al revisore autore.
                         $stmt3 = $pdo->prepare("CALL sp_InserisciNotaVoce(?, ?, ?, ?, ?)");
                         $stmt3->execute([$testo, $nome_voce, $username, $id_bil, $rag_soc]);
                         $messaggio = "Nota inserita sulla voce '$nome_voce' del bilancio #$id_bil.";
@@ -84,7 +90,8 @@ if (isset($_POST["inserisci_nota"])) {
     }
 }
 
-// Bilanci assegnati al revisore loggato
+// Carica solo i bilanci assegnati al revisore loggato tramite JOIN su
+// VALUTA_REVISORE_BILANCIO, per popolare la tabella di selezione bilancio.
 $bilanci = [];
 try {
     $stmt = $pdo->prepare(
@@ -101,11 +108,12 @@ try {
     $errore = "Errore lettura bilanci: " . $e->getMessage();
 }
 
-// Bilancio selezionato via GET
+// Bilancio selezionato via GET dal click su "Seleziona" nella tabella superiore
 $id_sel  = isset($_GET["id_bilancio"])     ? (int)$_GET["id_bilancio"]     : 0;
 $rag_sel = isset($_GET["ragione_sociale"]) ? trim($_GET["ragione_sociale"]) : "";
 
-// Voci del bilancio selezionato
+// Carica le voci del bilancio selezionato per popolare il select del form nota.
+// Le voci sono quelle effettivamente associate al bilancio in ASSOCIA_BILANCIO_VOCE.
 $voci = [];
 if ($id_sel > 0 && $rag_sel !== "") {
     try {
@@ -122,7 +130,7 @@ if ($id_sel > 0 && $rag_sel !== "") {
     }
 }
 
-// Note già inserite dal revisore loggato
+// Carica le note già inserite dal revisore loggato per la tabella riepilogativa
 $note = [];
 try {
     $stmt = $pdo->prepare(
@@ -137,6 +145,7 @@ try {
     $errore = "Errore lettura note: " . $e->getMessage();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="it">
 <head>

@@ -2,19 +2,17 @@
 session_start();
 require_once "db.php";
 
-// Se non loggato → login
+// Protezione pagina: utente non autenticato viene rimandato al login
 if (!isset($_SESSION["Username"])) {
     header("Location: login.php");
     exit();
 }
 
-// Logout
+// Logout: registra l'evento su MongoDB prima di distruggere la sessione
 if (isset($_POST["logout"])) {
-    // ── AGGIUNGERE QUESTE 3 RIGHE ──
     $username_log = $_SESSION["Username"];
     require_once "db_mongo.php";
     logEvento('USER_LOGOUT', "Logout effettuato: " . $username_log, 0, 0);
-    // ──────────────────────────────
     session_destroy();
     header("Location: home.php");
     exit();
@@ -23,7 +21,9 @@ if (isset($_POST["logout"])) {
 $username = $_SESSION["Username"];
 $ruolo    = $_SESSION["Ruolo"];
 
-// Voci di menu per ogni ruolo
+// Voci di menu differenziate per ruolo, coerenti con le operazioni previste
+// dalla consegna per ciascuna categoria utente. Le statistiche sono visibili
+// a tutti gli utenti autenticati come da specifica.
 $voci_menu = [
     "amministratore" => [
         ["label" => "Aggiungi Indicatore ESG",    "href" => "actions/aggiungi_indicatore.php"],
@@ -42,6 +42,7 @@ $voci_menu = [
     ],
 ];
 ?>
+
 <!DOCTYPE html>
 <html lang="it">
 <head>

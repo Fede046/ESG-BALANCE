@@ -2,11 +2,16 @@
 session_start();
 require_once "../db.php";
 
+// Protezione pagina: utente non autenticato viene rimandato al login.
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
 
+// Accesso riservato esclusivamente ai revisori ESG.
+// La consegna prevede che solo i revisori possano dichiarare le proprie
+// competenze, usate dall'amministratore per scegliere il revisore più
+// adatto a ciascun bilancio.
 if ($_SESSION["Ruolo"] !== "revisore") {
     header("Location: ../menu.php");
     exit();
@@ -19,39 +24,47 @@ $errore    = "";
 
 if (isset($_POST["aggiungi_competenza"])) {
     $nome_comp = trim($_POST["nome_competenza"]);
-    $livello   = ($_POST["livello"] !== "") ? (int)$_POST["livello"] : null;
+
+    // Livello vuoto trattato come null per distinguerlo dallo 0 (nessuna esperienza)
+    $livello = ($_POST["livello"] !== "") ? (int)$_POST["livello"] : null;
 
     if ($nome_comp === "") {
         $errore = "Il nome della competenza è obbligatorio.";
+
+    // Livello obbligatorio e compreso tra 0 e 5 come da schema DB
     } elseif ($livello === null || $livello < 0 || $livello > 5) {
         $errore = "Il livello deve essere tra 0 e 5.";
-} else {
-    try {
-        // Controllo duplicato PRIMA della SP, per messaggio chiaro
-        $chk = $pdo->prepare(
-            "SELECT 1 FROM DICHIARA_COMPETENZA_REVISORE
-             WHERE Username_revisore = ? AND Nome_competenza = ?"
-        );
-        $chk->execute([$username, $nome_comp]);
+    } else {
+        try {
+            // Controllo duplicato preventivo: un revisore non può dichiarare
+            // la stessa competenza due volte con livelli diversi.
+            $chk = $pdo->prepare(
+                "SELECT 1 FROM DICHIARA_COMPETENZA_REVISORE
+                 WHERE Username_revisore = ? AND Nome_competenza = ?"
+            );
+            $chk->execute([$username, $nome_comp]);
 
-        if ($chk->fetch()) {
-            $errore = "Hai già dichiarato questa competenza.";
-        } else {
-            $stmt = $pdo->prepare("CALL sp_InserisciCompetenzaRevisore(?, ?, ?)");
-            $stmt->execute([$username, $nome_comp, $livello]);
-            $messaggio = "Competenza '$nome_comp' (livello $livello) aggiunta.";
+            if ($chk->fetch()) {
+                $errore = "Hai già dichiarato questa competenza.";
+            } else {
+                // sp_InserisciCompetenzaRevisore inserisce la riga in
+                // DICHIARA_COMPETENZA_REVISORE collegando il revisore
+                // alla competenza con il livello dichiarato.
+                $stmt = $pdo->prepare("CALL sp_InserisciCompetenzaRevisore(?, ?, ?)");
+                $stmt->execute([$username, $nome_comp, $livello]);
+                $messaggio = "Competenza '$nome_comp' (livello $livello) aggiunta.";
 
-            require_once "../db_mongo.php";
-            logEvento('ADD_COMPETENZA', "Competenza '$nome_comp' (livello $livello) aggiunta da $username", 0, 0);
+                require_once "../db_mongo.php";
+                logEvento('ADD_COMPETENZA', "Competenza '$nome_comp' (livello $livello) aggiunta da $username", 0, 0);
+            }
+
+        } catch (PDOException $e) {
+            $errore = "Errore DB: " . $e->getMessage();
         }
-
-    } catch (PDOException $e) {
-        $errore = "Errore DB: " . $e->getMessage();
     }
 }
-}
 
-// Lettura competenze del revisore loggato
+// Carica le competenze già dichiarate dal revisore loggato per la tabella riepilogativa
 $competenze = [];
 try {
     $stmt = $pdo->prepare(
@@ -66,6 +79,7 @@ try {
     $errore = "Errore lettura competenze: " . $e->getMessage();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="it">
 <head>

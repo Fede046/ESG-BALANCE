@@ -2,11 +2,15 @@
 session_start();
 require_once "../db.php";
 
+// Protezione pagina: utente non autenticato viene rimandato al login.
 if (!isset($_SESSION["Username"])) {
     header("Location: ../login.php");
     exit();
 }
 
+// Accesso riservato esclusivamente ai responsabili aziendali.
+// La consegna prevede che la creazione del bilancio di esercizio e
+// l'inserimento delle voci contabili siano operazioni del responsabile.
 if ($_SESSION["Ruolo"] !== "responsabile") {
     header("Location: ../menu.php");
     exit();
@@ -17,44 +21,49 @@ $pdo       = getDB();
 $messaggio = "";
 $errore    = "";
 
-// Crea bilancio tramite SP
+// --- FORM 1: Creazione bilancio ---
 if (isset($_POST["crea_bilancio"])) {
     $rag_soc = trim($_POST["ragione_sociale"]);
     $id_bil  = (int)$_POST["id_bilancio"];
 
     if ($rag_soc === "" || $id_bil <= 0) {
-    $errore = "Ragione sociale e ID bilancio sono obbligatori.";
-} else {
-    try {
-        // 1. Check preventivo duplicato id_bilancio per quella azienda
-        $chk = $pdo->prepare(
-            "SELECT 1 FROM BILANCIO
-             WHERE id = ? AND Ragione_sociale_azienda = ?"
-        );
-        $chk->execute([$id_bil, $rag_soc]);
+        $errore = "Ragione sociale e ID bilancio sono obbligatori.";
+    } else {
+        try {
+            // Controllo preventivo duplicato: verifica che non esista già un bilancio
+            // con lo stesso ID per la stessa azienda prima di chiamare la SP,
+            // per fornire un messaggio d'errore chiaro all'utente.
+            $chk = $pdo->prepare(
+                "SELECT 1 FROM BILANCIO
+                 WHERE id = ? AND Ragione_sociale_azienda = ?"
+            );
+            $chk->execute([$id_bil, $rag_soc]);
 
-        if ($chk->fetch()) {
-            $errore = "Un bilancio con questo ID esiste già per questa azienda.";
-        } else {
-            $stmt = $pdo->prepare("CALL sp_CreaBilancioEsercizio(?, ?)");
-            $stmt->execute([$id_bil, $rag_soc]);
-            $messaggio = "Bilancio #$id_bil creato per '$rag_soc'.";
+            if ($chk->fetch()) {
+                $errore = "Un bilancio con questo ID esiste già per questa azienda.";
+            } else {
+                // sp_CreaBilancioEsercizio crea il bilancio in stato "bozza" e lo popola
+                // con tutte le voci del template definito dall'amministratore,
+                // inizializzando i valori a zero come previsto dalla consegna.
+                $stmt = $pdo->prepare("CALL sp_CreaBilancioEsercizio(?, ?)");
+                $stmt->execute([$id_bil, $rag_soc]);
+                $messaggio = "Bilancio #$id_bil creato per '$rag_soc'.";
 
-            require_once "../db_mongo.php";
-            logEvento('CREATE_BILANCIO', "Bilancio #$id_bil creato per '$rag_soc' da $username", 0, $id_bil);
-        }
+                require_once "../db_mongo.php";
+                logEvento('CREATE_BILANCIO', "Bilancio #$id_bil creato per '$rag_soc' da $username", 0, $id_bil);
+            }
 
-    } catch (PDOException $e) {
-        if ($e->errorInfo[1] == 1062) {
-            $errore = "Errore: un bilancio con questo ID esiste già per questa azienda.";
-        } else {
-            $errore = "Errore DB: " . $e->getMessage();
+        } catch (PDOException $e) {
+            if ($e->errorInfo[1] == 1062) {
+                $errore = "Errore: un bilancio con questo ID esiste già per questa azienda.";
+            } else {
+                $errore = "Errore DB: " . $e->getMessage();
             }
         }
     }
 }
 
-// Associa voce al bilancio tramite SP
+// --- FORM 2: Associazione voce al bilancio ---
 if (isset($_POST["associa_voce"])) {
     $rag_soc   = trim($_POST["ragione_sociale_voce"]);
     $id_bil    = (int)$_POST["id_bilancio_voce"];
@@ -62,38 +71,42 @@ if (isset($_POST["associa_voce"])) {
     $valore    = (int)$_POST["valore"];
 
     if ($rag_soc === "" || $id_bil <= 0 || $nome_voce === "") {
-    $errore = "Tutti i campi sono obbligatori.";
-} else {
-    try {
-        // 2. Verifica che il bilancio appartenga a un'azienda del responsabile loggato
-        $chk = $pdo->prepare(
-            "SELECT 1 FROM BILANCIO b
-             JOIN AZIENDA a ON b.Ragione_sociale_azienda = a.Ragione_sociale
-             WHERE b.id = ?
-               AND b.Ragione_sociale_azienda = ?
-               AND a.Username_Responsabile_Aziendale = ?"
-        );
-        $chk->execute([$id_bil, $rag_soc, $username]);
+        $errore = "Tutti i campi sono obbligatori.";
+    } else {
+        try {
+            // Controllo di ownership: il responsabile può popolare solo i bilanci
+            // delle proprie aziende. La JOIN con AZIENDA garantisce che non si possano
+            // modificare bilanci di aziende altrui passando ID arbitrari nel form.
+            $chk = $pdo->prepare(
+                "SELECT 1 FROM BILANCIO b
+                 JOIN AZIENDA a ON b.Ragione_sociale_azienda = a.Ragione_sociale
+                 WHERE b.id = ?
+                   AND b.Ragione_sociale_azienda = ?
+                   AND a.Username_Responsabile_Aziendale = ?"
+            );
+            $chk->execute([$id_bil, $rag_soc, $username]);
 
-        if (!$chk->fetch()) {
-            $errore = "Bilancio non trovato o non di tua competenza.";
-        } else {
-            $stmt = $pdo->prepare("CALL sp_PopolaBilancioEsercizio(?, ?, ?, ?)");
-            $stmt->execute([$id_bil, $nome_voce, $rag_soc, $valore]);
-            $messaggio = "Voce '$nome_voce' (valore: $valore) associata al bilancio #$id_bil.";
-        }
+            if (!$chk->fetch()) {
+                $errore = "Bilancio non trovato o non di tua competenza.";
+            } else {
+                // sp_PopolaBilancioEsercizio aggiorna il valore della voce contabile
+                // nel bilancio specificato; la voce deve già esistere nel template.
+                $stmt = $pdo->prepare("CALL sp_PopolaBilancioEsercizio(?, ?, ?, ?)");
+                $stmt->execute([$id_bil, $nome_voce, $rag_soc, $valore]);
+                $messaggio = "Voce '$nome_voce' (valore: $valore) associata al bilancio #$id_bil.";
+            }
 
-    } catch (PDOException $e) {
-        if ($e->errorInfo[1] == 1062) {
-            $errore = "Errore: questa voce è già associata al bilancio.";
-        } else {
-            $errore = "Errore DB: " . $e->getMessage();
+        } catch (PDOException $e) {
+            if ($e->errorInfo[1] == 1062) {
+                $errore = "Errore: questa voce è già associata al bilancio.";
+            } else {
+                $errore = "Errore DB: " . $e->getMessage();
             }
         }
     }
 }
 
-// Lettura aziende del responsabile loggato
+// Carica solo le aziende del responsabile loggato per popolare i select del form
 $aziende = [];
 try {
     $stmt = $pdo->prepare(
@@ -107,7 +120,7 @@ try {
     $errore = "Errore lettura aziende: " . $e->getMessage();
 }
 
-// Lettura voci disponibili
+// Carica le voci del template condiviso per popolare il select del secondo form
 $voci = [];
 try {
     $voci = $pdo->query("SELECT Nome FROM VOCE ORDER BY Nome")->fetchAll(PDO::FETCH_ASSOC);
@@ -115,7 +128,8 @@ try {
     $errore = "Errore lettura VOCE: " . $e->getMessage();
 }
 
-// Lettura bilanci delle aziende del responsabile
+// Carica i bilanci delle aziende del responsabile loggato tramite JOIN,
+// per mostrare solo i bilanci di propria competenza nella tabella riepilogativa.
 $bilanci = [];
 try {
     $stmt = $pdo->prepare(
@@ -131,6 +145,7 @@ try {
     $errore = "Errore lettura bilanci: " . $e->getMessage();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
