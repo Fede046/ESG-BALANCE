@@ -198,7 +198,7 @@ try {
                 <input type="hidden" name="id_bilancio"     value="<?= htmlspecialchars($id_sel) ?>">
                 <input type="hidden" name="ragione_sociale" value="<?= htmlspecialchars($rag_sel) ?>">
                 <div class="input-group2">
-                    <label>Voce contabile *</label>
+                    <label>Voce contabile</label>
                     <select name="nome_voce" required>
                         <option value="">-- seleziona voce --</option>
                         <?php foreach ($voci as $v): ?>
@@ -209,7 +209,7 @@ try {
                     </select>
                 </div>
                 <div class="input-group2">
-                    <label>Testo nota * (max 500 caratteri)</label>
+                    <label>Testo nota (max 500 caratteri)</label>
                     <textarea name="testo" rows="4" cols="50" maxlength="500" required></textarea>
                 </div>
                 <input type="submit" name="inserisci_nota" value="Inserisci Nota" class="add-btn">

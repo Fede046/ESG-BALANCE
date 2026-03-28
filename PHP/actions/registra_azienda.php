@@ -124,31 +124,31 @@ try {
 
         <form action="registra_azienda.php" method="post" enctype="multipart/form-data">
             <div class="input-group2">
-                <label>Ragione Sociale * (max 30 caratteri)</label>
+                <label>Ragione Sociale (max 30 caratteri)</label>
                 <input type="text" name="ragione_sociale" maxlength="30" required
                 value="<?= htmlspecialchars($_POST['ragione_sociale'] ?? '') ?>">
             </div>
             <div class="input-group2">
-                <label>Nome * (max 30 caratteri)</label>
+                <label>Nome (max 30 caratteri)</label>
                 <input type="text" name="nome" maxlength="30" required
                 value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>">
             </div>
             <div class="input-group2">
-                <label>Partita IVA *</label>
+                <label>Partita IVA </label>
                 <input type="text" name="piva" pattern="[0-9]+" inputmode="numeric" required
                 value="<?= htmlspecialchars($_POST['piva'] ?? '') ?>">
             </div>
             <div class="input-group2">
-                <label>Settore * (max 30 caratteri)</label>
+                <label>Settore (max 30 caratteri)</label>
                 <input type="text" name="settore" maxlength="30" required
                 value="<?= htmlspecialchars($_POST['settore'] ?? '') ?>">
             </div>
             <div class="input-group2">
-                <label>Numero dipendenti *</label>
+                <label>Numero dipendenti </label>
                 <input type="number" name="n_dip" min="0" value="<?= htmlspecialchars($_POST['n_dip'] ?? '0') ?>" required>
             </div>
             <div class="input-group2">
-                <label>Logo Azienda * (immagine)</label>
+                <label>Logo Azienda (immagine)</label>
                 <input type="file" name="logo" accept="image/*" required>
             </div>
 

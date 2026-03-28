@@ -139,7 +139,7 @@ try {
 
         <form action="inserisci_giudizio.php" method="post">
             <div class="input-group2">
-                <label>Bilancio assegnato *</label>
+                <label>Bilancio assegnato</label>
                 <select name="id_bilancio" required onchange="sincronizzaRagioneSociale(this)">
                     <option value="">-- seleziona bilancio --</option>
                     <?php foreach ($bilanci as $b): ?>
@@ -152,7 +152,7 @@ try {
             </div>
             <input type="hidden" name="ragione_sociale" id="ragione_sociale_hidden">
             <div class="input-group2">
-                <label>Esito *</label>
+                <label>Esito</label>
                 <select name="esito" required>
                     <option value="">-- seleziona esito --</option>
                     <option value="approvazione">Approvazione</option>

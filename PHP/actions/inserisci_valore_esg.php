@@ -230,7 +230,7 @@ if ($id_sel > 0 && $rag_sel !== "") {
                     <input type="hidden" name="id_bilancio"     value="<?= htmlspecialchars($id_sel) ?>">
                     <input type="hidden" name="ragione_sociale" value="<?= htmlspecialchars($rag_sel) ?>">
                     <div class="input-group2">
-                        <label>Voce Contabile *</label>
+                        <label>Voce Contabile </label>
                         <select name="nome_voce" required>
                             <option value="">-- seleziona voce --</option>
                             <?php foreach ($voci as $v): ?>
@@ -241,7 +241,7 @@ if ($id_sel > 0 && $rag_sel !== "") {
                         </select>
                     </div>
                     <div class="input-group2">
-                        <label>Indicatore ESG *</label>
+                        <label>Indicatore ESG </label>
                         <select name="nome_esg" required>
                             <option value="">-- seleziona indicatore --</option>
                             <?php foreach ($indicatori as $i): ?>
@@ -252,15 +252,15 @@ if ($id_sel > 0 && $rag_sel !== "") {
                         </select>
                     </div>
                     <div class="input-group2">
-                        <label>Valore *</label>
+                        <label>Valore </label>
                         <input type="number" step="0.01" name="valore" required>
                     </div>
                     <div class="input-group2">
-                        <label>Fonte * (max 30 caratteri)</label>
+                        <label>Fonte (max 30 caratteri)</label>
                         <input type="text" name="fonte" maxlength="30" required>
                     </div>
                     <div class="input-group2">
-                        <label>Data di rilevazione *</label>
+                        <label>Data di rilevazione </label>
                         <input type="date" name="data_rilevazione"
                                max="<?= date('Y-m-d') ?>" required>
                     </div>
