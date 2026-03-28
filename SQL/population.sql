@@ -51,9 +51,9 @@ INSERT INTO REVISORE_ESG (Username, IndiceAffidabilita, NumRevisioni) VALUES
 -- 3c. RESPONSABILE_AZIENDALE
 -- ─────────────────────────────────────────────
 INSERT INTO RESPONSABILE_AZIENDALE (Username, CV) VALUES
-('anna.neri',    '../uploads/cv/cv_anna.neri.pdf'),
-('paolo.gialli', '../uploads/cv/cv_paolo.gialli.pdf'),
-('sara.blu',     '../uploads/cv/cv_sara.blu.pdf');
+('anna.neri',    'uploads/cv/cv_anna.neri.pdf'),
+('paolo.gialli', 'uploads/cv/cv_paolo.gialli.pdf'),
+('sara.blu',     'uploads/cv/cv_sara.blu.pdf');
 
 -- ─────────────────────────────────────────────
 -- 4. COMPETENZA
@@ -77,11 +77,11 @@ INSERT INTO DICHIARA_COMPETENZA_REVISORE (Nome_competenza, Username_revisore, Li
 -- 6. INDICATORE_ESG
 -- ─────────────────────────────────────────────
 INSERT INTO INDICATORE_ESG (Nome, Username_Amministratore, Immagine, Rilevanza) VALUES
-('Emissioni CO2',    'mario.rossi', '../uploads/indicatori/img_Emissioni_CO2.png',    9),
-('Parita di genere', 'mario.rossi', '../uploads/indicatori/img_Parita_di_genere.png', 7),
-('Consumo idrico',   'mario.rossi', '../uploads/indicatori/img_Consumo_idrico.png',   8),
-('Diversita CdA',    'mario.rossi', '../uploads/indicatori/img_Diversita_CdA.png',    6),
-('Sicurezza lavoro', 'mario.rossi', '../uploads/indicatori/img_Sicurezza_lavoro.png', 8);
+('Emissioni CO2',    'mario.rossi', 'uploads/indicatori/img_Emissioni_CO2.png',    9),
+('Parita di genere', 'mario.rossi', 'uploads/indicatori/img_Parita_di_genere.png', 7),
+('Consumo idrico',   'mario.rossi', 'uploads/indicatori/img_Consumo_idrico.png',   8),
+('Diversita CdA',    'mario.rossi', 'uploads/indicatori/img_Diversita_CdA.png',    6),
+('Sicurezza lavoro', 'mario.rossi', 'uploads/indicatori/img_Sicurezza_lavoro.png', 8);
 
 -- ─────────────────────────────────────────────
 -- 7a. ESG_AMBIENTALE
@@ -112,9 +112,9 @@ INSERT INTO VOCE (Nome, Descrizione, Username_Amministratore) VALUES
 -- 9. AZIENDA
 -- ─────────────────────────────────────────────
 INSERT INTO AZIENDA (Ragione_sociale, Nome, p_IVA, Settore, n_dip, logo, nr_bilanci, Username_Responsabile_Aziendale) VALUES
-('GreenTech SRL', 'GreenTech', '12345678901', 'Tecnologia', 150, '../uploads/loghi/logo_GreenTech_SRL.png', 3, 'anna.neri'),
-('EcoFarm SPA',   'EcoFarm',   '87654321012', 'Agricoltura', 80, '../uploads/loghi/logo_EcoFarm_SPA.png',   2, 'paolo.gialli'),
-('BluEnergy SRL', 'BluEnergy', '11223344556', 'Energia',    200, '../uploads/loghi/logo_BluEnergy_SRL.png', 3, 'sara.blu');
+('GreenTech SRL', 'GreenTech', '12345678901', 'Tecnologia', 150, 'uploads/loghi/logo_GreenTech_SRL.png', 3, 'anna.neri'),
+('EcoFarm SPA',   'EcoFarm',   '87654321012', 'Agricoltura', 80, 'uploads/loghi/logo_EcoFarm_SPA.png',   2, 'paolo.gialli'),
+('BluEnergy SRL', 'BluEnergy', '11223344556', 'Energia',    200, 'uploads/loghi/logo_BluEnergy_SRL.png', 3, 'sara.blu');
 
 -- ─────────────────────────────────────────────
 -- 10. BILANCIO  (tutti 'bozza' alla creazione)
