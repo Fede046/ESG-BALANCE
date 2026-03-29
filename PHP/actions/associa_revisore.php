@@ -88,6 +88,28 @@ try {
 } catch (PDOException $e) {
     $errore = "Errore lettura BILANCIO: " . $e->getMessage();
 }
+
+
+// Carica tutti i revisori assegnati ai bilanci (ultimi 50)
+$revisori_assegnati = [];
+try {
+    $ids = array_column($bilanci, 'id');
+    if (!empty($ids)) {
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $pdo->prepare(
+        "SELECT id_bilancio, Username_Revisore_ESG
+        FROM VALUTA_REVISORE_BILANCIO
+        WHERE id_bilancio IN ($placeholders)
+        ORDER BY Username_Revisore_ESG"
+        );
+        $stmt->execute($ids);
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $revisori_assegnati[$row['id_bilancio']][] = $row['Username_Revisore_ESG'];
+        }
+    }
+} catch (PDOException $e) {
+    $errore = "Errore lettura REVISIONE: " . $e->getMessage();
+}
 ?>
 
 <!DOCTYPE html>
@@ -151,6 +173,7 @@ try {
                         <th>ID</th>
                         <th>Azienda</th>
                         <th>Stato</th>
+                        <th>Revisori assegnati</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -170,6 +193,15 @@ try {
                                     <?= htmlspecialchars($r["Stato"]) ?>
                                 </span>
                             </td>
+                            <td>
+                                <?php if (!empty($revisori_assegnati[$r["id"]])): ?>
+                                    <?php foreach ($revisori_assegnati[$r["id"]] as $rev): ?>
+                                        <span class="status-pill stato-info"><?= htmlspecialchars($rev) ?></span>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <span style="color: var(--text-muted, #aaa); font-style: italic;">Nessuno</span>
+                                <?php endif; ?>
+                            </td>                            
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
