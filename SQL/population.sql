@@ -146,11 +146,11 @@ INSERT INTO VALUTA_REVISORE_BILANCIO (Username_Revisore_ESG, id_bilancio, Ragion
 -- 12. GIUDIZIO
 -- ─────────────────────────────────────────────
 INSERT INTO GIUDIZIO (Id, Esito, Data, Rilievi, Username, id_bilancio, Ragione_sociale_bilancio) VALUES
-(1, 'approvazione',             '2022-05-01 00:00:00', NULL,                                                          'giulia.bianchi', 1, 'GreenTech SRL'),
-(2, 'approvazione',             '2023-05-01 00:00:00', NULL,                                                          'giulia.bianchi', 2, 'GreenTech SRL'),
-(3, 'approvazione con rilievi', '2023-06-15 00:00:00', 'Lieve discrepanza nei valori EBITDA rispetto al consuntivo.', 'luca.verdi',     4, 'EcoFarm SPA'),
-(4, 'respingimento',            '2022-08-01 00:00:00', 'Costi operativi non giustificati, dati incompleti.',          'giulia.bianchi', 6, 'BluEnergy SRL'),
-(5, 'approvazione con rilievi', '2023-08-01 00:00:00', 'Patrimonio netto da verificare con documentazione extra.',    'luca.verdi',     7, 'BluEnergy SRL');
+( 'approvazione',             '2022-05-01 00:00:00', NULL,                                                          'giulia.bianchi', 1, 'GreenTech SRL'),
+( 'approvazione',             '2023-05-01 00:00:00', NULL,                                                          'giulia.bianchi', 2, 'GreenTech SRL'),
+( 'approvazione con rilievi', '2023-06-15 00:00:00', 'Lieve discrepanza nei valori EBITDA rispetto al consuntivo.', 'luca.verdi',     4, 'EcoFarm SPA'),
+( 'respingimento',            '2022-08-01 00:00:00', 'Costi operativi non giustificati, dati incompleti.',          'giulia.bianchi', 6, 'BluEnergy SRL'),
+( 'approvazione con rilievi', '2023-08-01 00:00:00', 'Patrimonio netto da verificare con documentazione extra.',    'luca.verdi',     7, 'BluEnergy SRL');
 
 -- ─────────────────────────────────────────────
 -- 13. ASSOCIA_BILANCIO_VOCE
