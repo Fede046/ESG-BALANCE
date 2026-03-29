@@ -13,7 +13,7 @@ CREATE TABLE UTENTE (
     CodiceFiscale VARCHAR(30) NOT NULL,
     Password VARCHAR(255) NOT NULL, 
     Luogo VARCHAR(30) NOT NULL,
-    Data VARCHAR(30) NOT NULL
+    Data DATE NOT NULL
 );
 
 
