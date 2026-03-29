@@ -1,205 +1,43 @@
-# Roadmap Progetto ESG-BALANCE
+# ESG-BALANCE
 
-## 1. Analisi dei requisiti
+Sistema di Gestione e Bilanciamento dei Dati ESG (Environmental, Social, Governance)
 
-### 1.1 Analisi del dominio
-- Rileggere la traccia del progetto e annotare tutti i tipi di attori coinvolti e i loro compiti principali.
-- Elencare tutte le informazioni da memorizzare per ciascuna entità descritta nella traccia.
-- Costruire il glossario dei termini con una definizione chiara per ogni concetto chiave presente nella traccia.
-- Redigere l'elenco completo delle operazioni sui dati, suddivise per ruolo:
-  - Operazioni comuni: registrazione e autenticazione.
-  - Operazioni amministratore: gestione template di bilancio, gestione indicatori ESG, assegnazione revisori ai bilanci.
-  - Operazioni revisore ESG: gestione competenze, inserimento note su voci, inserimento giudizio complessivo.
-  - Operazioni responsabile aziendale: registrazione azienda, creazione e compilazione bilanci, inserimento valori indicatori ESG.
-  - Statistiche visibili a tutti gli utenti.
+## Descrizione del Progetto
 
-### 1.2 Tavola dei volumi e carichi
-- Compilare la tavola dei volumi indicando il numero stimato di occorrenze per ciascuna entità (aziende: 10, bilanci per azienda: 5, voci contabili, indicatori ESG, revisori, note, giudizi).
-- Elencare le operazioni da analizzare per la ridondanza sul campo `#nr_bilanci`:
-  - Inserimento di una nuova azienda con i bilanci degli ultimi tre anni (1 volta/mese, interattiva).
-  - Conteggio del numero totale di bilanci di esercizio per tutte le aziende (3 volte/mese, batch).
-  - Rimozione di un'azienda con tutti i bilanci associati (1 volta/mese, batch).
-- Specificare tipo di esecuzione (batch o interattiva) e frequenza per ciascuna operazione.
+ESG-BALANCE è un progetto universitario sviluppato per il Corso di Basi di Dati. Si tratta di un sistema completo di gestione per il reporting finanziario ESG che permette alle aziende di gestire i propri bilanci in termini di sostenibilità ambientale, responsabilità sociale e governance aziendale. Il sistema implementa un'architettura multi-utente con ruoli differenziati, un database relazionale MySQL con stored procedures, triggers e viste statistiche, e un sistema di logging eventi basato su MongoDB.
 
----
+## Caratteristiche Principali
 
-## 2. Progettazione concettuale e logica
+Il progetto offre un sistema completo di gestione ESG con autenticazione e autorizzazione basata su ruoli. Gli amministratori possono gestire i modelli di budget, definire gli indicatori ESG e assegnare i revisori ai vari task di valutazione. I revisori ESG hanno la possibilità di gestire le competenze, aggiungere note ai vari inserimenti e fornire giudizi complessivi sulle performance aziendali. I responsabili aziendali possono registrare le proprie aziende, creare e completare i fogli di bilancio ed inserire i valori degli indicatori ESG. Il sistema include inoltre un cruscotto statistico che mostra metriche chiave come il numero di aziende registrate, i revisori ESG attivi, l'azienda con la migliore affidabilità e la classifica dei bilanci aziendali basata sugli indicatori ESG collegati.
 
-### 2.1 Schema E-R
-- Identificare tutte le entità, gli attributi e le relazioni a partire dalla traccia.
-- Modellare le specializzazioni degli utenti e degli indicatori ESG con le rispettive cardinalità.
-- Definire le business rules derivanti dalla traccia (vincoli sugli stati del bilancio, vincoli di cardinalità, vincoli sulle categorie ESG).
-- Disegnare lo schema E-R completo e verificarne la coerenza con i requisiti.
+## Stack Tecnologico
 
-### 2.2 Analisi della ridondanza `#nr_bilanci`
-- Definire due scenari alternativi:
-  - Scenario A: campo `#nr_bilanci` non memorizzato, conteggio calcolato con query al momento del bisogno.
-  - Scenario B: campo `#nr_bilanci` memorizzato e mantenuto aggiornato tramite trigger.
-- Calcolare i costi di lettura e scrittura per le tre operazioni della tavola dei volumi, applicando i coefficienti: wI = 1, wB = 0.5, a = 2.
-- Confrontare i due scenari e documentare la scelta finale con motivazione esplicita nella relazione.
+Il backend del sistema è sviluppato in PHP utilizzando PDO per le connessioni al database, garantendo una gestione sicura e parametrizzata delle query. Il database primario è MySQL, che ospita le tabelle principali, le stored procedures per la logica di business, i triggers per la gestione automatica degli eventi e le viste per le statistiche aggregate. Per il logging degli eventi applicativi viene utilizzato MongoDB con una collection dedicata denominata "eventi" che memorizza tutte le operazioni di sistema. Lo styling dell'interfaccia web è gestito tramite CSS per garantire un'esperienza utente coerente e professionale.
 
-### 2.3 Schema relazionale
-- Tradurre lo schema E-R ristrutturato in schema relazionale, definendo per ogni tabella:
-  - Attributi, tipi di dato, chiave primaria, chiavi esterne e vincoli di integrità referenziale.
-- Scrivere la lista completa dei vincoli inter-relazionali.
-- Verificare la normalizzazione almeno fino alla 3NF, evidenziando eventuali violazioni e le correzioni apportate.
-- Verificare che il numero di tabelle rispetti il minimo previsto dal regolamento (almeno 12).
+## Struttura del Progetto
 
----
+La struttura del repository è organizzata in cartelle tematiche che separano chiaramente le diverse componenti del sistema. La directory PHP contiene tutto il codice backend necessario per le funzionalità del sito web, incluse le pagine di login e registrazione, la gestione delle sessioni, il controllo degli accessi basato sui ruoli e le operazioni CRUD specifiche per ogni ruolo utente. La directory SQL ospita tutti gli script necessari per la creazione e l'inizializzazione del database, incluse le definizioni delle tabelle, le stored procedures, i triggers e le viste statistiche. La directory STYLE contiene i fogli di stile CSS che definiscono l'aspetto visivo dell'applicazione web.
 
-## 3. Implementazione database MySQL
+## Ruoli Utente
 
-### 3.1 Script DDL e vincoli fisici
-- Scrivere lo script SQL per la creazione del database `esg_balance` e di tutte le tabelle con:
-  - Chiavi primarie, chiavi esterne con azioni ON DELETE / ON UPDATE appropriate.
-  - Vincoli UNIQUE sugli attributi che lo richiedono (es. ragione sociale, nome voce contabile, nome indicatore ESG).
-  - Vincoli CHECK dove utili (es. livello competenza tra 0 e 5, rilevanza indicatore tra 0 e 10, stato bilancio).
-- Definire indici aggiuntivi sulle colonne frequentemente usate in join e filtri.
+Il sistema implementa tre ruoli principali con permessi e responsabilità specifiche. L'**Amministratore** ha il controllo completo sul sistema e può gestire i modelli di budget, definire gli indicatori ESG disponibili, assegnare i revisori ai vari compiti e visualizzare tutte le statistiche aggregate. L'**ESG Reviewer** è il revisore specializzato che gestisce le competenze tecniche, analizza i dati inseriti dalle aziende, aggiunge note e commenti ai vari inserimenti e fornisce un giudizio complessivo sulla qualità dei dati ESG presentati. Il **Company Responsible** rappresenta l'azienda nel sistema e può registrare la propria azienda, creare nuovi fogli di bilancio, completare i bilanci in fase di elaborazione e inserire i valori degli indicatori ESG richiesti.
 
-### 3.2 Stored procedure
-Implementare stored procedure per tutte le operazioni applicative:
+## Requisiti di Sistema
 
-- Registrazione di un nuovo utente con gestione del tipo e dei campi specifici per ruolo.
-- Autenticazione utente.
-- Creazione e modifica dei dati di un'azienda.
-- Creazione di un nuovo bilancio in stato "bozza" con inizializzazione automatica delle voci del template.
-- Inserimento e aggiornamento dei valori delle voci contabili di un bilancio.
-- Inserimento e modifica degli indicatori ESG.
-- Collegamento di un indicatore ESG a una voce contabile con valore, fonte e data di rilevazione.
-- Inserimento e aggiornamento delle competenze del revisore.
-- Assegnazione di uno o più revisori ESG a un bilancio.
-- Inserimento di una nota su una voce di bilancio da parte di un revisore.
-- Inserimento del giudizio complessivo su un bilancio.
+Per l'installazione e l'esecuzione del progetto sono necessari i seguenti componenti. Il server web richiede PHP versione 7.4 o superiore con estensione PDO abilitata per la connessione al database MySQL. Il database primario richiede MySQL 8.0 o superiore per il supporto completo alle stored procedures, triggers e viste. Per il sistema di logging eventi è necessario MongoDB 4.4 o superiore. Composer deve essere installato per la gestione delle dipendenze PHP elencate nel file composer.json.
 
-### 3.3 Trigger
+## Installazione
 
-- **Trigger 1 — Cambio stato a "in revisione"**  
-  Attivato all'inserimento di una riga nella tabella di associazione revisore–bilancio. Imposta lo stato del bilancio a "in revisione".
+Il processo di installazione si articola in quattro passaggi principali. Prima di tutto, clonare il repository nel proprio ambiente di sviluppo utilizzando il comando git clone seguito dall'URL del repository. Successivamente, configurare il database MySQL importando gli script SQL presenti nella directory SQL, assicurandosi di creare il database esg_balance prima dell'importazione. Configurare poi la connessione a MongoDB seguendo le istruzioni dettagliate presenti nel file ConfigMONGO.md. Infine, installare le dipendenze PHP eseguendo il comando composer install nella directory principale del progetto.
 
-- **Trigger 2 — Cambio stato a "approvato" o "respinto"**  
-  Attivato all'inserimento di un giudizio complessivo. Verifica se tutti i revisori associati al bilancio hanno emesso il proprio giudizio:
-  - Se tutti i giudizi sono "approvazione" o "approvazione con rilievi" → stato "approvato".
-  - Se almeno un giudizio è "respingimento" → stato "respinto".
+## Documentazione Tecnica
 
-- **Trigger 3 — Mantenimento ridondanza `#nr_bilanci`** *(solo se si decide di mantenerla)*  
-  Attivato su inserimento ed eliminazione di un bilancio. Aggiorna il contatore `#nr_bilanci` nella tabella Azienda.
+Il repository include diverse risorse documentative per comprendere meglio l'architettura del sistema. Il file ER_Progetto.drawio e la relativa immagine PNG contengono il diagramma Entity-Relationship completo che illustra la struttura logica del database. Il file progettobd202526.pdf contiene le specifiche complete del progetto per l'anno accademico 2025-2026. Il file ConfigMONGO.md fornisce istruzioni dettagliate per la configurazione del database MongoDB per il logging degli eventi.
 
-### 3.4 Viste per le statistiche
-- Vista per il numero totale di aziende registrate in piattaforma.
-- Vista per il numero di revisori ESG registrati in piattaforma.
-- Vista per l'azienda con il valore di affidabilità più alto, definita come la percentuale di bilanci con esito "approvazione" (senza rilievi) sul totale dei bilanci valutati.
-- Vista per la classifica dei bilanci aziendali, ordinati in modo decrescente per numero totale di indicatori ESG collegati alle voci contabili.
+## Licenza
 
----
+Questo progetto è distribuito con licenza MIT. Per maggiori dettagli consulta il file LICENSE presente nella directory principale del repository.
 
-## 4. Backend Web (PHP + MySQL)
+## Autore
 
-### 4.1 Struttura applicativa e autenticazione
-- Definire la struttura delle cartelle del progetto (es. `config/`, `lib/`, `controllers/`, `views/`, `public/`).
-- Implementare `config.php` per la connessione PDO a MySQL e i parametri globali dell'applicazione.
-- Implementare la logica di autenticazione:
-  - Pagine di login e registrazione che delegano alle stored procedure.
-  - Gestione delle sessioni PHP.
-  - Controllo del ruolo utente prima di rendere accessibile qualsiasi pagina protetta.
-
-### 4.2 Funzionalità per i ruoli
-
-**Amministratore**
-- Pagine per la gestione del template di bilancio (CRUD voci contabili).
-- Pagine per la gestione degli indicatori ESG (creazione, modifica, assegnazione categoria e rilevanza).
-- Pagina per l'assegnazione di uno o più revisori ESG a un bilancio aziendale.
-
-**Revisore ESG**
-- Pagina per la gestione delle proprie competenze (inserimento e aggiornamento nome e livello).
-- Pagina con l'elenco dei bilanci assegnati e il loro stato corrente.
-- Pagina per l'inserimento e la modifica delle note sulle singole voci di bilancio.
-- Pagina per l'inserimento e la modifica del giudizio complessivo (esito, rilievi, data).
-
-**Responsabile aziendale**
-- Pagina per la creazione e la modifica dei dati delle proprie aziende.
-- Pagina per la creazione di nuovi bilanci e la modifica di quelli in stato "bozza".
-- Pagina per l'inserimento e l'aggiornamento dei valori delle voci contabili.
-- Pagina per il collegamento degli indicatori ESG alle voci contabili con valore, fonte e data di rilevazione.
-
-### 4.3 Pagine statistiche
-- Dashboard accessibile a tutti gli utenti che interroga le viste SQL e presenta:
-  - Numero di aziende registrate.
-  - Numero di revisori ESG registrati.
-  - Azienda con affidabilità più alta.
-  - Classifica dei bilanci per numero di indicatori ESG collegati.
-
----
-
-## 5. Logging eventi con MongoDB
-
-### 5.1 Modello di dati per i log
-- Definire la struttura del documento evento nella collection:
-  - `tipo`: stringa che identifica il tipo di evento (es. `creazione_bilancio`, `inizio_revisione`).
-  - `descrizione`: testo descrittivo dell'evento.
-  - `riferimenti`: oggetto con gli identificativi correlati (id utente, id azienda, id bilancio, ecc.).
-  - `timestamp`: data e ora in formato ISO 8601.
-- Creare il database `esg_balance_logs` e la collection `eventi`.
-
-### 5.2 Integrazione nel backend PHP
-- Implementare una funzione PHP di utilità `logEvent($tipo, $descrizione, $riferimenti)` che inserisce il documento nella collection con timestamp automatico.
-- Richiamare il logging nei punti chiave del flusso applicativo:
-  - Creazione di un nuovo bilancio.
-  - Inserimento dei valori degli indicatori ESG.
-  - Assegnazione di un revisore a un bilancio.
-  - Inserimento di un giudizio complessivo.
-  - Altri eventi rilevanti a discrezione del gruppo.
-
----
-
-## 6. Relazione di progetto
-
-La relazione deve seguire la struttura richiesta dal regolamento:
-
-- **Capitolo 1 — Analisi dei requisiti**  
-  Testo completo delle specifiche sui dati, lista delle operazioni, tavola dei volumi, glossario dei dati.
-
-- **Capitolo 2 — Progettazione concettuale**  
-  Diagramma E-R completo, dizionario delle entità, dizionario delle relazioni, tavola delle business rules.
-
-- **Capitolo 3 — Progettazione logica**  
-  Ristrutturazione dello schema E-R, analisi e motivazione delle ridondanze con calcolo dei costi, schema relazionale con tabelle, chiavi e vincoli inter-relazionali.
-
-- **Capitolo 4 — Normalizzazione**  
-  Analisi delle dipendenze funzionali e trasformazioni effettuate per raggiungere la 3NF.
-
-- **Capitolo 5 — Funzionalità dell'applicazione Web**  
-  Descrizione ad alto livello delle pagine e delle funzionalità implementate, suddivise per ruolo.
-
-- **Appendice — Codice SQL**  
-  Script DDL completo, stored procedure principali, trigger, viste.
-
----
-
-## 7. Presentazione, demo e verifica finale
-
-### 7.1 Slide per la discussione
-- Slide introduttiva: contesto del progetto ESG-BALANCE e obiettivi.
-- Slide sulla progettazione: schema E-R, schema relazionale, scelte progettuali rilevanti.
-- Slide sull'implementazione: stored procedure, trigger e viste statistiche.
-- Slide sull'applicazione Web: screenshot delle pagine principali per ciascun ruolo.
-- Slide su MongoDB: struttura dei documenti di log ed esempi di eventi registrati.
-
-### 7.2 Scenario di demo
-Preparare uno scenario dimostrativo completo che percorra nell'ordine:
-
-1. Registrazione di un amministratore, un revisore ESG e un responsabile aziendale.
-2. Login come amministratore: inserimento del template di bilancio e degli indicatori ESG.
-3. Login come responsabile aziendale: registrazione di un'azienda, creazione di un bilancio e compilazione delle voci con indicatori ESG.
-4. Login come amministratore: assegnazione del revisore al bilancio.
-5. Login come revisore ESG: inserimento note su alcune voci e giudizio complessivo.
-6. Verifica del cambio di stato del bilancio tramite trigger.
-7. Consultazione della dashboard con le statistiche aggiornate.
-8. Verifica dei log su MongoDB.
-
-### 7.3 Verifica finale
-- Testare tutte le stored procedure per casi nominali e casi limite.
-- Verificare il comportamento corretto dei trigger nelle transizioni di stato del bilancio.
-- Testare tutte le pagine Web per i tre ruoli con dati realistici.
-- Controllare che le viste statistiche restituiscano i risultati attesi.
-- Verificare l'inserimento e la consultazione dei log su MongoDB.
-- Assicurarsi che ogni membro del gruppo conosca il 100% del codice consegnato, come richiesto dal regolamento del corso.
+Progetto sviluppato da Fede046 per il Corso di Basi di Dati.
