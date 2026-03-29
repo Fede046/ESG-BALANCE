@@ -64,7 +64,6 @@ ESG-BALANCE/
 ---
 
 ## Installazione
-
 ```bash
 # 1. Clona il repository
 git clone https://github.com/Fede046/ESG-BALANCE.git
@@ -74,13 +73,14 @@ cd ESG-BALANCE
 composer install
 
 # 3. Crea il database e importa gli script
-mysql -u root -p -e "CREATE DATABASE esg_balance;"
-mysql -u root -p esg_balance < SQL/data.sql
+mysql -u root -p -e "CREATE DATABASE TEST;"
+mysql -u root -p TEST < SQL/data.sql
+mysql -u root -p TEST < SQL/query.sql
+mysql -u root -p TEST < SQL/population.sql
 
 # 4. Configura MongoDB
 # → Segui le istruzioni in ConfigMONGO.md
 ```
-
 ---
 
 ## Documentazione
