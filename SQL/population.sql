@@ -145,7 +145,7 @@ INSERT INTO VALUTA_REVISORE_BILANCIO (Username_Revisore_ESG, id_bilancio, Ragion
 -- ─────────────────────────────────────────────
 -- 12. GIUDIZIO
 -- ─────────────────────────────────────────────
-INSERT INTO GIUDIZIO (Id, Esito, Data, Rilievi, Username, id_bilancio, Ragione_sociale_bilancio) VALUES
+INSERT INTO GIUDIZIO ( Esito, Data, Rilievi, Username, id_bilancio, Ragione_sociale_bilancio) VALUES
 ( 'approvazione',             '2022-05-01 00:00:00', NULL,                                                          'giulia.bianchi', 1, 'GreenTech SRL'),
 ( 'approvazione',             '2023-05-01 00:00:00', NULL,                                                          'giulia.bianchi', 2, 'GreenTech SRL'),
 ( 'approvazione con rilievi', '2023-06-15 00:00:00', 'Lieve discrepanza nei valori EBITDA rispetto al consuntivo.', 'luca.verdi',     4, 'EcoFarm SPA'),

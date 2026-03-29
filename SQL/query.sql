@@ -328,7 +328,7 @@ FROM REVISORE_ESG;
 CREATE VIEW VISTA_AZIENDA_TOP_AFFIDABILITA AS
 SELECT 
     B.Ragione_sociale_azienda AS Azienda,
-    (COUNT(CASE WHEN G.Esito = 'approvazione' THEN 1 END) * 100.0 / COUNT(G.Id)) AS PercentualeAffidabilita
+    (COUNT(CASE WHEN G.Esito = 'approvazione' THEN 1 END) * 100.0 / COUNT(*)) AS PercentualeAffidabilita
 FROM BILANCIO B
 JOIN GIUDIZIO G 
     ON B.id = G.id_bilancio 
