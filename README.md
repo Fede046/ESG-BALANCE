@@ -40,4 +40,4 @@ Questo progetto è distribuito con licenza MIT. Per maggiori dettagli consulta i
 
 ## Autore
 
-Progetto sviluppato da Fede046,AlessiaSiri15,Tommus129 per il Corso di Basi di Dati.
+Progetto sviluppato da Fede046, AlessiaSiri15, Tommus129 per il Corso di Basi di Dati.
