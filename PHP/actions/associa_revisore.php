@@ -101,7 +101,7 @@ try {
 <body>
     <div class="card-full">
         <div class="card-header">
-            <h1>AAssocia Revisore ESG a Bilancio</h1>
+            <h1>Associa Revisore ESG a Bilancio</h1>
             <a href="../menu.php" class="btn-logout">← Torna al menu</a>
         </div>
         <?php if ($messaggio): ?><p><?= htmlspecialchars($messaggio) ?></p><?php endif; ?>
