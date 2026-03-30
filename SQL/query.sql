@@ -339,6 +339,7 @@ JOIN GIUDIZIO G
     AND B.Ragione_sociale_azienda = G.Ragione_sociale_bilancio
 GROUP BY B.Ragione_sociale_azienda
 ORDER BY PercentualeAffidabilita DESC
+         B.Ragione_sociale_azienda ASC
 LIMIT 1;
 
 -- 4. Classifica dei bilanci aziendali per numero totale di indicatori ESG connessi
