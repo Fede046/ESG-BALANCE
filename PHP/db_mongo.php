@@ -71,13 +71,13 @@ function getCategoryFromEventType(string $event_type): string {
  * @param int    $user_id     ID utente (0 se non disponibile)
  * @param int    $entity_id   ID entità coinvolta, es. id bilancio (0 se N/A)
  */
-function logEvento(string $event_type, string $text, int $user_id = 0, int $entity_id = 0): void {
+function logEvento(string $event_type, string $text, string $username = '', int $entity_id = 0): void{
     try {
         $col = getMongoCollection($event_type);
         $col->insertOne([
             'text'       => $text,
             'timestamp'  => new MongoDB\BSON\UTCDateTime(),
-            'user_id'    => $user_id,
+            'username'   => $username,
             'event_type' => $event_type,
             'entity_id'  => $entity_id,
             'category'   => getCategoryFromEventType($event_type),
