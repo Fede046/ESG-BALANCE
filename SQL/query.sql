@@ -276,8 +276,12 @@ CREATE PROCEDURE sp_PopolaBilancioEsercizio(
     IN p_valore INT
 )
 BEGIN
+    -- Inserisce la voce contabile nel bilancio oppure, se esiste gia',
+    -- aggiorna il valore (upsert). Questo evita errori su chiave duplicata
+    -- e permette al responsabile di correggere un valore gia' inserito.
     INSERT INTO ASSOCIA_BILANCIO_VOCE (Nome_voce, id_bilancio, Ragione_sociale_bilancio, Valore)
-    VALUES (p_nome_voce, p_id_bilancio, p_ragione_sociale, p_valore);
+    VALUES (p_nome_voce, p_id_bilancio, p_ragione_sociale, p_valore)
+    ON DUPLICATE KEY UPDATE Valore = p_valore;
 END //
 DELIMITER ;
 
