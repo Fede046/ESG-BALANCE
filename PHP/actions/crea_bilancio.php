@@ -50,7 +50,7 @@ if (isset($_POST["crea_bilancio"])) {
                 $messaggio = "Bilancio #$id_bil creato per '$rag_soc'.";
 
                 require_once "../db_mongo.php";
-                logEvento('CREATE_BILANCIO', "Bilancio #$id_bil creato per '$rag_soc' da $username", 0, $id_bil);
+                logEvento('CREATE_BILANCIO', "Bilancio #$id_bil creato per '$rag_soc' da $username", $_SESSION["Username"], $id_bil);
             }
 
         } catch (PDOException $e) {

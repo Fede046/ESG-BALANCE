@@ -95,7 +95,7 @@ if (isset($_POST["aggiungi_indicatore"])) {
             $messaggio = "Indicatore '$nome' aggiunto" . ($tipo ? " (tipo: $tipo)" : " (generico)") . ".";
 
             require_once "../db_mongo.php";
-            logEvento('CREATE_INDICATORE', "Indicatore ESG creato: '$nome' (tipo: " . ($tipo ?: 'generico') . ") da $username", 0, 0);
+            logEvento('CREATE_INDICATORE', "Indicatore ESG creato: '$nome' (tipo: " . ($tipo ?: 'generico') . ") da $username", $_SESSION["Username"]);
 
         } catch (PDOException $e) {
             // Codice 1062 = duplicate entry: il nome dell'indicatore deve essere univoco

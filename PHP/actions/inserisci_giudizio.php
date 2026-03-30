@@ -75,7 +75,7 @@ if (isset($_POST["inserisci_giudizio"])) {
                     $messaggio = "Giudizio inserito sul bilancio #$id_bil ($rag_soc).";
 
                     require_once "../db_mongo.php";
-                    logEvento('INSERT_GIUDIZIO', "Giudizio '$esito' inserito sul bilancio #$id_bil ($rag_soc) da $username", 0, $id_bil);
+                    logEvento('INSERT_GIUDIZIO', "Giudizio '$esito' inserito sul bilancio #$id_bil ($rag_soc) da $username", $_SESSION["Username"], $id_bil);
 
                     // Rileva l'eventuale cambio di stato prodotto dal trigger
                     // per loggare l'evento di chiusura del bilancio su MongoDB.

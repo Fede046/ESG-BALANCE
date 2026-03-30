@@ -53,8 +53,8 @@ if (isset($_POST["associa_revisore"])) {
                 $messaggio = "Revisore '$rev' associato al bilancio #$id_bil ($rag_soc).";
 
                 require_once "../db_mongo.php";
-                logEvento('ASSIGN_REVISORE', "Revisore '$rev' assegnato al bilancio #$id_bil ($rag_soc)", 0, $id_bil);
-                logEvento('CREATE_REVISIONE', "Revisione avviata sul bilancio #$id_bil ($rag_soc)", 0, $id_bil);
+                logEvento('ASSIGN_REVISORE', "Revisore '$rev' assegnato al bilancio #$id_bil ($rag_soc)", $_SESSION["Username"], $id_bil);
+                logEvento('CREATE_REVISIONE', "Revisione avviata sul bilancio #$id_bil ($rag_soc)", $_SESSION["Username"], $id_bil);
             }
 
         } catch (PDOException $e) {
