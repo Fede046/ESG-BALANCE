@@ -338,7 +338,7 @@ JOIN GIUDIZIO G
     ON B.id = G.id_bilancio 
     AND B.Ragione_sociale_azienda = G.Ragione_sociale_bilancio
 GROUP BY B.Ragione_sociale_azienda
-ORDER BY PercentualeAffidabilita DESC
+ORDER BY PercentualeAffidabilita DESC,
          B.Ragione_sociale_azienda ASC
 LIMIT 1;
 
