@@ -47,7 +47,7 @@ if (isset($_POST["aggiungi_voce"])) {
             $messaggio = "Voce '$nome_voce' aggiunta al template.";
 
             require_once "../db_mongo.php";
-            logEvento('ADD_VOCE', "Voce template aggiunta: '$nome_voce' da $username", 0, 0);
+            logEvento('ADD_VOCE', "Voce template aggiunta: '$nome_voce' da $username", $_SESSION["Username"]);
 
         } catch (PDOException $e) {
             // Codice 1062 = duplicate entry: il nome della voce deve essere univoco

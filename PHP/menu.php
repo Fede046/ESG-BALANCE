@@ -12,7 +12,7 @@ if (!isset($_SESSION["Username"])) {
 if (isset($_POST["logout"])) {
     $username_log = $_SESSION["Username"];
     require_once "db_mongo.php";
-    logEvento('USER_LOGOUT', "Logout effettuato: " . $username_log, 0, 0);
+    logEvento('USER_LOGOUT', "Logout effettuato", $_SESSION["Username"]);
     session_destroy();
     header("Location: home.php");
     exit();

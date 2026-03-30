@@ -90,7 +90,7 @@ if (isset($_POST["registra_azienda"])) {
                 $messaggio = "Azienda '$ragione_sociale' registrata.";
 
                 require_once "../db_mongo.php";
-                logEvento('CREATE_COMPANY', "Azienda registrata: " . $ragione_sociale . " da " . $username, 0, 0);
+                logEvento('CREATE_COMPANY', "Azienda registrata: " . $ragione_sociale . " da " . $username, $_SESSION["Username"]);
 
             } catch (PDOException $e) {
                 // Codice 1062 = duplicate entry: la ragione sociale deve essere univoca in piattaforma

@@ -123,8 +123,7 @@ function registraUtente() {
         }
 
         require_once "db_mongo.php";
-        logEvento('USER_REGISTER', "Nuovo utente registrato: $usr (ruolo: $ruolo)", 0, 0);
-
+        logEvento('USER_REGISTER', "Nuovo utente registrato (ruolo: $ruolo)", $usr);
         return "ok";
 
     } catch (PDOException $e) {

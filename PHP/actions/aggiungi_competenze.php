@@ -55,7 +55,7 @@ if (isset($_POST["aggiungi_competenza"])) {
                 $messaggio = "Competenza '$nome_comp' (livello $livello) aggiunta.";
 
                 require_once "../db_mongo.php";
-                logEvento('ADD_COMPETENZA', "Competenza '$nome_comp' (livello $livello) aggiunta da $username", 0, 0);
+                logEvento('ADD_COMPETENZA', "Competenza '$nome_comp' (livello $livello) aggiunta da $username", $_SESSION["Username"] );
             }
 
         } catch (PDOException $e) {

@@ -26,11 +26,7 @@ if (isset($_POST["login"])) {
                 $_SESSION["Ruolo"]    = $riga["Ruolo"];
 
                 require_once "db_mongo.php";
-                logEvento(
-                    'USER_LOGIN',
-                    "Login effettuato: " . $riga["Username"] . " (ruolo: " . $riga["Ruolo"] . ")",
-                    0, 0
-                );
+                logEvento('USER_LOGIN', "Login effettuato (ruolo: " . $riga["Ruolo"] . ")", $riga["Username"]);
 
                 header("Location: menu.php");
                 exit();

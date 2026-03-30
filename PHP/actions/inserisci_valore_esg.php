@@ -91,7 +91,7 @@ if (isset($_POST["inserisci_valore"])) {
                         $messaggio = "Valore ESG per voce '$nome_voce' — indicatore '$nome_esg' salvato (inserito o aggiornato).";
 
                         require_once "../db_mongo.php";
-                        logEvento('INSERT_ESG', "Valore ESG inserito/aggiornato: voce '$nome_voce', indicatore '$nome_esg' nel bilancio #$id_bil ($rag_soc) da $username", 0, $id_bil);
+                        logEvento('INSERT_ESG', "Valore ESG inserito/aggiornato: voce '$nome_voce', indicatore '$nome_esg' nel bilancio #$id_bil ($rag_soc) da $username", $_SESSION["Username"], $id_bil);
 
                     } catch (PDOException $e) {
                         $errore = "Errore DB: " . $e->getMessage();
