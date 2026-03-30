@@ -89,19 +89,16 @@ if (isset($_POST["associa_voce"])) {
             if (!$chk->fetch()) {
                 $errore = "Bilancio non trovato o non di tua competenza.";
             } else {
-                // sp_PopolaBilancioEsercizio aggiorna il valore della voce contabile
-                // nel bilancio specificato; la voce deve già esistere nel template.
+                // sp_PopolaBilancioEsercizio inserisce la voce contabile nel bilancio oppure,
+                // se la voce e' gia' presente, aggiorna il suo valore (upsert).
+                // Non genera mai errore di chiave duplicata.
                 $stmt = $pdo->prepare("CALL sp_PopolaBilancioEsercizio(?, ?, ?, ?)");
                 $stmt->execute([$id_bil, $nome_voce, $rag_soc, $valore]);
-                $messaggio = "Voce '$nome_voce' (valore: $valore) associata al bilancio #$id_bil.";
+                $messaggio = "Voce '$nome_voce' (valore: $valore) salvata nel bilancio #$id_bil.";
             }
 
         } catch (PDOException $e) {
-            if ($e->errorInfo[1] == 1062) {
-                $errore = "Errore: questa voce è già associata al bilancio.";
-            } else {
-                $errore = "Errore DB: " . $e->getMessage();
-            }
+            $errore = "Errore DB: " . $e->getMessage();
         }
     }
 }
@@ -144,6 +141,26 @@ try {
 } catch (PDOException $e) {
     $errore = "Errore lettura bilanci: " . $e->getMessage();
 }
+
+// Carica le voci già associate all'ultimo bilancio selezionato (se presente nel POST),
+// per mostrare i valori attuali e permettere all'utente di capire cosa sta aggiornando.
+$voci_bilancio = [];
+$id_bil_sel    = (int)($_POST["id_bilancio_voce"] ?? 0);
+$rag_soc_sel   = trim($_POST["ragione_sociale_voce"] ?? "");
+if ($id_bil_sel > 0 && $rag_soc_sel !== "") {
+    try {
+        $qVoci = $pdo->prepare(
+            "SELECT Nome_voce, Valore
+             FROM ASSOCIA_BILANCIO_VOCE
+             WHERE id_bilancio = ? AND Ragione_sociale_bilancio = ?
+             ORDER BY Nome_voce"
+        );
+        $qVoci->execute([$id_bil_sel, $rag_soc_sel]);
+        $voci_bilancio = $qVoci->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        // Non bloccante: la tabella potrebbe essere vuota
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -184,14 +201,15 @@ try {
             <input type="submit" name="crea_bilancio" value="Crea Bilancio" class="add-btn">
         </form>
         <br>
-        <h2>Associa Voce al Bilancio</h2>
+        <h2>Associa / Aggiorna Voce nel Bilancio</h2>
         <form action="crea_bilancio.php" method="post">
             <div class="input-group2">
                 <label>Ragione Sociale Azienda</label>
                 <select name="ragione_sociale_voce" required>
                     <option value="">-- seleziona azienda --</option>
                     <?php foreach ($aziende as $a): ?>
-                        <option value="<?= htmlspecialchars($a["Ragione_sociale"]) ?>">
+                        <option value="<?= htmlspecialchars($a["Ragione_sociale"]) ?>"
+                            <?= ($a["Ragione_sociale"] === $rag_soc_sel) ? 'selected' : '' ?>>
                             <?= htmlspecialchars($a["Ragione_sociale"]) ?>
                         </option>
                     <?php endforeach; ?>
@@ -199,7 +217,8 @@ try {
             </div>
         <div class="input-group2">
             <label>ID Bilancio</label>
-            <input type="number" name="id_bilancio_voce" min="1" required>
+            <input type="number" name="id_bilancio_voce" min="1" required
+                   value="<?= $id_bil_sel > 0 ? $id_bil_sel : '' ?>">
         </div>
         <div class="input-group2">
             <label>Voce Contabile</label>
@@ -216,8 +235,30 @@ try {
             <label>Valore</label>
             <input type="number" name="valore" required>
         </div>
-            <input type="submit" name="associa_voce" value="Associa Voce" class="add-btn">
+            <input type="submit" name="associa_voce" value="Salva Voce" class="add-btn">
         </form>
+
+        <?php if ($voci_bilancio): ?>
+            <div class="table-container">
+                <h3>Voci già associate al bilancio #<?= htmlspecialchars($id_bil_sel) ?> — <?= htmlspecialchars($rag_soc_sel) ?></h3>
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Voce</th>
+                            <th>Valore attuale</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($voci_bilancio as $vb): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($vb["Nome_voce"]) ?></td>
+                                <td><?= htmlspecialchars($vb["Valore"]) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
 
         <div class="table-container">
             <?php if ($bilanci): ?>
