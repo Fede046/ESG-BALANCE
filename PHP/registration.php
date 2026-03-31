@@ -86,10 +86,9 @@ function registraUtente() {
         $extra = 'uploads/cv/default.pdf';
         if ($ruolo === 'responsabile') {
             if (isset($_FILES['cv']) && $_FILES['cv']['error'] === UPLOAD_ERR_OK) {
-                $finfo = new finfo(FILEINFO_MIME_TYPE);
-                $mime  = $finfo->file($_FILES['cv']['tmp_name']);
+                $ext = strtolower(pathinfo($_FILES['cv']['name'], PATHINFO_EXTENSION));
 
-                if ($mime !== 'application/pdf') {
+                if ($ext !== 'pdf') {
                     return "Il CV deve essere un file PDF valido.";
                 }
 
