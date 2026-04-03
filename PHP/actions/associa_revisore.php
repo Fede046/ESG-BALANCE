@@ -93,18 +93,17 @@ try {
 // Carica tutti i revisori assegnati ai bilanci (ultimi 50)
 $revisori_assegnati = [];
 try {
-    $ids = array_column($bilanci, 'id');
-    if (!empty($ids)) {
-        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    foreach ($bilanci as $b) {
         $stmt = $pdo->prepare(
-        "SELECT id_bilancio, Username_Revisore_ESG
-        FROM VALUTA_REVISORE_BILANCIO
-        WHERE id_bilancio IN ($placeholders)
-        ORDER BY Username_Revisore_ESG"
+            "SELECT Username_Revisore_ESG
+             FROM VALUTA_REVISORE_BILANCIO
+             WHERE id_bilancio = ? AND Ragione_sociale_bilancio = ?
+             ORDER BY Username_Revisore_ESG"
         );
-        $stmt->execute($ids);
+        $stmt->execute([$b['id'], $b['Ragione_sociale_azienda']]);
+        $key = $b['id'] . '|' . $b['Ragione_sociale_azienda'];
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $revisori_assegnati[$row['id_bilancio']][] = $row['Username_Revisore_ESG'];
+            $revisori_assegnati[$key][] = $row['Username_Revisore_ESG'];
         }
     }
 } catch (PDOException $e) {
@@ -194,8 +193,9 @@ try {
                                 </span>
                             </td>
                             <td>
-                                <?php if (!empty($revisori_assegnati[$r["id"]])): ?>
-                                    <?php foreach ($revisori_assegnati[$r["id"]] as $rev): ?>
+                                <?php $key = $r["id"] . '|' . $r["Ragione_sociale_azienda"]; ?>
+                                <?php if (!empty($revisori_assegnati[$key])): ?>
+                                    <?php foreach ($revisori_assegnati[$key] as $rev): ?>
                                         <span class="status-pill stato-info"><?= htmlspecialchars($rev) ?></span>
                                     <?php endforeach; ?>
                                 <?php else: ?>
